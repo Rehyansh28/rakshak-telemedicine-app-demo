@@ -9,6 +9,6 @@ export const BRAND = {
   supportHotline: '1800-RAKSHAK',
   supportEmail: 'support@iitj.ac.in',
   iitJodhpurLabel: 'IIT Jodhpur',
-  iitJodhpurUnit: 'Medical Research Wing',
+  iitJodhpurUnit: 'Department of Computer Science and Engineering',
   armyUnit: 'Indian Army Medical Corps',
 };

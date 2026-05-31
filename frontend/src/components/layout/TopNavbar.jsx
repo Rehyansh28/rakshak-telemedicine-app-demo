@@ -2,15 +2,17 @@ import { useNavigate } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import { Search, Bell, Shield, Menu } from 'lucide-react';
 import { useApp } from '../../context/AppContext';
-import { doctorProfile, emergencyAlerts } from '../../data/mockData';
+import { emergencyAlerts } from '../../data/mockData';
 import { formatLiveTime } from '../../utils/formatTime';
 import { PATHS } from '../../routes/paths';
 import SlideOver from '../ui/SlideOver';
+import ProfileMenu from './ProfileMenu';
 
 export default function TopNavbar({
   sidebarWidth = 256,
   onMenuClick,
   onShieldClick,
+  onSettings,
 }) {
   const {
     liveTimestamp,
@@ -92,9 +94,11 @@ export default function TopNavbar({
           >
             <Shield className="w-5 h-5" />
           </button>
-          <div className="h-8 w-8 rounded-full bg-primary-container overflow-hidden border border-secondary/30">
-            <img src={doctorProfile.avatar} alt="Profile" className="w-full h-full object-cover" />
-          </div>
+          <ProfileMenu
+            onSettings={onSettings}
+            onSupport={onSettings}
+            onShieldClick={onShieldClick}
+          />
         </div>
       </motion.header>
 

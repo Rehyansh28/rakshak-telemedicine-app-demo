@@ -24,6 +24,7 @@ export function AppProvider({ children }) {
   const [notificationsOpen, setNotificationsOpen] = useState(false);
   const [mobileNavOpen, setMobileNavOpen] = useState(false);
   const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
+  const [profileOpen, setProfileOpen] = useState(false);
   const [consultationControls, setConsultationControls] = useState({
     micMuted: false,
     videoOn: true,
@@ -95,6 +96,8 @@ export function AppProvider({ children }) {
     sidebarCollapsed,
     setSidebarCollapsed,
     toggleSidebar: () => setSidebarCollapsed((c) => !c),
+    profileOpen,
+    setProfileOpen,
     consultationControls,
     updateConsultationControl,
     setConsultationControls,

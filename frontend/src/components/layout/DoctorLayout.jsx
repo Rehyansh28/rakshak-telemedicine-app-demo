@@ -51,6 +51,7 @@ export default function DoctorLayout() {
           sidebarWidth={sidebarWidth}
           onMenuClick={() => setMobileNavOpen(true)}
           onShieldClick={() => setShieldModal(true)}
+          onSettings={onSettings}
         />
         <MobileDrawer
           open={mobileNavOpen}
