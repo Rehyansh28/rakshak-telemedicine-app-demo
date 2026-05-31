@@ -1,0 +1,433 @@
+<!DOCTYPE html>
+
+<html class="light" lang="en"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>Sensor Connection | SAMARTH MEDIC</title>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com/css2?family=Sora:wght@400;600;700&amp;family=Inter:wght@400;500&amp;family=JetBrains+Mono:wght@500;700&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<script id="tailwind-config">
+        tailwind.config = {
+            darkMode: "class",
+            theme: {
+                extend: {
+                    "colors": {
+                        "tertiary": "#001a36",
+                        "surface-bright": "#f7f9fb",
+                        "on-error-container": "#93000a",
+                        "surface-container": "#eceef0",
+                        "surface": "#f7f9fb",
+                        "on-primary": "#ffffff",
+                        "on-error": "#ffffff",
+                        "primary": "#00193c",
+                        "tertiary-container": "#002f59",
+                        "inverse-on-surface": "#eff1f3",
+                        "primary-fixed-dim": "#abc7ff",
+                        "tertiary-fixed-dim": "#a4c9ff",
+                        "primary-container": "#002d62",
+                        "surface-variant": "#e0e3e5",
+                        "surface-container-lowest": "#ffffff",
+                        "on-tertiary-fixed": "#001c39",
+                        "surface-container-high": "#e6e8ea",
+                        "secondary-fixed": "#7df4ff",
+                        "surface-container-highest": "#e0e3e5",
+                        "secondary-fixed-dim": "#00dbe9",
+                        "inverse-surface": "#2d3133",
+                        "surface-dim": "#d8dadc",
+                        "on-primary-fixed-variant": "#24467c",
+                        "inverse-primary": "#abc7ff",
+                        "secondary-container": "#00eefc",
+                        "on-tertiary-fixed-variant": "#004883",
+                        "error": "#ba1a1a",
+                        "on-primary-container": "#7796d1",
+                        "on-surface": "#191c1e",
+                        "on-secondary-fixed": "#002022",
+                        "on-primary-fixed": "#001b3f",
+                        "outline": "#747781",
+                        "surface-container-low": "#f2f4f6",
+                        "outline-variant": "#c4c6d1",
+                        "on-tertiary-container": "#5398eb",
+                        "tertiary-fixed": "#d4e3ff",
+                        "error-container": "#ffdad6",
+                        "on-tertiary": "#ffffff",
+                        "surface-tint": "#3e5e95",
+                        "on-surface-variant": "#43474f",
+                        "on-background": "#191c1e",
+                        "on-secondary-fixed-variant": "#004f54",
+                        "on-secondary-container": "#00686f",
+                        "secondary": "#006970",
+                        "primary-fixed": "#d7e2ff",
+                        "background": "#f7f9fb",
+                        "on-secondary": "#ffffff"
+                    },
+                    "borderRadius": {
+                        "DEFAULT": "8px",
+                        "lg": "8px",
+                        "xl": "12px",
+                        "full": "9999px"
+                    },
+                    "spacing": {
+                        "unit": "4px",
+                        "margin-mobile": "16px",
+                        "margin-desktop": "64px",
+                        "container-max": "1440px",
+                        "gutter": "24px"
+                    },
+                    "fontFamily": {
+                        "headline-lg": ["Sora"],
+                        "display-lg": ["Sora"],
+                        "label-caps": ["JetBrains Mono"],
+                        "headline-lg-mobile": ["Sora"],
+                        "headline-md": ["Sora"],
+                        "data-mono": ["JetBrains Mono"],
+                        "body-md": ["Inter"],
+                        "body-lg": ["Inter"]
+                    },
+                    "fontSize": {
+                        "headline-lg": ["32px", {"lineHeight": "40px", "fontWeight": "600"}],
+                        "display-lg": ["48px", {"lineHeight": "56px", "letterSpacing": "-0.02em", "fontWeight": "700"}],
+                        "label-caps": ["12px", {"lineHeight": "16px", "letterSpacing": "0.1em", "fontWeight": "700"}],
+                        "headline-lg-mobile": ["24px", {"lineHeight": "32px", "fontWeight": "600"}],
+                        "headline-md": ["24px", {"lineHeight": "32px", "fontWeight": "600"}],
+                        "data-mono": ["14px", {"lineHeight": "20px", "fontWeight": "500"}],
+                        "body-md": ["16px", {"lineHeight": "24px", "fontWeight": "400"}],
+                        "body-lg": ["18px", {"lineHeight": "28px", "fontWeight": "400"}]
+                    }
+                },
+            },
+        }
+    </script>
+<style>
+        .material-symbols-outlined {
+            font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24;
+        }
+        .glass-card {
+            background: rgba(255, 255, 255, 0.7);
+            backdrop-filter: blur(12px);
+            border: 1px solid rgba(0, 105, 112, 0.1);
+        }
+        .hotspot-pulse {
+            position: absolute;
+            width: 12px;
+            height: 12px;
+            background: #00eefc;
+            border-radius: 50%;
+            box-shadow: 0 0 15px #00eefc;
+            animation: pulse-glow 2s infinite;
+        }
+        @keyframes pulse-glow {
+            0% { transform: scale(0.95); box-shadow: 0 0 0 0 rgba(0, 238, 252, 0.7); }
+            70% { transform: scale(1); box-shadow: 0 0 0 10px rgba(0, 238, 252, 0); }
+            100% { transform: scale(0.95); box-shadow: 0 0 0 0 rgba(0, 238, 252, 0); }
+        }
+        .scan-line {
+            width: 100%;
+            height: 2px;
+            background: linear-gradient(90deg, transparent, #00eefc, transparent);
+            position: absolute;
+            top: 0;
+            animation: scan-move 4s linear infinite;
+        }
+        @keyframes scan-move {
+            0% { top: 0%; opacity: 0; }
+            5% { opacity: 1; }
+            95% { opacity: 1; }
+            100% { top: 100%; opacity: 0; }
+        }
+    </style>
+</head>
+<body class="bg-background text-on-background font-body-md overflow-x-hidden">
+<!-- Top Navigation -->
+<header class="fixed top-0 left-0 w-full z-50 flex justify-between items-center px-margin-mobile md:px-margin-desktop h-16 bg-surface/80 dark:bg-primary/80 backdrop-blur-xl border-b border-outline-variant/30">
+<div class="flex items-center gap-4">
+<span class="text-body-lg font-headline-md font-bold tracking-tighter text-on-surface dark:text-on-primary-fixed">SAMARTH MEDIC</span>
+</div>
+<div class="flex items-center gap-6">
+<div class="hidden md:flex gap-8">
+<a class="font-label-caps text-label-caps text-on-surface-variant dark:text-outline-variant hover:text-secondary-container transition-colors" href="#">DASHBOARD</a>
+<a class="font-label-caps text-label-caps text-secondary dark:text-secondary-fixed border-b-2 border-secondary" href="#">SENSORS</a>
+<a class="font-label-caps text-label-caps text-on-surface-variant dark:text-outline-variant hover:text-secondary-container transition-colors" href="#">REPORTS</a>
+</div>
+<div class="flex gap-4">
+<span class="material-symbols-outlined text-secondary cursor-pointer">security</span>
+<span class="material-symbols-outlined text-secondary cursor-pointer">notifications_active</span>
+<div class="w-8 h-8 rounded-full bg-surface-container-high border border-outline-variant/30 overflow-hidden">
+<img alt="Army Medical Officer Profile" src="https://lh3.googleusercontent.com/aida-public/AB6AXuA17vcqYgVnqTB0eFeMezI1yPZTYqTAYdYT77jZOBOpOMW41jOwSOvRg-JULlqg38eif1giOT2Dn-9lBr1G8bVR9mD8b9X8xBp1ntreVbkNog6fJ74MwtebRc8hzwee3SBQBlO3aKYMXEE5ckP-gchK_akT5OHKra1u2WxoqKNZH2x3mc42Fl75ckdd9TpQDk3h0vAnhPqnKdRWiwD3Nn2GppAd3e4YgWEMi_uHVBVrcTIrSGiycL-vkCRNVUjy0ueHOthtt3GSOyw"/>
+</div>
+</div>
+</div>
+</header>
+<!-- Side Navigation -->
+<aside class="fixed left-0 top-0 h-full z-40 h-screen w-64 hidden md:flex flex-col bg-primary dark:bg-primary-container shadow-md pt-20">
+<div class="px-6 py-4 mb-8">
+<div class="font-headline-md text-on-primary">STRAT-MED</div>
+<div class="font-label-caps text-label-caps text-secondary-fixed-dim/70">Secure Node: JOD-01</div>
+</div>
+<nav class="flex-1">
+<a class="text-on-primary-fixed-variant hover:text-white mx-2 my-1 px-4 py-3 flex items-center gap-3 hover:bg-primary-container/50 transition-all rounded-lg" href="#">
+<span class="material-symbols-outlined">dashboard</span>
+<span class="font-label-caps text-label-caps">Command Center</span>
+</a>
+<a class="bg-secondary-container text-on-secondary-container rounded-lg mx-2 my-1 px-4 py-3 flex items-center gap-3 transition-all translate-x-1" href="#">
+<span class="material-symbols-outlined">monitor_heart</span>
+<span class="font-label-caps text-label-caps">Patient Vitals</span>
+</a>
+<a class="text-on-primary-fixed-variant hover:text-white mx-2 my-1 px-4 py-3 flex items-center gap-3 hover:bg-primary-container/50 transition-all rounded-lg" href="#">
+<span class="material-symbols-outlined">vpn_key</span>
+<span class="font-label-caps text-label-caps">Encryption Keys</span>
+</a>
+<a class="text-on-primary-fixed-variant hover:text-white mx-2 my-1 px-4 py-3 flex items-center gap-3 hover:bg-primary-container/50 transition-all rounded-lg" href="#">
+<span class="material-symbols-outlined">local_shipping</span>
+<span class="font-label-caps text-label-caps">Medical Logistics</span>
+</a>
+<a class="text-on-primary-fixed-variant hover:text-white mx-2 my-1 px-4 py-3 flex items-center gap-3 hover:bg-primary-container/50 transition-all rounded-lg" href="#">
+<span class="material-symbols-outlined">hub</span>
+<span class="font-label-caps text-label-caps">Field Comms</span>
+</a>
+</nav>
+<div class="p-4 border-t border-white/10">
+<button class="w-full bg-error text-white font-label-caps text-label-caps py-4 rounded-lg flex items-center justify-center gap-2 hover:brightness-110 transition-all shadow-[0_0_15px_rgba(186,26,26,0.3)]">
+<span class="material-symbols-outlined">emergency</span> Emergency SOS
+            </button>
+</div>
+<div class="p-2 mb-4">
+<a class="text-on-primary-fixed-variant hover:text-white px-4 py-2 flex items-center gap-3 transition-all" href="#">
+<span class="material-symbols-outlined">settings</span>
+<span class="font-label-caps text-label-caps">Settings</span>
+</a>
+<a class="text-on-primary-fixed-variant hover:text-white px-4 py-2 flex items-center gap-3 transition-all" href="#">
+<span class="material-symbols-outlined">help</span>
+<span class="font-label-caps text-label-caps">Support</span>
+</a>
+</div>
+</aside>
+<!-- Main Content Area -->
+<main class="md:ml-64 pt-24 px-margin-mobile md:px-margin-desktop pb-24 min-h-screen">
+<!-- Header & Stepper -->
+<div class="mb-8">
+<h1 class="font-headline-lg text-headline-lg-mobile md:text-headline-lg text-primary mb-6">Bio-Suit Sensor Initialization</h1>
+<div class="relative py-4 flex justify-between items-center max-w-3xl">
+<div class="absolute top-1/2 left-0 w-full h-1 bg-surface-container -translate-y-1/2 -z-10"></div>
+<div class="absolute top-1/2 left-0 w-[66%] h-1 bg-secondary -translate-y-1/2 -z-10 transition-all duration-1000"></div>
+<div class="flex flex-col items-center gap-2">
+<div class="w-10 h-10 rounded-full bg-secondary text-white flex items-center justify-center font-bold shadow-[0_0_10px_#00eefc]">1</div>
+<span class="font-label-caps text-[10px] text-secondary">BOOT</span>
+</div>
+<div class="flex flex-col items-center gap-2">
+<div class="w-10 h-10 rounded-full bg-secondary text-white flex items-center justify-center font-bold shadow-[0_0_10px_#00eefc]">2</div>
+<span class="font-label-caps text-[10px] text-secondary">AUTHENTICATE</span>
+</div>
+<div class="flex flex-col items-center gap-2">
+<div class="w-10 h-10 rounded-full bg-secondary text-white flex items-center justify-center font-bold shadow-[0_0_10px_#00eefc]">3</div>
+<span class="font-label-caps text-[10px] text-secondary">SYNC SENSORS</span>
+</div>
+<div class="flex flex-col items-center gap-2">
+<div class="w-10 h-10 rounded-full bg-surface-container text-on-surface-variant flex items-center justify-center font-bold">4</div>
+<span class="font-label-caps text-[10px] text-on-surface-variant">UPLINK READY</span>
+</div>
+</div>
+</div>
+<div class="grid grid-cols-1 lg:grid-cols-12 gap-gutter items-start">
+<!-- Side Panel: Sensor Pairing -->
+<div class="lg:col-span-3 space-y-4">
+<h3 class="font-label-caps text-label-caps text-on-surface-variant mb-4 px-1">ACTIVE SENSORS</h3>
+<!-- Sensor Card: Connected -->
+<div class="glass-card p-4 rounded-xl border-l-4 border-l-secondary shadow-sm hover:translate-x-1 transition-transform">
+<div class="flex justify-between items-start mb-2">
+<span class="font-headline-md text-sm text-primary">ECG Heart-Link</span>
+<span class="text-[10px] px-2 py-0.5 rounded bg-secondary/10 text-secondary font-bold">CONNECTED</span>
+</div>
+<div class="flex justify-between items-center text-on-surface-variant">
+<div class="flex items-center gap-2">
+<span class="material-symbols-outlined text-sm">battery_5_bar</span>
+<span class="font-data-mono text-xs">82%</span>
+</div>
+<div class="flex items-center gap-1">
+<span class="material-symbols-outlined text-sm text-secondary">signal_cellular_alt</span>
+<span class="font-data-mono text-[10px]">EXCELLENT</span>
+</div>
+</div>
+</div>
+<!-- Sensor Card: Pairing -->
+<div class="glass-card p-4 rounded-xl border-l-4 border-l-secondary-container shadow-sm">
+<div class="flex justify-between items-start mb-2">
+<span class="font-headline-md text-sm text-primary">Pulse-Oxy Sensor</span>
+<div class="flex items-center gap-1">
+<div class="w-1.5 h-1.5 rounded-full bg-secondary-container animate-pulse"></div>
+<span class="text-[10px] text-on-secondary-container font-bold">PAIRING...</span>
+</div>
+</div>
+<div class="flex justify-between items-center text-on-surface-variant opacity-60">
+<div class="flex items-center gap-2">
+<span class="material-symbols-outlined text-sm">battery_full</span>
+<span class="font-data-mono text-xs">100%</span>
+</div>
+<div class="flex items-center gap-1">
+<span class="material-symbols-outlined text-sm">signal_cellular_0_bar</span>
+<span class="font-data-mono text-[10px]">SEARCHING</span>
+</div>
+</div>
+</div>
+<!-- Sensor Card: Disconnected -->
+<div class="glass-card p-4 rounded-xl border-l-4 border-l-outline shadow-sm opacity-80">
+<div class="flex justify-between items-start mb-2">
+<span class="font-headline-md text-sm text-primary">Thermal Probe</span>
+<span class="text-[10px] px-2 py-0.5 rounded bg-surface-container text-on-surface-variant font-bold">DISCONNECTED</span>
+</div>
+<div class="flex justify-between items-center text-on-surface-variant opacity-60">
+<div class="flex items-center gap-2">
+<span class="material-symbols-outlined text-sm">battery_alert</span>
+<span class="font-data-mono text-xs">14%</span>
+</div>
+<div class="flex items-center gap-1">
+<span class="material-symbols-outlined text-sm">signal_cellular_off</span>
+</div>
+</div>
+</div>
+<div class="glass-card p-4 rounded-xl border-l-4 border-l-secondary shadow-sm">
+<div class="flex justify-between items-start mb-2">
+<span class="font-headline-md text-sm text-primary">Respiro-Strap</span>
+<span class="text-[10px] px-2 py-0.5 rounded bg-secondary/10 text-secondary font-bold">CONNECTED</span>
+</div>
+<div class="flex justify-between items-center text-on-surface-variant">
+<div class="flex items-center gap-2">
+<span class="material-symbols-outlined text-sm">battery_4_bar</span>
+<span class="font-data-mono text-xs">65%</span>
+</div>
+<div class="flex items-center gap-1">
+<span class="material-symbols-outlined text-sm text-secondary">signal_cellular_alt</span>
+<span class="font-data-mono text-[10px]">GOOD</span>
+</div>
+</div>
+</div>
+</div>
+<!-- Central Visualizer -->
+<div class="lg:col-span-6 flex flex-col items-center justify-center relative min-h-[500px] glass-card rounded-3xl p-8">
+<div class="scan-line"></div>
+<div class="relative w-full max-w-md aspect-square">
+<img alt="Tactical Bio-Suit Digital Silhouette" class="w-full h-full object-contain" src="https://lh3.googleusercontent.com/aida/ADBb0ugm-9xdy-e2hb2Jms8mv6OZYc1omxaq_3n7lqC3knAiC4DpaHjCTFqdLmsKZL7ANhtv8c1lSM2Bb3_C-ItMe1s7huFEVCEB-Xjc6N0AE2w6aymsw81X08ZPlrkAMHoACX0uNY1_wAhIRRSkwJ4wKU-z6xlZLyzpHcAQbyi-bdCr2zpnk5722knPLESeP3U1A40szagnVOD3WRtkWq--WrbRxlvN6QAeQb6kENYBXrkOcJEK5aS51if7GA"/>
+<!-- Hotspots -->
+<!-- Chest ECG -->
+<div class="hotspot-pulse top-[38%] left-[48%] group cursor-pointer" title="ECG Heart-Link">
+<div class="absolute left-6 top-0 w-32 glass-card p-2 rounded scale-0 group-hover:scale-100 transition-transform origin-left">
+<p class="font-label-caps text-[10px] text-secondary">ECG: STABLE</p>
+<p class="font-data-mono text-[8px] text-on-surface-variant">72 BPM / Sinus Rhythm</p>
+</div>
+</div>
+<!-- Wrist SpO2 -->
+<div class="hotspot-pulse top-[58%] left-[28%] group cursor-pointer" title="Pulse-Oxy Sensor">
+<div class="absolute right-6 top-0 w-32 glass-card p-2 rounded scale-0 group-hover:scale-100 transition-transform origin-right text-right">
+<p class="font-label-caps text-[10px] text-secondary">SpO2: SYNCING</p>
+<p class="font-data-mono text-[8px] text-on-surface-variant">Requesting Auth...</p>
+</div>
+</div>
+<!-- Shoulder Temp -->
+<div class="hotspot-pulse top-[28%] left-[55%] group cursor-pointer" title="Thermal Probe">
+<div class="absolute left-6 top-0 w-32 glass-card p-2 rounded scale-0 group-hover:scale-100 transition-transform origin-left">
+<p class="font-label-caps text-[10px] text-on-surface-variant">TEMP: OFFLINE</p>
+<p class="font-data-mono text-[8px] text-on-surface-variant">Check battery</p>
+</div>
+</div>
+<!-- HUD Overlays -->
+<div class="absolute top-0 right-0 p-4 border-r border-t border-secondary/20 w-24 h-24 rounded-tr-3xl"></div>
+<div class="absolute bottom-0 left-0 p-4 border-l border-b border-secondary/20 w-24 h-24 rounded-bl-3xl"></div>
+</div>
+<!-- Interactive Controls -->
+<div class="flex flex-wrap justify-center gap-4 mt-8 w-full">
+<button class="bg-primary text-white font-label-caps text-[11px] px-6 py-3 rounded hover:bg-tertiary transition-all flex items-center gap-2">
+<span class="material-symbols-outlined text-sm">sensors</span> SCAN FOR DEVICES
+                    </button>
+<button class="border border-secondary/50 text-secondary font-label-caps text-[11px] px-6 py-3 rounded hover:bg-secondary/10 transition-all flex items-center gap-2 shadow-[0_0_10px_rgba(0,238,252,0.1)]">
+<span class="material-symbols-outlined text-sm">tune</span> CALIBRATE SUITE
+                    </button>
+<button class="text-on-surface-variant font-label-caps text-[11px] px-6 py-3 rounded hover:bg-surface-container transition-all flex items-center gap-2">
+<span class="material-symbols-outlined text-sm">sync</span> FORCE RESYNC
+                    </button>
+</div>
+</div>
+<!-- Right Panel: Connectivity & Uplink -->
+<div class="lg:col-span-3 space-y-6">
+<div class="glass-card p-6 rounded-2xl border border-secondary/20 shadow-lg">
+<div class="flex items-center gap-3 mb-6">
+<div class="w-10 h-10 rounded-lg bg-secondary/10 flex items-center justify-center">
+<span class="material-symbols-outlined text-secondary" style="font-variation-settings: 'FILL' 1;">cloud_upload</span>
+</div>
+<div>
+<h4 class="font-headline-md text-sm text-primary">Secure Uplink</h4>
+<p class="font-label-caps text-[10px] text-secondary">ACTIVE: STRAT-LINK 07</p>
+</div>
+</div>
+<div class="space-y-4">
+<div class="flex justify-between items-center pb-2 border-b border-surface-container">
+<span class="text-xs text-on-surface-variant">Encryption</span>
+<span class="font-data-mono text-xs text-primary bg-secondary/10 px-2 py-0.5 rounded">AES-256</span>
+</div>
+<div class="flex justify-between items-center pb-2 border-b border-surface-container">
+<span class="text-xs text-on-surface-variant">Latency</span>
+<span class="font-data-mono text-xs text-on-secondary-container">14ms</span>
+</div>
+<div class="flex justify-between items-center">
+<span class="text-xs text-on-surface-variant">Sat-Lock</span>
+<div class="flex gap-0.5">
+<div class="w-1.5 h-3 bg-secondary rounded-full"></div>
+<div class="w-1.5 h-3 bg-secondary rounded-full"></div>
+<div class="w-1.5 h-3 bg-secondary rounded-full"></div>
+<div class="w-1.5 h-3 bg-surface-container rounded-full"></div>
+</div>
+</div>
+</div>
+</div>
+<div class="p-6 rounded-2xl bg-primary text-white space-y-4 relative overflow-hidden">
+<div class="absolute -right-4 -bottom-4 opacity-10">
+<span class="material-symbols-outlined text-8xl">verified_user</span>
+</div>
+<h5 class="font-label-caps text-[11px] tracking-widest opacity-60">MISSION CONTEXT</h5>
+<p class="font-body-md text-sm leading-relaxed">
+                        Bio-data stream is currently <span class="text-secondary-fixed">ENCRYPTED</span>. No abnormalities detected in initial telemetry.
+                    </p>
+<div class="pt-4 flex items-center gap-2">
+<div class="w-2 h-2 rounded-full bg-secondary-fixed animate-pulse"></div>
+<span class="font-data-mono text-[10px]">REAL-TIME SYNC ACTIVE</span>
+</div>
+</div>
+</div>
+</div>
+</main>
+<!-- Bottom Navigation (Mobile) -->
+<nav class="md:hidden fixed bottom-0 left-0 w-full z-50 flex justify-around items-center px-4 pb-6 pt-2 bg-surface/90 dark:bg-primary/95 backdrop-blur-2xl border-t border-secondary/20 shadow-[0_-4px_10px_rgba(0,238,252,0.1)] rounded-t-xl">
+<a class="flex flex-col items-center justify-center text-on-surface-variant dark:text-outline-variant p-2" href="#">
+<span class="material-symbols-outlined">grid_view</span>
+<span class="font-label-caps text-[10px] mt-1">HUD</span>
+</a>
+<a class="flex flex-col items-center justify-center bg-secondary-container/20 text-secondary-container rounded-xl p-2 scale-90" href="#">
+<span class="material-symbols-outlined">analytics</span>
+<span class="font-label-caps text-[10px] mt-1">VITALS</span>
+</a>
+<a class="flex flex-col items-center justify-center text-on-surface-variant dark:text-outline-variant p-2" href="#">
+<span class="material-symbols-outlined">emergency_share</span>
+<span class="font-label-caps text-[10px] mt-1">CHAT</span>
+</a>
+<a class="flex flex-col items-center justify-center text-on-surface-variant dark:text-outline-variant p-2" href="#">
+<span class="material-symbols-outlined">account_circle</span>
+<span class="font-label-caps text-[10px] mt-1">PROFILE</span>
+</a>
+</nav>
+<script>
+        // Micro-interaction for scanning effect
+        const scanBtn = document.querySelector('button:first-of-type');
+        scanBtn.addEventListener('click', () => {
+            const scanLine = document.querySelector('.scan-line');
+            scanLine.style.animation = 'none';
+            void scanLine.offsetWidth; // trigger reflow
+            scanLine.style.animation = 'scan-move 1.5s ease-in-out forwards';
+            
+            scanBtn.innerHTML = '<span class="material-symbols-outlined text-sm animate-spin">refresh</span> SCANNING...';
+            setTimeout(() => {
+                scanBtn.innerHTML = '<span class="material-symbols-outlined text-sm">sensors</span> SCAN FOR DEVICES';
+                scanLine.style.animation = 'scan-move 4s linear infinite';
+            }, 1500);
+        });
+    </script>
+</body></html>

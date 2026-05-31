@@ -1,0 +1,432 @@
+<!DOCTYPE html>
+
+<html class="light" lang="en"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>SAMARTH MEDIC | STRAT-MED HUD</title>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com/css2?family=Sora:wght@400;600;700;800&amp;family=Inter:wght@400;500;600&amp;family=JetBrains+Mono:wght@500;700&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<script id="tailwind-config">
+        tailwind.config = {
+            darkMode: "class",
+            theme: {
+                extend: {
+                    "colors": {
+                        "surface-container-highest": "#e0e3e5",
+                        "inverse-on-surface": "#eff1f3",
+                        "surface-container-lowest": "#ffffff",
+                        "on-primary": "#ffffff",
+                        "surface-dim": "#d8dadc",
+                        "primary": "#00193c",
+                        "on-secondary": "#ffffff",
+                        "surface-container-high": "#e6e8ea",
+                        "on-tertiary-fixed": "#001c39",
+                        "tertiary": "#001a36",
+                        "surface-tint": "#3e5e95",
+                        "on-surface": "#191c1e",
+                        "primary-fixed-dim": "#abc7ff",
+                        "error-container": "#ffdad6",
+                        "tertiary-container": "#002f59",
+                        "inverse-surface": "#2d3133",
+                        "secondary-fixed-dim": "#00dbe9",
+                        "primary-container": "#002d62",
+                        "surface-variant": "#e0e3e5",
+                        "on-primary-fixed": "#001b3f",
+                        "surface-bright": "#f7f9fb",
+                        "on-error": "#ffffff",
+                        "on-secondary-fixed": "#002022",
+                        "error": "#ba1a1a",
+                        "on-surface-variant": "#43474f",
+                        "inverse-primary": "#abc7ff",
+                        "background": "#f7f9fb",
+                        "on-secondary-fixed-variant": "#004f54",
+                        "surface": "#f7f9fb",
+                        "primary-fixed": "#d7e2ff",
+                        "on-primary-container": "#7796d1",
+                        "on-secondary-container": "#00686f",
+                        "on-error-container": "#93000a",
+                        "tertiary-fixed-dim": "#a4c9ff",
+                        "tertiary-fixed": "#d4e3ff",
+                        "outline-variant": "#c4c6d1",
+                        "secondary": "#006970",
+                        "on-tertiary-container": "#5398eb",
+                        "surface-container-low": "#f2f4f6",
+                        "secondary-fixed": "#7df4ff",
+                        "outline": "#747781",
+                        "on-primary-fixed-variant": "#24467c",
+                        "surface-container": "#eceef0",
+                        "on-tertiary-fixed-variant": "#004883",
+                        "on-background": "#191c1e",
+                        "secondary-container": "#00eefc",
+                        "on-tertiary": "#ffffff"
+                    },
+                    "borderRadius": {
+                        "DEFAULT": "0.25rem",
+                        "lg": "0.5rem",
+                        "xl": "0.75rem",
+                        "full": "9999px"
+                    },
+                    "spacing": {
+                        "margin-desktop": "64px",
+                        "margin-mobile": "16px",
+                        "gutter": "24px",
+                        "container-max": "1440px",
+                        "unit": "4px"
+                    },
+                    "fontFamily": {
+                        "display-lg": ["Sora"],
+                        "body-lg": ["Inter"],
+                        "data-mono": ["JetBrains Mono"],
+                        "label-caps": ["JetBrains Mono"],
+                        "headline-md": ["Sora"],
+                        "body-md": ["Inter"],
+                        "headline-lg-mobile": ["Sora"],
+                        "headline-lg": ["Sora"]
+                    },
+                    "fontSize": {
+                        "display-lg": ["48px", {"lineHeight": "56px", "letterSpacing": "-0.02em", "fontWeight": "700"}],
+                        "body-lg": ["18px", {"lineHeight": "28px", "fontWeight": "400"}],
+                        "data-mono": ["14px", {"lineHeight": "20px", "fontWeight": "500"}],
+                        "label-caps": ["12px", {"lineHeight": "16px", "letterSpacing": "0.1em", "fontWeight": "700"}],
+                        "headline-md": ["24px", {"lineHeight": "32px", "fontWeight": "600"}],
+                        "body-md": ["16px", {"lineHeight": "24px", "fontWeight": "400"}],
+                        "headline-lg-mobile": ["24px", {"lineHeight": "32px", "fontWeight": "600"}],
+                        "headline-lg": ["32px", {"lineHeight": "40px", "fontWeight": "600"}]
+                    }
+                },
+            },
+        }
+    </script>
+<style>
+        .material-symbols-outlined {
+            font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24;
+        }
+        .glass-card {
+            background: rgba(255, 255, 255, 0.6);
+            backdrop-filter: blur(20px);
+            border: 1px solid rgba(0, 219, 233, 0.2);
+        }
+        .hud-grid {
+            background-image: radial-gradient(rgba(0, 105, 112, 0.05) 1px, transparent 0);
+            background-size: 40px 40px;
+        }
+        @keyframes pulse-cyan {
+            0% { box-shadow: 0 0 0 0 rgba(0, 219, 233, 0.4); }
+            70% { box-shadow: 0 0 0 10px rgba(0, 219, 233, 0); }
+            100% { box-shadow: 0 0 0 0 rgba(0, 219, 233, 0); }
+        }
+        .animate-scan {
+            animation: pulse-cyan 2s infinite;
+        }
+        .vitals-wave {
+            height: 40px;
+            width: 100%;
+            overflow: hidden;
+            position: relative;
+        }
+        .vitals-wave::after {
+            content: "";
+            position: absolute;
+            top: 0; left: 0; right: 0; bottom: 0;
+            background: linear-gradient(90deg, transparent 0%, #00dbe9 50%, transparent 100%);
+            background-size: 200% 100%;
+            animation: wave-move 3s linear infinite;
+            opacity: 0.3;
+        }
+        @keyframes wave-move {
+            0% { background-position: -200% 0; }
+            100% { background-position: 200% 0; }
+        }
+    </style>
+</head>
+<body class="bg-surface font-body-md text-on-surface hud-grid overflow-hidden h-screen flex">
+<!-- SideNavBar (Authority: JSON) -->
+<aside class="fixed left-0 top-0 h-full z-40 bg-primary dark:bg-primary-container h-screen w-64 hidden md:flex flex-col shadow-md">
+<div class="p-6">
+<h1 class="font-headline-md text-on-primary text-headline-md">STRAT-MED</h1>
+<p class="font-label-caps text-label-caps text-secondary-fixed-dim mt-1">Secure Node: JOD-01</p>
+</div>
+<nav class="flex-1 mt-4">
+<!-- Command Center is Active for this Dashboard view -->
+<div class="bg-secondary-container text-on-secondary-container rounded-lg mx-2 my-1 px-4 py-3 flex items-center gap-3 translate-x-1 duration-200">
+<span class="material-symbols-outlined" data-icon="dashboard">dashboard</span>
+<span class="font-label-caps text-label-caps">Command Center</span>
+</div>
+<div class="text-on-primary-fixed-variant hover:text-white mx-2 my-1 px-4 py-3 flex items-center gap-3 transition-all cursor-pointer">
+<span class="material-symbols-outlined" data-icon="monitor_heart">monitor_heart</span>
+<span class="font-label-caps text-label-caps">Patient Vitals</span>
+</div>
+<div class="text-on-primary-fixed-variant hover:text-white mx-2 my-1 px-4 py-3 flex items-center gap-3 transition-all cursor-pointer">
+<span class="material-symbols-outlined" data-icon="vpn_key">vpn_key</span>
+<span class="font-label-caps text-label-caps">Encryption Keys</span>
+</div>
+<div class="text-on-primary-fixed-variant hover:text-white mx-2 my-1 px-4 py-3 flex items-center gap-3 transition-all cursor-pointer">
+<span class="material-symbols-outlined" data-icon="local_shipping">local_shipping</span>
+<span class="font-label-caps text-label-caps">Medical Logistics</span>
+</div>
+<div class="text-on-primary-fixed-variant hover:text-white mx-2 my-1 px-4 py-3 flex items-center gap-3 transition-all cursor-pointer">
+<span class="material-symbols-outlined" data-icon="hub">hub</span>
+<span class="font-label-caps text-label-caps">Field Comms</span>
+</div>
+</nav>
+<div class="p-4 mt-auto">
+<button class="w-full bg-error py-3 rounded-lg text-white font-bold animate-pulse flex items-center justify-center gap-2">
+<span class="material-symbols-outlined" data-icon="emergency">emergency</span>
+                Emergency SOS
+            </button>
+<div class="mt-4 border-t border-white/10 pt-4">
+<div class="text-on-primary-fixed-variant hover:text-white px-4 py-2 flex items-center gap-3 cursor-pointer">
+<span class="material-symbols-outlined" data-icon="settings">settings</span>
+<span class="font-label-caps text-label-caps">Settings</span>
+</div>
+</div>
+</div>
+</aside>
+<!-- Main Content Canvas -->
+<main class="flex-1 md:ml-64 flex flex-col relative h-full">
+<!-- TopNavBar (Authority: JSON) -->
+<header class="fixed top-0 left-0 md:left-64 right-0 z-50 flex justify-between items-center px-margin-mobile md:px-margin-desktop h-16 bg-surface/80 dark:bg-primary/80 backdrop-blur-xl border-b border-outline-variant/30">
+<div class="flex items-center gap-4">
+<span class="material-symbols-outlined md:hidden text-primary" data-icon="menu">menu</span>
+<h2 class="text-body-lg font-headline-md font-bold tracking-tighter text-on-surface dark:text-on-primary-fixed">SAMARTH MEDIC</h2>
+</div>
+<div class="flex items-center gap-6">
+<div class="hidden md:flex gap-4">
+<span class="material-symbols-outlined text-secondary hover:text-secondary-container transition-colors cursor-pointer" data-icon="security">security</span>
+<span class="material-symbols-outlined text-secondary hover:text-secondary-container transition-colors cursor-pointer" data-icon="notifications_active">notifications_active</span>
+</div>
+<div class="w-8 h-8 rounded-full bg-secondary-container flex items-center justify-center overflow-hidden border border-secondary/30">
+<img alt="Army Medical Officer Profile" class="w-full h-full object-cover" src="https://lh3.googleusercontent.com/aida-public/AB6AXuA8M9p6PCbhgn4tqGKIAyuOJ3QVFNyBUidwgBd64i1MQ1aRvNBZ9ZY0xDVWeA5mVde5-MaIUTJPv4VtYosz83lxO2p3NIKH7proybRVEp8wXkOYjR1BuOSDg42TPWKSJF3zLYwSK3SvBv3BEWrZ04rxazCHqbr232C8TIbVdG0Yd5Y7AVXOi1XGd2SSP4V9z7-7ldSFJ-4xX7z-QJI2PX_dufnMEo1qAX2JH6c_qoCLmoQi5VxIdlzqFPvQimHclqioVb3_ccfroOA"/>
+</div>
+</div>
+</header>
+<!-- Primary Workspace -->
+<section class="mt-16 p-6 flex flex-col md:flex-row gap-gutter h-[calc(100vh-64px)] overflow-hidden">
+<!-- Left: Floating Vitals (Tactical HUD Style) -->
+<div class="w-full md:w-80 flex flex-col gap-4 overflow-y-auto pr-2 pb-24 md:pb-0 scrollbar-hide">
+<div class="glass-card p-4 rounded-xl flex flex-col gap-2">
+<div class="flex justify-between items-center">
+<span class="font-label-caps text-label-caps text-on-surface-variant uppercase">ECG / Heart Rate</span>
+<span class="text-secondary font-bold font-data-mono">LIVE</span>
+</div>
+<div class="flex items-end gap-2">
+<span class="font-display-lg text-display-lg text-primary">72</span>
+<span class="font-label-caps text-label-caps text-on-surface-variant mb-2">BPM</span>
+</div>
+<div class="vitals-wave bg-secondary-container/10 rounded"></div>
+</div>
+<div class="glass-card p-4 rounded-xl flex flex-col gap-2">
+<div class="flex justify-between items-center">
+<span class="font-label-caps text-label-caps text-on-surface-variant uppercase">SpO2 / Blood Oxygen</span>
+<span class="material-symbols-outlined text-secondary text-sm" data-icon="check_circle">check_circle</span>
+</div>
+<div class="flex items-end gap-2">
+<span class="font-display-lg text-display-lg text-primary">98</span>
+<span class="font-label-caps text-label-caps text-on-surface-variant mb-2">%</span>
+</div>
+<div class="h-2 w-full bg-surface-container-highest rounded-full overflow-hidden">
+<div class="h-full bg-secondary w-[98%]"></div>
+</div>
+</div>
+<div class="glass-card p-4 rounded-xl flex flex-col gap-2">
+<div class="flex justify-between items-center">
+<span class="font-label-caps text-label-caps text-on-surface-variant uppercase">Blood Pressure</span>
+<span class="font-label-caps text-label-caps text-on-surface-variant">SYS/DIA</span>
+</div>
+<div class="flex items-end gap-2">
+<span class="font-display-lg text-display-lg text-primary">120/80</span>
+<span class="font-label-caps text-label-caps text-on-surface-variant mb-2">mmHg</span>
+</div>
+</div>
+<div class="glass-card p-4 rounded-xl flex flex-col gap-2 border-l-4 border-secondary">
+<div class="flex justify-between items-center">
+<span class="font-label-caps text-label-caps text-on-surface-variant uppercase">Respiration</span>
+<span class="material-symbols-outlined text-secondary text-sm animate-pulse" data-icon="air">air</span>
+</div>
+<div class="flex items-end gap-2">
+<span class="font-display-lg text-display-lg text-primary">16</span>
+<span class="font-label-caps text-label-caps text-on-surface-variant mb-2">BRPM</span>
+</div>
+</div>
+<div class="glass-card p-4 rounded-xl flex flex-col gap-2">
+<div class="flex justify-between items-center">
+<span class="font-label-caps text-label-caps text-on-surface-variant uppercase">Temp</span>
+<span class="material-symbols-outlined text-secondary text-sm" data-icon="device_thermostat">device_thermostat</span>
+</div>
+<div class="flex items-end gap-2">
+<span class="font-display-lg text-display-lg text-primary">98.6</span>
+<span class="font-label-caps text-label-caps text-on-surface-variant mb-2">°F</span>
+</div>
+</div>
+</div>
+<!-- Center: Holographic Human Body (AR Focus) -->
+<div class="flex-1 flex flex-col items-center justify-center relative py-12">
+<div class="absolute inset-0 flex items-center justify-center opacity-5 pointer-events-none">
+<div class="w-[600px] h-[600px] border border-secondary rounded-full"></div>
+<div class="absolute w-[400px] h-[400px] border border-secondary/50 rounded-full animate-ping"></div>
+</div>
+<!-- Hologram Image -->
+<div class="relative w-full max-w-2xl h-full flex items-center justify-center">
+<img alt="3D Holographic Human Diagnostic Visualization" class="max-h-[80%] object-contain drop-shadow-[0_0_30px_rgba(0,219,233,0.3)]" src="https://lh3.googleusercontent.com/aida/ADBb0ugm-9xdy-e2hb2Jms8mv6OZYc1omxaq_3n7lqC3knAiC4DpaHjCTFqdLmsKZL7ANhtv8c1lSM2Bb3_C-ItMe1s7huFEVCEB-Xjc6N0AE2w6aymsw81X08ZPlrkAMHoACX0uNY1_wAhIRRSkwJ4wKU-z6xlZLyzpHcAQbyi-bdCr2zpnk5722knPLESeP3U1A40szagnVOD3WRtkWq--WrbRxlvN6QAeQb6kENYBXrkOcJEK5aS51if7GA"/>
+<!-- Floating Data Markers -->
+<div class="absolute top-[25%] left-[20%] glass-card px-3 py-1 rounded-full flex items-center gap-2 border-secondary animate-bounce">
+<div class="w-2 h-2 rounded-full bg-error animate-pulse"></div>
+<span class="font-label-caps text-label-caps text-[10px] text-primary">PULMONARY CONGESTION</span>
+</div>
+<div class="absolute top-[30%] right-[15%] glass-card px-3 py-1 rounded-full flex items-center gap-2 border-secondary">
+<div class="w-2 h-2 rounded-full bg-secondary"></div>
+<span class="font-label-caps text-label-caps text-[10px] text-primary">CARDIAC RHYTHM STABLE</span>
+</div>
+</div>
+<!-- HUD Timeline Bottom Overlay -->
+<div class="absolute bottom-4 left-0 right-0 px-4">
+<div class="glass-card w-full p-4 rounded-2xl flex flex-col gap-2">
+<div class="flex justify-between items-center">
+<span class="font-label-caps text-label-caps text-on-surface-variant">24H PHYSIOLOGICAL TIMELINE</span>
+<span class="font-data-mono text-xs text-secondary">T-MINUS 00:00:12</span>
+</div>
+<div class="h-12 w-full flex items-end gap-1 px-1">
+<div class="flex-1 bg-secondary/20 h-[40%] rounded-t-sm"></div>
+<div class="flex-1 bg-secondary/20 h-[45%] rounded-t-sm"></div>
+<div class="flex-1 bg-secondary/40 h-[60%] rounded-t-sm"></div>
+<div class="flex-1 bg-secondary/20 h-[55%] rounded-t-sm"></div>
+<div class="flex-1 bg-secondary/80 h-[80%] rounded-t-sm border-t-2 border-secondary shadow-[0_0_10px_rgba(0,219,233,0.5)]"></div>
+<div class="flex-1 bg-secondary/30 h-[50%] rounded-t-sm"></div>
+<div class="flex-1 bg-secondary/20 h-[40%] rounded-t-sm"></div>
+<div class="flex-1 bg-secondary/10 h-[30%] rounded-t-sm"></div>
+<div class="flex-1 bg-secondary/20 h-[45%] rounded-t-sm"></div>
+<div class="flex-1 bg-secondary/50 h-[70%] rounded-t-sm"></div>
+</div>
+</div>
+</div>
+</div>
+<!-- Right: Dharma AI & Organ Analysis -->
+<div class="w-full md:w-96 flex flex-col gap-4 overflow-y-auto pb-24 md:pb-0 scrollbar-hide">
+<!-- Organ Detail -->
+<div class="glass-card p-4 rounded-xl border-t-4 border-secondary shadow-lg">
+<div class="flex items-center gap-2 mb-4">
+<span class="material-symbols-outlined text-secondary" data-icon="favorite">favorite</span>
+<h3 class="font-headline-md text-headline-md text-primary">Cardio Focus</h3>
+</div>
+<div class="aspect-square bg-surface-container-low rounded-lg relative overflow-hidden flex items-center justify-center mb-4">
+<img alt="Detailed Heart Visualization" class="w-32 h-32 opacity-80" data-alt="A detailed, medically accurate 3D model of a human heart rendered in a cool, semi-transparent blue holographic style. The visualization is set against a clean, clinical white background with faint digital grid lines and anatomical data labels floating nearby. Soft cyan light highlights the pulmonary arteries and ventricles, giving it a futuristic, high-tech diagnostic look." src="https://lh3.googleusercontent.com/aida-public/AB6AXuDQkGFPbIp5SuikHD2smTDzophg87DaRWIgdytyHIWXmsMwkDvF5lNzYvkFb4rjXh1lXpXwPfFJYBqFz8xihgTDzJcH_2aLooorY3NZVuA6O4ymEeA1uMusIj22v8rH1HlUNSf7O9XqqhX1m1mBqzwZ7kJI0p_szj1qorFbApIsyLETMWu_C3DbsEFjL0Iq4Evty7Qrzis4GiE9TW20fZcr9ALq2aYVcD8K6Z_pgfFRwXDWvRVanYrPFws5Uc52zgg2EUrA65bjhNk"/>
+<div class="absolute inset-0 border-[1px] border-secondary/10 pointer-events-none"></div>
+<div class="absolute bottom-2 right-2 flex flex-col items-end">
+<span class="font-data-mono text-[10px] text-secondary">AORTIC FLOW: 5.2 L/MIN</span>
+<span class="font-data-mono text-[10px] text-secondary">PRESSURE: 122 mmHg</span>
+</div>
+</div>
+<div class="space-y-2">
+<div class="flex justify-between items-center text-xs">
+<span class="font-label-caps text-on-surface-variant">Stetho-Sync</span>
+<span class="text-secondary font-bold">SYNCED</span>
+</div>
+<div class="vitals-wave bg-secondary-container/5 rounded h-8"></div>
+</div>
+</div>
+<!-- Dharma AI Panel -->
+<div class="glass-card p-5 rounded-xl bg-primary text-white border-none shadow-2xl relative overflow-hidden">
+<div class="absolute top-0 right-0 p-2">
+<span class="material-symbols-outlined text-secondary-container animate-spin-slow" data-icon="settings_slow_motion" style="font-size: 40px; opacity: 0.1;">settings_slow_motion</span>
+</div>
+<div class="flex items-center gap-2 mb-4">
+<span class="material-symbols-outlined text-secondary-fixed" data-icon="psychology">psychology</span>
+<h3 class="font-headline-md text-headline-md text-white">Dharma AI</h3>
+</div>
+<div class="space-y-4">
+<div class="p-3 bg-white/5 rounded-lg border border-white/10">
+<p class="font-body-md text-sm text-surface-variant italic">"Current biometric patterns suggest mild elevation in cardiac workload. Recommend immediate fluid administration and follow-up SpO2 check in 15m."</p>
+</div>
+<div class="flex flex-col gap-2">
+<div class="flex items-center gap-2">
+<span class="w-1.5 h-1.5 rounded-full bg-secondary"></span>
+<span class="font-label-caps text-[10px] text-outline-variant">CONFIDENCE: 94.2%</span>
+</div>
+<div class="flex items-center gap-2">
+<span class="w-1.5 h-1.5 rounded-full bg-error"></span>
+<span class="font-label-caps text-[10px] text-outline-variant">RISK FACTOR: ELEVATED</span>
+</div>
+</div>
+<button class="w-full bg-secondary-container py-2 rounded-lg text-on-secondary-container font-bold font-label-caps text-xs hover:bg-secondary-fixed transition-colors">
+                            GENERATE CLINICAL REPORT
+                        </button>
+</div>
+</div>
+</div>
+</section>
+<!-- Bottom HUD Action Bar -->
+<footer class="fixed bottom-0 left-0 md:left-64 right-0 p-4 z-50 pointer-events-none">
+<div class="max-w-4xl mx-auto glass-card rounded-2xl p-2 flex items-center justify-between pointer-events-auto border-secondary/40 shadow-xl">
+<div class="flex items-center gap-4 px-4">
+<div class="flex flex-col">
+<span class="font-label-caps text-[10px] text-on-surface-variant">PATIENT ID</span>
+<span class="font-data-mono text-sm text-primary">ARM-JOD-9921</span>
+</div>
+<div class="h-8 w-px bg-outline-variant/30"></div>
+<div class="flex flex-col">
+<span class="font-label-caps text-[10px] text-on-surface-variant">STATUS</span>
+<span class="font-data-mono text-sm text-secondary font-bold">MONITORED</span>
+</div>
+</div>
+<div class="flex gap-2">
+<button class="px-6 py-3 bg-primary text-white rounded-xl font-bold font-label-caps text-sm flex items-center gap-2 shadow-lg hover:scale-105 transition-transform active:scale-95">
+<span class="material-symbols-outlined text-sm" data-icon="videocam">videocam</span>
+                        INITIATE CALL
+                    </button>
+<button class="px-4 py-3 bg-surface border border-secondary text-secondary rounded-xl font-bold font-label-caps text-sm flex items-center gap-2 hover:bg-secondary/10 transition-colors">
+<span class="material-symbols-outlined text-sm" data-icon="share">share</span>
+                        CONSULT
+                    </button>
+<button class="p-3 bg-error/10 text-error border border-error/20 rounded-xl hover:bg-error hover:text-white transition-all">
+<span class="material-symbols-outlined" data-icon="report">report</span>
+</button>
+</div>
+</div>
+</footer>
+<!-- BottomNavBar Mobile (Authority: JSON) -->
+<nav class="fixed bottom-0 left-0 w-full z-50 flex justify-around items-center px-4 pb-6 pt-2 bg-surface/90 dark:bg-primary/95 backdrop-blur-2xl border-t border-secondary/20 shadow-[0_-4px_10px_rgba(0,238,252,0.1)] md:hidden">
+<div class="flex flex-col items-center justify-center bg-secondary-container/20 text-secondary-container rounded-xl p-2 scale-90">
+<span class="material-symbols-outlined" data-icon="grid_view">grid_view</span>
+<span class="font-label-caps text-label-caps">HUD</span>
+</div>
+<div class="flex flex-col items-center justify-center text-on-surface-variant dark:text-outline-variant p-2 hover:bg-secondary/10 transition-colors">
+<span class="material-symbols-outlined" data-icon="analytics">analytics</span>
+<span class="font-label-caps text-label-caps">Vitals</span>
+</div>
+<div class="flex flex-col items-center justify-center text-on-surface-variant dark:text-outline-variant p-2 hover:bg-secondary/10 transition-colors">
+<span class="material-symbols-outlined" data-icon="emergency_share">emergency_share</span>
+<span class="font-label-caps text-label-caps">Secure Chat</span>
+</div>
+<div class="flex flex-col items-center justify-center text-on-surface-variant dark:text-outline-variant p-2 hover:bg-secondary/10 transition-colors">
+<span class="material-symbols-outlined" data-icon="account_circle">account_circle</span>
+<span class="font-label-caps text-label-caps">Profile</span>
+</div>
+</nav>
+</main>
+<script>
+        // Micro-interactions for live feeling
+        document.querySelectorAll('.glass-card').forEach(card => {
+            card.addEventListener('mouseenter', () => {
+                card.style.transform = 'translateY(-2px)';
+                card.style.borderColor = 'rgba(0, 219, 233, 0.5)';
+                card.style.transition = 'all 0.3s ease';
+            });
+            card.addEventListener('mouseleave', () => {
+                card.style.transform = 'translateY(0)';
+                card.style.borderColor = 'rgba(0, 219, 233, 0.2)';
+            });
+        });
+
+        // Simulating live data jitter
+        setInterval(() => {
+            const hr = document.querySelector('.text-display-lg');
+            if(hr) {
+                const current = parseInt(hr.innerText);
+                const jitter = Math.floor(Math.random() * 3) - 1;
+                hr.innerText = Math.max(68, Math.min(76, current + jitter));
+            }
+        }, 2000);
+    </script>
+</body></html>

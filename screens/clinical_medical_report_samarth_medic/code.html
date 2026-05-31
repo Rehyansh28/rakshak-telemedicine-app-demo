@@ -1,0 +1,456 @@
+<!DOCTYPE html>
+
+<html class="light" lang="en"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>SAMARTH MEDIC | Clinical Report</title>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com/css2?family=Sora:wght@400;600;700&amp;family=Inter:wght@400;500;600&amp;family=JetBrains+Mono:wght@500;700&amp;family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@100..900&amp;family=JetBrains+Mono:wght@100..900&amp;family=Sora:wght@100..900&amp;display=swap" rel="stylesheet"/>
+<script id="tailwind-config">
+        tailwind.config = {
+            darkMode: "class",
+            theme: {
+                extend: {
+                    "colors": {
+                        "secondary-container": "#00eefc",
+                        "inverse-primary": "#abc7ff",
+                        "tertiary-container": "#002f59",
+                        "on-primary-fixed": "#001b3f",
+                        "on-error": "#ffffff",
+                        "on-error-container": "#93000a",
+                        "outline": "#747781",
+                        "on-surface": "#191c1e",
+                        "surface": "#f7f9fb",
+                        "on-tertiary-fixed": "#001c39",
+                        "on-surface-variant": "#43474f",
+                        "surface-dim": "#d8dadc",
+                        "on-primary-fixed-variant": "#24467c",
+                        "primary-fixed": "#d7e2ff",
+                        "on-tertiary": "#ffffff",
+                        "error-container": "#ffdad6",
+                        "on-secondary-fixed": "#002022",
+                        "tertiary-fixed": "#d4e3ff",
+                        "primary-fixed-dim": "#abc7ff",
+                        "inverse-on-surface": "#eff1f3",
+                        "on-primary": "#ffffff",
+                        "on-tertiary-fixed-variant": "#004883",
+                        "error": "#ba1a1a",
+                        "secondary-fixed-dim": "#00dbe9",
+                        "secondary-fixed": "#7df4ff",
+                        "on-background": "#191c1e",
+                        "inverse-surface": "#2d3133",
+                        "tertiary": "#001a36",
+                        "surface-variant": "#e0e3e5",
+                        "surface-bright": "#f7f9fb",
+                        "surface-container-highest": "#e0e3e5",
+                        "surface-container": "#eceef0",
+                        "surface-tint": "#3e5e95",
+                        "on-secondary": "#ffffff",
+                        "secondary": "#006970",
+                        "primary": "#00193c",
+                        "surface-container-lowest": "#ffffff",
+                        "surface-container-low": "#f2f4f6",
+                        "outline-variant": "#c4c6d1",
+                        "on-tertiary-container": "#5398eb",
+                        "surface-container-high": "#e6e8ea",
+                        "primary-container": "#002d62",
+                        "on-secondary-container": "#00686f",
+                        "tertiary-fixed-dim": "#a4c9ff",
+                        "on-primary-container": "#7796d1",
+                        "background": "#f7f9fb",
+                        "on-secondary-fixed-variant": "#004f54"
+                    },
+                    "borderRadius": {
+                        "DEFAULT": "0.25rem",
+                        "lg": "0.5rem",
+                        "xl": "0.75rem",
+                        "full": "9999px"
+                    },
+                    "spacing": {
+                        "gutter": "24px",
+                        "unit": "4px",
+                        "margin-mobile": "16px",
+                        "margin-desktop": "64px",
+                        "container-max": "1440px"
+                    },
+                    "fontFamily": {
+                        "headline-md": ["Sora"],
+                        "display-lg": ["Sora"],
+                        "body-lg": ["Inter"],
+                        "headline-lg-mobile": ["Sora"],
+                        "headline-lg": ["Sora"],
+                        "data-mono": ["JetBrains Mono"],
+                        "body-md": ["Inter"],
+                        "label-caps": ["JetBrains Mono"]
+                    },
+                    "fontSize": {
+                        "headline-md": ["24px", {"lineHeight": "32px", "fontWeight": "600"}],
+                        "display-lg": ["48px", {"lineHeight": "56px", "letterSpacing": "-0.02em", "fontWeight": "700"}],
+                        "body-lg": ["18px", {"lineHeight": "28px", "fontWeight": "400"}],
+                        "headline-lg-mobile": ["24px", {"lineHeight": "32px", "fontWeight": "600"}],
+                        "headline-lg": ["32px", {"lineHeight": "40px", "fontWeight": "600"}],
+                        "data-mono": ["14px", {"lineHeight": "20px", "fontWeight": "500"}],
+                        "body-md": ["16px", {"lineHeight": "24px", "fontWeight": "400"}],
+                        "label-caps": ["12px", {"lineHeight": "16px", "letterSpacing": "0.1em", "fontWeight": "700"}]
+                    }
+                },
+            },
+        }
+    </script>
+<style>
+        .material-symbols-outlined {
+            font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24;
+        }
+        .glass-card {
+            background: rgba(255, 255, 255, 0.7);
+            backdrop-filter: blur(12px);
+            border: 1px solid rgba(0, 105, 112, 0.1);
+        }
+        .hud-line {
+            height: 1px;
+            background: linear-gradient(90deg, transparent, #00eefc, transparent);
+        }
+        .scan-animation {
+            position: relative;
+            overflow: hidden;
+        }
+        .scan-animation::after {
+            content: "";
+            position: absolute;
+            top: -100%;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(to bottom, transparent, rgba(0, 238, 252, 0.1), transparent);
+            animation: scan 3s linear infinite;
+        }
+        @keyframes scan {
+            0% { top: -100%; }
+            100% { top: 100%; }
+        }
+        @media print {
+            .no-print { display: none !important; }
+            body { background: white !important; }
+            .glass-card { border: 1px solid #e0e3e5 !important; backdrop-filter: none !important; }
+        }
+    </style>
+</head>
+<body class="bg-surface font-body-md text-on-surface selection:bg-secondary-container">
+<!-- Top Navigation Bar -->
+<header class="fixed top-0 left-0 w-full z-50 flex justify-between items-center px-margin-mobile md:px-margin-desktop h-16 bg-surface/80 dark:bg-primary/80 backdrop-blur-xl border-b border-outline-variant/30 no-print">
+<div class="flex items-center gap-4">
+<span class="text-body-lg font-headline-md font-bold tracking-tighter text-on-surface">SAMARTH MEDIC</span>
+<div class="h-6 w-[1px] bg-outline-variant/50 hidden md:block"></div>
+<span class="font-label-caps text-label-caps text-on-surface-variant hidden md:block">SECURE MEDICAL NODE: JOD-01</span>
+</div>
+<div class="flex items-center gap-6">
+<div class="flex gap-2">
+<button class="p-2 text-on-surface-variant hover:text-secondary transition-colors material-symbols-outlined">security</button>
+<button class="p-2 text-on-surface-variant hover:text-secondary transition-colors material-symbols-outlined">notifications_active</button>
+</div>
+<div class="flex items-center gap-3">
+<div class="text-right hidden sm:block">
+<p class="font-label-caps text-[10px] text-on-surface-variant">COMMANDING OFFICER</p>
+<p class="font-headline-md text-sm text-on-surface">DR. ARJUN SINGH</p>
+</div>
+<img alt="Profile" class="w-10 h-10 rounded-full border-2 border-secondary" data-alt="A professional portrait of a male Indian Army medical officer in a crisp olive green uniform, looking confidently at the camera. He has a clean-shaven face and short, disciplined hair. The background is a softly blurred modern medical research facility with blue and white tones, reflecting high-end medical technology and military discipline." src="https://lh3.googleusercontent.com/aida-public/AB6AXuDZEoQYOoxnZ0b5CvVUZEttsCqKonceU8C1kfr-8CfzxGJ9qADNEW9fSc8BQgmxTq6K71nyeZHs_OUhgt6IkLUSfCDA2Qqt8O5EzvIqaeHi1tntOOzsxvwiRbgLkvs2wYAyyC7PUlHO5s17pdL0fmQ5aOzvDvcdisf6st8lp2xZ7pRaM2QuLySAUDxhesB1_qL7JCeDFhAyYcJuxVG95mJX7o9Ut0LPeb7d_LhMKCcvZ-A7whkVaKT4iwZKOfd1cmFAxtjESy9sv-4"/>
+</div>
+</div>
+</header>
+<main class="pt-24 pb-32 px-margin-mobile md:px-margin-desktop max-w-container-max mx-auto">
+<!-- Report Controls -->
+<div class="flex flex-col md:flex-row justify-between items-end md:items-center mb-8 gap-4 no-print">
+<div>
+<h1 class="font-headline-lg text-headline-lg text-primary mb-1">Tactical Medical Report</h1>
+<p class="font-label-caps text-label-caps text-secondary uppercase">Mission Critical • Restricted Access</p>
+</div>
+<div class="flex gap-3">
+<button class="flex items-center gap-2 px-6 py-2 border border-secondary text-secondary rounded-lg font-label-caps text-label-caps hover:bg-secondary/10 transition-all" onclick="window.print()">
+<span class="material-symbols-outlined text-sm">print</span> PRINT
+                </button>
+<button class="flex items-center gap-2 px-6 py-2 border border-secondary text-secondary rounded-lg font-label-caps text-label-caps hover:bg-secondary/10 transition-all">
+<span class="material-symbols-outlined text-sm">share</span> SHARE SECURELY
+                </button>
+<button class="flex items-center gap-2 px-6 py-2 bg-primary text-white rounded-lg font-label-caps text-label-caps hover:bg-primary-container transition-all">
+<span class="material-symbols-outlined text-sm">download</span> DOWNLOAD PDF
+                </button>
+</div>
+</div>
+<!-- The "PDF" Container -->
+<div class="bg-white shadow-2xl rounded-xl p-8 md:p-12 border border-outline-variant/20 relative overflow-hidden">
+<!-- Background HUD Accents -->
+<div class="absolute top-0 right-0 p-8 opacity-10 pointer-events-none">
+<span class="material-symbols-outlined text-8xl" style="font-variation-settings: 'wght' 100">shield_with_heart</span>
+</div>
+<!-- 1. Patient & Mission Header -->
+<div class="grid grid-cols-1 md:grid-cols-3 gap-8 pb-8 border-b border-outline-variant/30">
+<div class="col-span-2">
+<div class="flex items-center gap-6 mb-6">
+<img alt="Patient" class="w-24 h-24 rounded-lg object-cover border border-outline-variant" data-alt="A tactical portrait of a fit Indian soldier in his late 20s, wearing army camouflage gear. His expression is stoic and focused. The lighting is dramatic, high-contrast, with a cool blue cast to match the medical interface style. The image is professional and used for identity verification in a secure military medical document." src="https://lh3.googleusercontent.com/aida-public/AB6AXuDCct2SKdB5AT175t9d3ayuos_GXi1OSujCpDZ_fgM-Dj-8UFAdJe4SSKmQlC9faWZNIlz-1ZlcHhSW_TZZy0igGmM_usZPvrfXhzBRTC8QyEGIYcfq-B8d5oO-rkjXLAul2bg7erAbMEeaI_vi6dOQxGGxv9-S4t1kxGKAjgPyel8W2VTqdn02qp7lwIsNv320qojHvjn6vYXT9dsXzL73_N3WpIGVjhUIgN04ghNTOXN5l1o8jSTPasc-knueVj3S4IrOS9TtvZc"/>
+<div>
+<h2 class="font-headline-lg text-headline-lg text-on-surface">VIKRAM CHOUDHARY</h2>
+<p class="font-data-mono text-data-mono text-secondary mt-1">ID: AR-14RR-99201 • RANK: HAVILDAR</p>
+<div class="flex gap-4 mt-3">
+<span class="px-2 py-0.5 bg-surface-container rounded text-[10px] font-label-caps border border-outline-variant/50">O+VE POSITIVE</span>
+<span class="px-2 py-0.5 bg-surface-container rounded text-[10px] font-label-caps border border-outline-variant/50">14 RAJPUTANA RIFLES</span>
+</div>
+</div>
+</div>
+</div>
+<div class="bg-surface-container-low p-4 rounded-lg border border-outline-variant/20">
+<p class="font-label-caps text-[10px] text-on-surface-variant mb-2">REPORT METADATA</p>
+<div class="space-y-2">
+<div class="flex justify-between">
+<span class="text-[11px] font-medium text-on-surface-variant">TIMESTAMP:</span>
+<span class="text-[11px] font-data-mono">24 OCT 2023 14:32 HRS</span>
+</div>
+<div class="flex justify-between">
+<span class="text-[11px] font-medium text-on-surface-variant">NODE ID:</span>
+<span class="text-[11px] font-data-mono">STRAT-MED-JOD-01</span>
+</div>
+<div class="flex justify-between">
+<span class="text-[11px] font-medium text-on-surface-variant">ENCRYPTION:</span>
+<span class="text-[11px] font-data-mono text-secondary">AES-256 ACTIVE</span>
+</div>
+</div>
+</div>
+</div>
+<!-- 2. Clinical Summary Dashboard -->
+<div class="py-10">
+<h3 class="font-label-caps text-label-caps text-primary mb-6 flex items-center gap-2">
+<span class="material-symbols-outlined text-lg">analytics</span> CLINICAL SUMMARY DASHBOARD
+                </h3>
+<div class="grid grid-cols-1 md:grid-cols-4 gap-4">
+<!-- Vital Card: Heart Rate -->
+<div class="glass-card p-5 rounded-xl scan-animation">
+<div class="flex justify-between items-start mb-4">
+<span class="text-[10px] font-label-caps text-on-surface-variant">HEART RATE</span>
+<span class="material-symbols-outlined text-secondary text-lg">monitoring</span>
+</div>
+<div class="flex items-baseline gap-2">
+<span class="text-3xl font-headline-md text-primary">72</span>
+<span class="text-xs font-label-caps text-on-surface-variant">BPM</span>
+</div>
+<div class="mt-4 h-8 flex items-end gap-1">
+<div class="w-full h-4 bg-secondary/10 rounded-sm relative overflow-hidden">
+<div class="absolute inset-0 bg-secondary/30" style="width: 65%"></div>
+</div>
+</div>
+<p class="text-[10px] font-data-mono text-secondary mt-2">OPTIMAL RANGE</p>
+</div>
+<!-- Vital Card: SpO2 -->
+<div class="glass-card p-5 rounded-xl">
+<div class="flex justify-between items-start mb-4">
+<span class="text-[10px] font-label-caps text-on-surface-variant">SPO2 LEVEL</span>
+<span class="material-symbols-outlined text-secondary text-lg">air</span>
+</div>
+<div class="flex items-baseline gap-2">
+<span class="text-3xl font-headline-md text-primary">98</span>
+<span class="text-xs font-label-caps text-on-surface-variant">%</span>
+</div>
+<div class="mt-4 h-8 flex items-end gap-1">
+<div class="w-full h-4 bg-secondary/10 rounded-sm relative overflow-hidden">
+<div class="absolute inset-0 bg-secondary/30" style="width: 98%"></div>
+</div>
+</div>
+<p class="text-[10px] font-data-mono text-secondary mt-2">STABLE ATMOSPHERE</p>
+</div>
+<!-- Vital Card: BP -->
+<div class="glass-card p-5 rounded-xl">
+<div class="flex justify-between items-start mb-4">
+<span class="text-[10px] font-label-caps text-on-surface-variant">BLOOD PRESSURE</span>
+<span class="material-symbols-outlined text-secondary text-lg">compress</span>
+</div>
+<div class="flex items-baseline gap-2">
+<span class="text-3xl font-headline-md text-primary">118/78</span>
+<span class="text-xs font-label-caps text-on-surface-variant">mmHg</span>
+</div>
+<div class="mt-4 h-8 flex items-end gap-1">
+<div class="w-full h-4 bg-secondary/10 rounded-sm relative overflow-hidden">
+<div class="absolute inset-0 bg-secondary/30" style="width: 75%"></div>
+</div>
+</div>
+<p class="text-[10px] font-data-mono text-secondary mt-2">NORMATIVE</p>
+</div>
+<!-- Vital Card: Temp -->
+<div class="glass-card p-5 rounded-xl">
+<div class="flex justify-between items-start mb-4">
+<span class="text-[10px] font-label-caps text-on-surface-variant">CORE TEMP</span>
+<span class="material-symbols-outlined text-secondary text-lg">device_thermostat</span>
+</div>
+<div class="flex items-baseline gap-2">
+<span class="text-3xl font-headline-md text-primary">98.4</span>
+<span class="text-xs font-label-caps text-on-surface-variant">°F</span>
+</div>
+<div class="mt-4 h-8 flex items-end gap-1">
+<div class="w-full h-4 bg-secondary/10 rounded-sm relative overflow-hidden">
+<div class="absolute inset-0 bg-secondary/30" style="width: 45%"></div>
+</div>
+</div>
+<p class="text-[10px] font-data-mono text-secondary mt-2">HOMEOSTATIC</p>
+</div>
+</div>
+</div>
+<!-- 3. Organ System Assessment -->
+<div class="py-10 border-t border-outline-variant/30">
+<h3 class="font-label-caps text-label-caps text-primary mb-6 flex items-center gap-2">
+<span class="material-symbols-outlined text-lg">settings_accessibility</span> ORGAN SYSTEM ASSESSMENT
+                </h3>
+<div class="space-y-4">
+<!-- Cardiac -->
+<div class="flex flex-col md:flex-row gap-6 p-6 rounded-xl border border-outline-variant/30 bg-surface-container-lowest">
+<div class="md:w-1/4">
+<div class="flex items-center gap-3 mb-2">
+<span class="material-symbols-outlined text-secondary">favorite</span>
+<h4 class="font-headline-md text-sm text-primary">CARDIAC</h4>
+</div>
+<span class="px-3 py-1 bg-secondary/10 text-secondary text-[10px] font-bold rounded-full tracking-wider">STABLE</span>
+</div>
+<div class="md:w-3/4">
+<p class="text-sm text-on-surface-variant leading-relaxed">
+                                Sinus rhythm preserved. No evidence of ST-segment elevation or T-wave inversion. Heart sound S1, S2 audible; no murmurs or gallops. Pulse intensity +2 bilateral.
+                            </p>
+<div class="mt-4 flex gap-8">
+<div>
+<p class="text-[10px] font-label-caps text-outline">STRESS LVL</p>
+<p class="text-xs font-data-mono text-primary">LOW (0.12)</p>
+</div>
+<div>
+<p class="text-[10px] font-label-caps text-outline">RECOVERY</p>
+<p class="text-xs font-data-mono text-primary">EXCELLENT</p>
+</div>
+</div>
+</div>
+</div>
+<!-- Respiratory -->
+<div class="flex flex-col md:flex-row gap-6 p-6 rounded-xl border border-outline-variant/30 bg-surface-container-lowest">
+<div class="md:w-1/4">
+<div class="flex items-center gap-3 mb-2">
+<span class="material-symbols-outlined text-secondary">air</span>
+<h4 class="font-headline-md text-sm text-primary">RESPIRATORY</h4>
+</div>
+<span class="px-3 py-1 bg-secondary/10 text-secondary text-[10px] font-bold rounded-full tracking-wider">STABLE</span>
+</div>
+<div class="md:w-3/4">
+<p class="text-sm text-on-surface-variant leading-relaxed">
+                                Lungs clear to auscultation bilaterally. No rales, rhonchi, or wheezing. RR 14/min regular. Peak expiratory flow within expected range for soldier's anthropometry.
+                            </p>
+</div>
+</div>
+<!-- Neural -->
+<div class="flex flex-col md:flex-row gap-6 p-6 rounded-xl border border-outline-variant/30 bg-surface-container-lowest">
+<div class="md:w-1/4">
+<div class="flex items-center gap-3 mb-2">
+<span class="material-symbols-outlined text-secondary">psychology</span>
+<h4 class="font-headline-md text-sm text-primary">NEURAL</h4>
+</div>
+<span class="px-3 py-1 bg-secondary-container/20 text-on-secondary-container text-[10px] font-bold rounded-full tracking-wider">MONITOR</span>
+</div>
+<div class="md:w-3/4">
+<p class="text-sm text-on-surface-variant leading-relaxed">
+                                GCS 15/15. Pupil reactivity normal. Mild cognitive fatigue markers detected via Dharmi AI analysis. Suggest monitoring sleep patterns for the next 72 hours post-field mission.
+                            </p>
+</div>
+</div>
+</div>
+</div>
+<!-- 4. Dharma AI Diagnostic Brief -->
+<div class="py-10 border-t border-outline-variant/30 bg-primary/5 -mx-8 md:-mx-12 px-8 md:px-12">
+<div class="flex items-center justify-between mb-6">
+<h3 class="font-label-caps text-label-caps text-primary flex items-center gap-2">
+<span class="material-symbols-outlined text-lg">auto_awesome</span> DHARMA AI DIAGNOSTIC BRIEF
+                    </h3>
+<span class="text-[10px] font-data-mono text-secondary">ENGINE v4.2.0 • REAL-TIME ANALYSIS</span>
+</div>
+<div class="grid grid-cols-1 md:grid-cols-2 gap-8">
+<div class="space-y-6">
+<div>
+<p class="text-[11px] font-bold text-primary uppercase mb-2">Synthetic Insight</p>
+<p class="text-sm text-on-surface-variant italic leading-relaxed">
+                                "Biometric trends indicate a 4.2% increase in base metabolic rate compared to pre-mission baseline. Cortisol markers suggest high operational stress but within acceptable psychological recovery limits. Recommend 'Blue-Phase' hydration protocol."
+                            </p>
+</div>
+<div class="hud-line"></div>
+<div class="grid grid-cols-2 gap-4">
+<div>
+<p class="text-[10px] font-label-caps text-outline mb-1">PROBABILITY SCORE</p>
+<p class="text-xl font-headline-md text-primary">99.2%</p>
+</div>
+<div>
+<p class="text-[10px] font-label-caps text-outline mb-1">DATA FIDELITY</p>
+<p class="text-xl font-headline-md text-primary">HIGH</p>
+</div>
+</div>
+</div>
+<div class="bg-white/50 p-6 rounded-xl border border-secondary/20 border-dashed">
+<p class="text-[11px] font-bold text-primary uppercase mb-4">Recommended Protocol</p>
+<ul class="space-y-3">
+<li class="flex items-start gap-3 text-sm text-on-surface-variant">
+<span class="material-symbols-outlined text-secondary text-sm mt-1">check_circle</span>
+<span>Initiate 48hr active recovery session.</span>
+</li>
+<li class="flex items-start gap-3 text-sm text-on-surface-variant">
+<span class="material-symbols-outlined text-secondary text-sm mt-1">check_circle</span>
+<span>Hydration with specialized electrolyte solution (2L/day).</span>
+</li>
+<li class="flex items-start gap-3 text-sm text-on-surface-variant">
+<span class="material-symbols-outlined text-secondary text-sm mt-1">check_circle</span>
+<span>Re-assess Neural metrics in T-minus 72 hours.</span>
+</li>
+</ul>
+</div>
+</div>
+</div>
+<!-- 5. Medical Officer's Notes -->
+<div class="py-10 border-t border-outline-variant/30">
+<div class="grid grid-cols-1 md:grid-cols-3 gap-12">
+<div class="col-span-2">
+<h3 class="font-label-caps text-label-caps text-primary mb-4">MEDICAL OFFICER'S NOTES</h3>
+<div class="min-h-[120px] p-4 bg-surface-container-lowest border border-outline-variant/30 rounded-lg text-sm text-on-surface-variant font-body-md">
+                            Soldier Vikaram Choudhary presents in excellent physical condition following the 12-day mission. All primary vitals are within normal military readiness parameters. The minor neural fatigue noted by DHARMA AI is typical for high-altitude endurance and is expected to resolve with standard camp rest. No medical restrictions recommended.
+                        </div>
+</div>
+<div class="flex flex-col justify-end">
+<div class="border-b border-on-surface mb-2 h-12 flex items-center justify-center italic font-serif text-lg text-primary/70">
+                            Dr. Arjun Singh
+                        </div>
+<p class="font-label-caps text-[10px] text-center text-on-surface-variant">DIGITAL SIGNATURE • AUTHENTICATED</p>
+<p class="font-data-mono text-[9px] text-center text-outline mt-1">SHA-256: 8f2a...c91e</p>
+</div>
+</div>
+</div>
+<!-- Report Footer (Technical) -->
+<div class="mt-12 pt-6 border-t border-outline-variant/10 flex justify-between items-center text-[9px] font-data-mono text-outline uppercase tracking-widest">
+<span>Samarth Medic • IIT Jodhpur Research Wing</span>
+<span>CONFIDENTIAL • ARMY PROPERTY</span>
+<span>Page 01 of 01</span>
+</div>
+</div>
+<!-- Warning Disclaimer -->
+<div class="mt-8 flex items-start gap-3 p-4 bg-error/5 border border-error/20 rounded-lg no-print">
+<span class="material-symbols-outlined text-error text-sm">warning</span>
+<p class="text-[11px] text-error font-medium">Unauthorized distribution or reproduction of this clinical data is a violation of military security protocols. This report is encrypted and tied to Node JOD-01. Access logs are recorded.</p>
+</div>
+</main>
+<!-- Bottom Navigation (Mobile Only) -->
+<nav class="fixed bottom-0 left-0 w-full z-50 flex justify-around items-center px-4 pb-6 pt-2 bg-surface/90 dark:bg-primary/95 backdrop-blur-2xl border-t border-secondary/20 shadow-[0_-4px_10px_rgba(0,238,252,0.1)] md:hidden no-print">
+<button class="flex flex-col items-center justify-center text-on-surface-variant p-2">
+<span class="material-symbols-outlined">grid_view</span>
+<span class="font-label-caps text-[8px]">HUD</span>
+</button>
+<button class="flex flex-col items-center justify-center bg-secondary-container/20 text-secondary-container rounded-xl p-2">
+<span class="material-symbols-outlined">analytics</span>
+<span class="font-label-caps text-[8px]">VITALS</span>
+</button>
+<button class="flex flex-col items-center justify-center text-on-surface-variant p-2">
+<span class="material-symbols-outlined">emergency_share</span>
+<span class="font-label-caps text-[8px]">CHAT</span>
+</button>
+<button class="flex flex-col items-center justify-center text-on-surface-variant p-2">
+<span class="material-symbols-outlined">account_circle</span>
+<span class="font-label-caps text-[8px]">PROFILE</span>
+</button>
+</nav>
+</body></html>

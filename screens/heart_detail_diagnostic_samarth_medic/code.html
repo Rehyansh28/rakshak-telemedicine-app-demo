@@ -1,0 +1,471 @@
+<!DOCTYPE html>
+
+<html class="light" lang="en"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>Samarth Medic - Heart Detail Diagnostic</title>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com/css2?family=Sora:wght@400;600;700&amp;family=Inter:wght@400;500&amp;family=JetBrains+Mono:wght@500;700&amp;family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@100..900&amp;family=JetBrains+Mono:wght@100..900&amp;family=Sora:wght@100..900&amp;display=swap" rel="stylesheet"/>
+<script id="tailwind-config">
+        tailwind.config = {
+            darkMode: "class",
+            theme: {
+                extend: {
+                    "colors": {
+                        "on-error-container": "#93000a",
+                        "tertiary": "#001a36",
+                        "surface-bright": "#f7f9fb",
+                        "on-primary": "#ffffff",
+                        "on-error": "#ffffff",
+                        "surface-container": "#eceef0",
+                        "surface": "#f7f9fb",
+                        "tertiary-container": "#002f59",
+                        "inverse-on-surface": "#eff1f3",
+                        "primary": "#00193c",
+                        "tertiary-fixed-dim": "#a4c9ff",
+                        "primary-container": "#002d62",
+                        "primary-fixed-dim": "#abc7ff",
+                        "surface-variant": "#e0e3e5",
+                        "surface-container-lowest": "#ffffff",
+                        "on-tertiary-fixed": "#001c39",
+                        "surface-container-high": "#e6e8ea",
+                        "secondary-fixed": "#7df4ff",
+                        "secondary-fixed-dim": "#00dbe9",
+                        "inverse-surface": "#2d3133",
+                        "surface-container-highest": "#e0e3e5",
+                        "surface-dim": "#d8dadc",
+                        "secondary-container": "#00eefc",
+                        "on-tertiary-fixed-variant": "#004883",
+                        "error": "#ba1a1a",
+                        "on-primary-fixed-variant": "#24467c",
+                        "inverse-primary": "#abc7ff",
+                        "on-surface": "#191c1e",
+                        "on-secondary-fixed": "#002022",
+                        "on-primary-fixed": "#001b3f",
+                        "outline": "#747781",
+                        "on-primary-container": "#7796d1",
+                        "surface-container-low": "#f2f4f6",
+                        "outline-variant": "#c4c6d1",
+                        "on-tertiary-container": "#5398eb",
+                        "tertiary-fixed": "#d4e3ff",
+                        "error-container": "#ffdad6",
+                        "surface-tint": "#3e5e95",
+                        "on-surface-variant": "#43474f",
+                        "on-tertiary": "#ffffff",
+                        "on-secondary-fixed-variant": "#004f54",
+                        "on-secondary-container": "#00686f",
+                        "secondary": "#006970",
+                        "on-background": "#191c1e",
+                        "primary-fixed": "#d7e2ff",
+                        "background": "#f7f9fb",
+                        "on-secondary": "#ffffff"
+                    },
+                    "borderRadius": {
+                        "DEFAULT": "0.25rem",
+                        "lg": "0.5rem",
+                        "xl": "0.75rem",
+                        "full": "9999px"
+                    },
+                    "spacing": {
+                        "margin-desktop": "64px",
+                        "container-max": "1440px",
+                        "unit": "4px",
+                        "margin-mobile": "16px",
+                        "gutter": "24px"
+                    },
+                    "fontFamily": {
+                        "headline-lg": ["Sora"],
+                        "display-lg": ["Sora"],
+                        "label-caps": ["JetBrains Mono"],
+                        "headline-lg-mobile": ["Sora"],
+                        "headline-md": ["Sora"],
+                        "data-mono": ["JetBrains Mono"],
+                        "body-md": ["Inter"],
+                        "body-lg": ["Inter"]
+                    },
+                    "fontSize": {
+                        "headline-lg": ["32px", {"lineHeight": "40px", "fontWeight": "600"}],
+                        "display-lg": ["48px", {"lineHeight": "56px", "letterSpacing": "-0.02em", "fontWeight": "700"}],
+                        "label-caps": ["12px", {"lineHeight": "16px", "letterSpacing": "0.1em", "fontWeight": "700"}],
+                        "headline-lg-mobile": ["24px", {"lineHeight": "32px", "fontWeight": "600"}],
+                        "headline-md": ["24px", {"lineHeight": "32px", "fontWeight": "600"}],
+                        "data-mono": ["14px", {"lineHeight": "20px", "fontWeight": "500"}],
+                        "body-md": ["16px", {"lineHeight": "24px", "fontWeight": "400"}],
+                        "body-lg": ["18px", {"lineHeight": "28px", "fontWeight": "400"}]
+                    }
+                },
+            },
+        }
+    </script>
+<style>
+        .material-symbols-outlined {
+            font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24;
+        }
+        .glass-card {
+            background: rgba(255, 255, 255, 0.7);
+            backdrop-filter: blur(20px);
+            border: 1px solid rgba(0, 45, 98, 0.1);
+        }
+        .ecg-grid {
+            background-image: linear-gradient(rgba(0, 222, 233, 0.1) 1px, transparent 1px),
+                              linear-gradient(90deg, rgba(0, 222, 233, 0.1) 1px, transparent 1px);
+            background-size: 20px 20px;
+        }
+        .hud-scanline {
+            background: linear-gradient(to bottom, transparent 50%, rgba(0, 222, 233, 0.05) 50%);
+            background-size: 100% 4px;
+        }
+        @keyframes pulse-cyan {
+            0% { box-shadow: 0 0 0 0 rgba(0, 222, 233, 0.4); }
+            70% { box-shadow: 0 0 0 10px rgba(0, 222, 233, 0); }
+            100% { box-shadow: 0 0 0 0 rgba(0, 222, 233, 0); }
+        }
+        .animate-pulse-cyan {
+            animation: pulse-cyan 2s infinite;
+        }
+        .hologram-glow {
+            filter: drop-shadow(0 0 15px rgba(0, 222, 233, 0.6));
+        }
+    </style>
+</head>
+<body class="bg-surface font-body-md text-on-surface overflow-x-hidden">
+<!-- TopNavBar -->
+<header class="fixed top-0 left-0 w-full z-50 flex justify-between items-center px-margin-mobile md:px-margin-desktop h-16 bg-surface/80 dark:bg-primary/80 backdrop-blur-xl border-b border-outline-variant/30">
+<div class="flex items-center gap-4">
+<h1 class="text-body-lg font-headline-md font-bold tracking-tighter text-on-surface dark:text-on-primary-fixed">SAMARTH MEDIC</h1>
+</div>
+<div class="flex items-center gap-6">
+<div class="hidden md:flex gap-8">
+<a class="font-label-caps text-label-caps text-secondary dark:text-secondary-fixed border-b-2 border-secondary" href="#">Diagnostics</a>
+<a class="font-label-caps text-label-caps text-on-surface-variant dark:text-outline-variant hover:text-secondary-container transition-colors" href="#">Patients</a>
+<a class="font-label-caps text-label-caps text-on-surface-variant dark:text-outline-variant hover:text-secondary-container transition-colors" href="#">Tactical</a>
+</div>
+<div class="flex items-center gap-4">
+<span class="material-symbols-outlined text-secondary">security</span>
+<span class="material-symbols-outlined text-secondary">notifications_active</span>
+<img alt="Army Medical Officer" class="w-8 h-8 rounded-full border border-secondary" data-alt="A professional portrait of an Indian Army medical officer in uniform, set against a clean, clinical background. The officer has a calm and authoritative expression, representing medical expertise and military discipline within a high-tech medical environment." src="https://lh3.googleusercontent.com/aida-public/AB6AXuCLMc5YoR9JnJqDcYe3m62PpqbJ7jNDM6R0wPIuf5tH_PAxKCbmcfjK4df9oFjmFaBBiR7DeprkLnVImzPGk0FTTRHu8nSVSNA7js8-fToM2Fdk0kV-f-4ia5-bfzAuWnTNbPlgs8jovz-K6J2zwDg6llmA1MtbVZjcbEFMyKgqVk3HPazrjHXymq6k0dhNIy4fOAVatkKaImIiNWnpOUi84AhoTidTvpeprdAPs-XemSYJ3nXT69-GaJx1e2PMdF0Cim3ANFfKv_M"/>
+</div>
+</div>
+</header>
+<!-- SideNavBar (Desktop Only) -->
+<aside class="fixed left-0 top-0 h-full z-40 h-screen w-64 hidden md:flex flex-col bg-primary pt-20 shadow-md">
+<div class="px-6 mb-8">
+<h2 class="font-headline-md text-on-primary">STRAT-MED</h2>
+<p class="font-label-caps text-label-caps text-secondary-fixed-dim">Node: JOD-01</p>
+</div>
+<nav class="flex-1 space-y-1">
+<div class="text-on-primary-fixed-variant hover:text-white mx-2 my-1 px-4 py-3 flex items-center gap-3 transition-all cursor-pointer">
+<span class="material-symbols-outlined">dashboard</span>
+<span class="font-label-caps text-label-caps">Command Center</span>
+</div>
+<div class="bg-secondary-container text-on-secondary-container rounded-lg mx-2 my-1 px-4 py-3 flex items-center gap-3 translate-x-1 duration-200 cursor-pointer">
+<span class="material-symbols-outlined">monitor_heart</span>
+<span class="font-label-caps text-label-caps">Patient Vitals</span>
+</div>
+<div class="text-on-primary-fixed-variant hover:text-white mx-2 my-1 px-4 py-3 flex items-center gap-3 transition-all cursor-pointer">
+<span class="material-symbols-outlined">vpn_key</span>
+<span class="font-label-caps text-label-caps">Encryption Keys</span>
+</div>
+<div class="text-on-primary-fixed-variant hover:text-white mx-2 my-1 px-4 py-3 flex items-center gap-3 transition-all cursor-pointer">
+<span class="material-symbols-outlined">local_shipping</span>
+<span class="font-label-caps text-label-caps">Medical Logistics</span>
+</div>
+<div class="text-on-primary-fixed-variant hover:text-white mx-2 my-1 px-4 py-3 flex items-center gap-3 transition-all cursor-pointer">
+<span class="material-symbols-outlined">hub</span>
+<span class="font-label-caps text-label-caps">Field Comms</span>
+</div>
+</nav>
+<div class="p-4 border-t border-white/10">
+<button class="w-full bg-error text-white font-label-caps text-label-caps py-3 rounded-lg mb-4 flex items-center justify-center gap-2 animate-pulse">
+<span class="material-symbols-outlined">emergency_share</span>
+                Emergency SOS
+            </button>
+<div class="flex flex-col gap-2">
+<div class="text-on-primary-fixed-variant hover:text-white px-4 py-2 flex items-center gap-3 cursor-pointer">
+<span class="material-symbols-outlined">settings</span>
+<span class="font-label-caps text-label-caps">Settings</span>
+</div>
+<div class="text-on-primary-fixed-variant hover:text-white px-4 py-2 flex items-center gap-3 cursor-pointer">
+<span class="material-symbols-outlined">help</span>
+<span class="font-label-caps text-label-caps">Support</span>
+</div>
+</div>
+</div>
+</aside>
+<!-- Main Content Canvas -->
+<main class="md:ml-64 pt-20 pb-24 px-margin-mobile md:px-margin-desktop min-h-screen">
+<!-- Dashboard Header -->
+<div class="mb-8 flex flex-col md:flex-row md:items-end justify-between gap-4">
+<div>
+<span class="font-label-caps text-label-caps text-secondary uppercase tracking-widest">Diagnostic Level: Advanced</span>
+<h2 class="font-headline-lg text-headline-lg-mobile md:text-headline-lg text-primary-container">Heart Detail Analysis</h2>
+<div class="flex items-center gap-2 text-on-surface-variant font-data-mono text-data-mono">
+<span class="text-secondary">●</span> LIVE FEED: PATIENT-0822-INF
+                    <span class="ml-4 border-l pl-4 border-outline-variant">SECURE CHANNEL: JOD-X-7</span>
+</div>
+</div>
+<div class="flex gap-3">
+<button class="bg-primary-container text-white px-6 py-2 rounded-lg font-label-caps text-label-caps flex items-center gap-2 hover:bg-primary transition-all">
+<span class="material-symbols-outlined text-[18px]">videocam</span> Initiate Consultation
+                </button>
+</div>
+</div>
+<!-- High-Performance Layout (Bento Style) -->
+<div class="grid grid-cols-1 md:grid-cols-12 gap-gutter">
+<!-- 3D Holographic Heart Visualization -->
+<div class="md:col-span-7 glass-card rounded-xl p-6 relative overflow-hidden h-[500px] flex flex-col">
+<div class="flex justify-between items-start z-10">
+<div class="bg-primary/5 px-3 py-1 rounded border border-primary/10">
+<span class="font-label-caps text-label-caps text-primary">3D SPATIAL SCAN</span>
+</div>
+<div class="flex gap-2">
+<span class="material-symbols-outlined text-secondary cursor-pointer">3d_rotation</span>
+<span class="material-symbols-outlined text-secondary cursor-pointer">layers</span>
+</div>
+</div>
+<div class="flex-1 flex items-center justify-center relative">
+<!-- Heart Visualization Placeholder -->
+<div class="absolute inset-0 flex items-center justify-center opacity-90 hologram-glow">
+<img alt="3D Heart Model" class="w-2/3 object-contain mix-blend-multiply" data-alt="A highly detailed, futuristic 3D holographic rendering of a human heart suspended in a clinical digital space. The heart is semi-transparent with glowing cyan blue and soft white highlights representing blood flow pathways. Bright orange hotspots pulse on the valves to indicate high performance or areas of interest. The background is a clean, minimal white grid, reflecting a tactical medical dashboard aesthetic." src="https://lh3.googleusercontent.com/aida-public/AB6AXuC6BZFnFrLI9gbqrV3V1U0xdctExE-xDQ5OAdu2WZ72wzBDoepCYQv1CDGeIXe1V3QISoCwOTlgwfU67tPcXG5JC1WE3V-BWFa0zDnk01Bp3Oh-WdwUZGqbLGyEMQOqPyC18svaFUslHaW1WQ5alDh0hwAncPaFO3ltFLTlW9zKt_gQVyyPM05YjXuNTd_BrVH2tyO3P0k3p-lNsgFM6Ri75TVhyL1tTv8p_C3TOz5ZZAlJ20KeaYtGZDDtz5S6V24fwAmW_kczsuM"/>
+</div>
+<!-- HUD Overlays -->
+<div class="absolute top-1/4 left-10 text-primary-container">
+<div class="flex items-center gap-2">
+<div class="w-2 h-2 rounded-full bg-secondary animate-pulse"></div>
+<span class="font-label-caps text-label-caps">MITRAL VALVE: 98%</span>
+</div>
+<div class="h-1 w-24 bg-outline-variant/30 mt-1"><div class="h-full bg-secondary w-[98%]"></div></div>
+</div>
+<div class="absolute bottom-1/4 right-10 text-primary-container text-right">
+<div class="flex items-center justify-end gap-2">
+<span class="font-label-caps text-label-caps">AORTIC FLOW: STABLE</span>
+<div class="w-2 h-2 rounded-full bg-secondary animate-pulse"></div>
+</div>
+<div class="h-1 w-24 bg-outline-variant/30 mt-1 ml-auto"><div class="h-full bg-secondary w-full"></div></div>
+</div>
+</div>
+<div class="flex justify-between border-t border-outline-variant/20 pt-4 z-10">
+<div class="font-data-mono text-data-mono text-on-surface-variant flex gap-4">
+<span>X: 142.02</span>
+<span>Y: 89.14</span>
+<span>Z: -12.44</span>
+</div>
+<button class="text-secondary font-label-caps text-label-caps flex items-center gap-1">
+                        RESET VIEW <span class="material-symbols-outlined text-[16px]">refresh</span>
+</button>
+</div>
+</div>
+<!-- ECG Real-time Widget & Key Metrics -->
+<div class="md:col-span-5 flex flex-col gap-gutter">
+<!-- ECG Waveform -->
+<div class="glass-card rounded-xl p-6 ecg-grid relative">
+<div class="flex justify-between items-center mb-4">
+<span class="font-label-caps text-label-caps text-primary">REAL-TIME ECG (Lead II)</span>
+<div class="bg-secondary/10 text-secondary px-2 py-0.5 rounded flex items-center gap-1 font-label-caps text-[10px]">
+<span class="w-1.5 h-1.5 bg-secondary rounded-full animate-pulse"></span> NORMAL RHYTHM
+                        </div>
+</div>
+<div class="h-32 flex items-center relative">
+<!-- Simulated ECG path -->
+<svg class="w-full h-full stroke-primary stroke-2 fill-none" viewbox="0 0 400 100">
+<path d="M0 50 L40 50 L50 30 L60 70 L70 50 L110 50 L120 45 L130 50 L140 10 L150 90 L160 50 L180 50 L190 40 L200 50 L240 50 L250 30 L260 70 L270 50 L310 50 L320 45 L330 50 L340 10 L350 90 L360 50 L380 50 L390 40 L400 50"></path>
+</svg>
+<div class="absolute inset-0 hud-scanline pointer-events-none"></div>
+</div>
+<div class="mt-4 flex justify-between font-data-mono text-[10px] text-on-surface-variant">
+<span>25mm/sec</span>
+<span>10mm/mV</span>
+<span>Filtered: 0.5-40Hz</span>
+</div>
+</div>
+<!-- AI Insights Panel -->
+<div class="glass-card rounded-xl p-6 bg-primary-container text-white">
+<div class="flex items-center gap-3 mb-4">
+<div class="w-8 h-8 rounded-full bg-secondary-container flex items-center justify-center">
+<span class="material-symbols-outlined text-primary text-[18px]" style="font-variation-settings: 'FILL' 1;">auto_awesome</span>
+</div>
+<h3 class="font-headline-md text-[18px]">Dharma AI Insights</h3>
+</div>
+<ul class="space-y-4">
+<li class="flex items-start gap-3">
+<span class="material-symbols-outlined text-secondary-fixed-dim text-[20px]">check_circle</span>
+<div>
+<p class="font-body-md text-sm">Mitral valve performance optimal; ejection fraction calculated at 64%.</p>
+</div>
+</li>
+<li class="flex items-start gap-3">
+<span class="material-symbols-outlined text-secondary-fixed-dim text-[20px]">verified</span>
+<div>
+<p class="font-body-md text-sm">Low risk of arrhythmia detected within the current 24-hour window.</p>
+</div>
+</li>
+<li class="flex items-start gap-3 opacity-60">
+<span class="material-symbols-outlined text-secondary-fixed-dim text-[20px]">info</span>
+<div>
+<p class="font-body-md text-sm">Recommended follow-up in 72 hours for routine monitoring cycle.</p>
+</div>
+</li>
+</ul>
+</div>
+</div>
+<!-- Metric Cards -->
+<div class="md:col-span-12 grid grid-cols-2 md:grid-cols-4 gap-gutter">
+<div class="glass-card rounded-xl p-5 border-l-4 border-l-secondary">
+<span class="font-label-caps text-[10px] text-on-surface-variant block mb-1">HEART RATE</span>
+<div class="flex items-baseline gap-2">
+<span class="font-display-lg text-4xl text-primary-container">72</span>
+<span class="font-label-caps text-label-caps text-on-surface-variant">BPM</span>
+</div>
+<div class="mt-2 text-secondary text-xs font-data-mono">↑ 2% from avg</div>
+</div>
+<div class="glass-card rounded-xl p-5 border-l-4 border-l-secondary">
+<span class="font-label-caps text-[10px] text-on-surface-variant block mb-1">BLOOD PRESSURE</span>
+<div class="flex items-baseline gap-2">
+<span class="font-display-lg text-4xl text-primary-container">118/78</span>
+<span class="font-label-caps text-label-caps text-on-surface-variant">mmHg</span>
+</div>
+<div class="mt-2 text-secondary text-xs font-data-mono">OPTIMAL ZONE</div>
+</div>
+<div class="glass-card rounded-xl p-5 border-l-4 border-l-secondary">
+<span class="font-label-caps text-[10px] text-on-surface-variant block mb-1">CARDIAC SpO2</span>
+<div class="flex items-baseline gap-2">
+<span class="font-display-lg text-4xl text-primary-container">98.4</span>
+<span class="font-label-caps text-label-caps text-on-surface-variant">%</span>
+</div>
+<div class="mt-2 text-secondary text-xs font-data-mono">EFFICIENCY: HIGH</div>
+</div>
+<div class="glass-card rounded-xl p-5 border-l-4 border-l-secondary">
+<span class="font-label-caps text-[10px] text-on-surface-variant block mb-1">CARDIAC OUTPUT</span>
+<div class="flex items-baseline gap-2">
+<span class="font-display-lg text-4xl text-primary-container">5.2</span>
+<span class="font-label-caps text-label-caps text-on-surface-variant">L/MIN</span>
+</div>
+<div class="mt-2 text-secondary text-xs font-data-mono">STABLE FLOW</div>
+</div>
+</div>
+<!-- Cardiac Audio Lab -->
+<div class="md:col-span-6 glass-card rounded-xl p-6">
+<div class="flex justify-between items-center mb-6">
+<h3 class="font-headline-md text-headline-md text-primary-container">Cardiac Audio Lab</h3>
+<div class="flex items-center gap-2">
+<span class="font-label-caps text-[10px] text-on-surface-variant">STETHO-SYNC:</span>
+<div class="px-2 py-0.5 rounded bg-secondary-container/20 text-on-secondary-container font-label-caps text-[10px] border border-secondary-container/50">ACTIVE</div>
+</div>
+</div>
+<div class="bg-surface-container rounded-lg p-6 mb-4">
+<div class="flex items-center gap-6 mb-4">
+<button class="w-12 h-12 rounded-full bg-primary-container text-white flex items-center justify-center hover:scale-105 transition-all">
+<span class="material-symbols-outlined">play_arrow</span>
+</button>
+<div class="flex-1">
+<div class="h-12 flex items-end gap-0.5 px-2">
+<!-- PCG Waveform Bars -->
+<div class="bg-primary/20 w-full h-[20%] rounded-t-sm"></div>
+<div class="bg-primary/20 w-full h-[40%] rounded-t-sm"></div>
+<div class="bg-primary/40 w-full h-[80%] rounded-t-sm"></div>
+<div class="bg-secondary w-full h-[100%] rounded-t-sm animate-pulse"></div>
+<div class="bg-primary/40 w-full h-[60%] rounded-t-sm"></div>
+<div class="bg-primary/20 w-full h-[30%] rounded-t-sm"></div>
+<div class="bg-primary/20 w-full h-[20%] rounded-t-sm"></div>
+<div class="bg-primary/20 w-full h-[45%] rounded-t-sm"></div>
+<div class="bg-primary/50 w-full h-[85%] rounded-t-sm"></div>
+<div class="bg-secondary w-full h-[95%] rounded-t-sm animate-pulse"></div>
+<div class="bg-primary/40 w-full h-[70%] rounded-t-sm"></div>
+<div class="bg-primary/20 w-full h-[30%] rounded-t-sm"></div>
+</div>
+<div class="mt-2 flex justify-between">
+<span class="font-data-mono text-[10px] text-on-surface-variant">S1 - LUB</span>
+<span class="font-data-mono text-[10px] text-on-surface-variant">S2 - DUB</span>
+</div>
+</div>
+</div>
+</div>
+<div class="grid grid-cols-2 gap-4">
+<button class="flex items-center justify-center gap-2 border border-outline-variant rounded-lg py-2 font-label-caps text-label-caps text-on-surface-variant hover:bg-surface-variant transition-all">
+<span class="material-symbols-outlined text-[18px]">graphic_eq</span> ISOLATE VALVES
+                    </button>
+<button class="flex items-center justify-center gap-2 border border-outline-variant rounded-lg py-2 font-label-caps text-label-caps text-on-surface-variant hover:bg-surface-variant transition-all">
+<span class="material-symbols-outlined text-[18px]">history</span> RECENT SESSIONS
+                    </button>
+</div>
+</div>
+<!-- Historical Trends -->
+<div class="md:col-span-6 glass-card rounded-xl p-6">
+<h3 class="font-headline-md text-headline-md text-primary-container mb-6">Historical Trend (24h)</h3>
+<div class="space-y-8">
+<div>
+<div class="flex justify-between mb-2">
+<span class="font-label-caps text-[10px] text-on-surface-variant">HEART RATE (BPM)</span>
+<span class="font-data-mono text-[10px] text-primary">AVG: 74 BPM</span>
+</div>
+<div class="h-16 w-full relative">
+<!-- SVG Sparkline for HR -->
+<svg class="w-full h-full stroke-secondary stroke-1 fill-none opacity-80" viewbox="0 0 400 40">
+<path d="M0 20 Q40 25 80 18 T160 22 T240 15 T320 25 T400 20"></path>
+</svg>
+</div>
+</div>
+<div>
+<div class="flex justify-between mb-2">
+<span class="font-label-caps text-[10px] text-on-surface-variant">BLOOD PRESSURE (SYS)</span>
+<span class="font-data-mono text-[10px] text-primary">AVG: 121 mmHg</span>
+</div>
+<div class="h-16 w-full relative">
+<!-- SVG Sparkline for BP -->
+<svg class="w-full h-full stroke-primary-container stroke-1 fill-none opacity-80" viewbox="0 0 400 40">
+<path d="M0 25 L40 22 L80 28 L120 20 L160 24 L200 22 L240 26 L280 18 L320 22 L360 20 L400 24"></path>
+</svg>
+</div>
+</div>
+</div>
+</div>
+</div>
+<!-- Sticky Footer CTAs -->
+<div class="mt-margin-mobile flex flex-col md:flex-row justify-center items-center gap-6 pb-margin-mobile">
+<button class="group flex items-center gap-3 px-8 py-4 bg-white border border-primary-container/20 rounded-full text-primary-container font-label-caps text-label-caps hover:bg-surface-container transition-all">
+<span class="material-symbols-outlined transition-transform group-hover:-translate-x-1">arrow_back</span>
+                BACK TO FULL BODY VIEW
+            </button>
+<button class="group flex items-center gap-3 px-10 py-4 bg-primary-container text-white rounded-full font-label-caps text-label-caps shadow-lg hover:shadow-primary/20 hover:scale-105 transition-all">
+                REQUEST SPECIALIST REVIEW
+                <span class="material-symbols-outlined transition-transform group-hover:translate-x-1">clinical_notes</span>
+</button>
+</div>
+</main>
+<!-- BottomNavBar (Mobile Only) -->
+<nav class="fixed bottom-0 left-0 w-full z-50 flex justify-around items-center px-4 pb-6 pt-2 bg-surface/90 dark:bg-primary/95 backdrop-blur-2xl border-t border-secondary/20 shadow-[0_-4px_10px_rgba(0,238,252,0.1)] md:hidden">
+<div class="flex flex-col items-center justify-center text-on-surface-variant dark:text-outline-variant p-2">
+<span class="material-symbols-outlined">grid_view</span>
+<span class="font-label-caps text-[10px]">HUD</span>
+</div>
+<div class="flex flex-col items-center justify-center bg-secondary-container/20 text-secondary-container rounded-xl p-2 scale-90">
+<span class="material-symbols-outlined" style="font-variation-settings: 'FILL' 1;">analytics</span>
+<span class="font-label-caps text-[10px]">VITALS</span>
+</div>
+<div class="flex flex-col items-center justify-center text-on-surface-variant dark:text-outline-variant p-2">
+<span class="material-symbols-outlined">emergency_share</span>
+<span class="font-label-caps text-[10px]">SECURE CHAT</span>
+</div>
+<div class="flex flex-col items-center justify-center text-on-surface-variant dark:text-outline-variant p-2">
+<span class="material-symbols-outlined">account_circle</span>
+<span class="font-label-caps text-[10px]">PROFILE</span>
+</div>
+</nav>
+<script>
+        // Simple micro-interaction for heart pulse effect alignment
+        document.addEventListener('DOMContentLoaded', () => {
+            const metrics = document.querySelectorAll('.glass-card');
+            metrics.forEach(card => {
+                card.addEventListener('mouseenter', () => {
+                    card.style.transform = 'translateY(-2px)';
+                    card.style.transition = 'transform 0.2s ease-out';
+                });
+                card.addEventListener('mouseleave', () => {
+                    card.style.transform = 'translateY(0px)';
+                });
+            });
+        });
+    </script>
+</body></html>

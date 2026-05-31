@@ -1,0 +1,486 @@
+<!DOCTYPE html>
+
+<html class="light" lang="en"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>SAMARTH MEDIC | Command Center</title>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&amp;family=JetBrains+Mono:wght@500;700&amp;family=Sora:wght@600;700;800&amp;family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@100..900&amp;family=JetBrains+Mono:wght@100..900&amp;family=Sora:wght@100..900&amp;display=swap" rel="stylesheet"/>
+<script id="tailwind-config">
+        tailwind.config = {
+            darkMode: "class",
+            theme: {
+                extend: {
+                    "colors": {
+                        "surface-dim": "#d8dadc",
+                        "primary-fixed": "#d7e2ff",
+                        "inverse-primary": "#abc7ff",
+                        "secondary": "#006970",
+                        "on-tertiary-fixed": "#001c39",
+                        "surface-container-lowest": "#ffffff",
+                        "on-primary-fixed-variant": "#24467c",
+                        "inverse-surface": "#2d3133",
+                        "primary-container": "#002d62",
+                        "on-secondary-fixed": "#002022",
+                        "primary": "#00193c",
+                        "surface-container": "#eceef0",
+                        "outline-variant": "#c4c6d1",
+                        "on-surface": "#191c1e",
+                        "secondary-fixed-dim": "#00dbe9",
+                        "inverse-on-surface": "#eff1f3",
+                        "surface-container-low": "#f2f4f6",
+                        "secondary-fixed": "#7df4ff",
+                        "on-tertiary-fixed-variant": "#004883",
+                        "on-secondary-fixed-variant": "#004f54",
+                        "surface-container-highest": "#e0e3e5",
+                        "background": "#f7f9fb",
+                        "on-background": "#191c1e",
+                        "surface-bright": "#f7f9fb",
+                        "outline": "#747781",
+                        "on-primary-container": "#7796d1",
+                        "error": "#ba1a1a",
+                        "on-secondary": "#ffffff",
+                        "on-error-container": "#93000a",
+                        "on-secondary-container": "#00686f",
+                        "tertiary": "#001a36",
+                        "on-tertiary-container": "#5398eb",
+                        "error-container": "#ffdad6",
+                        "on-primary-fixed": "#001b3f",
+                        "secondary-container": "#00eefc",
+                        "on-tertiary": "#ffffff",
+                        "surface": "#f7f9fb",
+                        "on-primary": "#ffffff",
+                        "surface-variant": "#e0e3e5",
+                        "surface-container-high": "#e6e8ea",
+                        "tertiary-container": "#002f59",
+                        "primary-fixed-dim": "#abc7ff",
+                        "surface-tint": "#3e5e95",
+                        "tertiary-fixed": "#d4e3ff",
+                        "on-error": "#ffffff",
+                        "on-surface-variant": "#43474f",
+                        "tertiary-fixed-dim": "#a4c9ff"
+                    },
+                    "borderRadius": {
+                        "DEFAULT": "0.25rem",
+                        "lg": "0.5rem",
+                        "xl": "0.75rem",
+                        "full": "9999px"
+                    },
+                    "spacing": {
+                        "container-max": "1440px",
+                        "margin-desktop": "64px",
+                        "unit": "4px",
+                        "gutter": "24px",
+                        "margin-mobile": "16px"
+                    },
+                    "fontFamily": {
+                        "headline-lg-mobile": ["Sora"],
+                        "body-lg": ["Inter"],
+                        "headline-lg": ["Sora"],
+                        "label-caps": ["JetBrains Mono"],
+                        "headline-md": ["Sora"],
+                        "display-lg": ["Sora"],
+                        "data-mono": ["JetBrains Mono"],
+                        "body-md": ["Inter"]
+                    },
+                    "fontSize": {
+                        "headline-lg-mobile": ["24px", {"lineHeight": "32px", "fontWeight": "600"}],
+                        "body-lg": ["18px", {"lineHeight": "28px", "fontWeight": "400"}],
+                        "headline-lg": ["32px", {"lineHeight": "40px", "fontWeight": "600"}],
+                        "label-caps": ["12px", {"lineHeight": "16px", "letterSpacing": "0.1em", "fontWeight": "700"}],
+                        "headline-md": ["24px", {"lineHeight": "32px", "fontWeight": "600"}],
+                        "display-lg": ["48px", {"lineHeight": "56px", "letterSpacing": "-0.02em", "fontWeight": "700"}],
+                        "data-mono": ["14px", {"lineHeight": "20px", "fontWeight": "500"}],
+                        "body-md": ["16px", {"lineHeight": "24px", "fontWeight": "400"}]
+                    }
+                },
+            },
+        }
+    </script>
+<style>
+        .material-symbols-outlined {
+            font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24;
+        }
+        .glass-card {
+            background: rgba(255, 255, 255, 0.7);
+            backdrop-filter: blur(20px);
+            border: 1px solid rgba(0, 105, 112, 0.1);
+        }
+        .hud-grid {
+            background-image: radial-gradient(circle, #e0e3e5 1px, transparent 1px);
+            background-size: 24px 24px;
+        }
+        .scan-line {
+            height: 2px;
+            background: linear-gradient(90deg, transparent, #00eefc, transparent);
+            animation: scan 4s linear infinite;
+        }
+        @keyframes scan {
+            0% { top: 0; }
+            100% { top: 100%; }
+        }
+        .pulse-emergency {
+            animation: pulse-red 2s cubic-bezier(0.4, 0, 0.6, 1) infinite;
+        }
+        @keyframes pulse-red {
+            0%, 100% { opacity: 1; box-shadow: 0 0 0 0 rgba(186, 26, 26, 0.4); }
+            50% { opacity: .7; box-shadow: 0 0 0 10px rgba(186, 26, 26, 0); }
+        }
+    </style>
+</head>
+<body class="bg-background font-body-md text-on-background hud-grid min-h-screen">
+<!-- TopNavBar -->
+<header class="fixed top-0 left-0 w-full z-50 flex justify-between items-center px-margin-mobile md:px-margin-desktop h-16 bg-surface/80 dark:bg-primary/80 backdrop-blur-xl border-b border-outline-variant/30">
+<div class="flex items-center gap-8">
+<span class="text-body-lg font-headline-md font-bold tracking-tighter text-on-surface dark:text-on-primary-fixed">SAMARTH MEDIC</span>
+<div class="hidden md:flex items-center bg-surface-container-low px-4 py-2 rounded-full border border-outline-variant/50 w-96">
+<span class="material-symbols-outlined text-outline mr-2">search</span>
+<input class="bg-transparent border-none focus:ring-0 text-body-md w-full placeholder:text-outline-variant" placeholder="Search Soldier ID, Rank, or Regiment..." type="text"/>
+</div>
+</div>
+<div class="flex items-center gap-4">
+<button class="p-2 text-on-surface-variant hover:text-secondary transition-colors relative">
+<span class="material-symbols-outlined">notifications_active</span>
+<span class="absolute top-2 right-2 w-2 h-2 bg-error rounded-full"></span>
+</button>
+<button class="p-2 text-on-surface-variant hover:text-secondary transition-colors">
+<span class="material-symbols-outlined">security</span>
+</button>
+<div class="h-8 w-8 rounded-full bg-primary-container overflow-hidden border border-secondary/30">
+<img alt="Army Medical Officer Profile" class="w-full h-full object-cover" src="https://lh3.googleusercontent.com/aida-public/AB6AXuAGu5kWmnvvYL57JiCxZgBaoPiswIFoiq1OjqJo8nVcpgCcWwxrGWkwk5k-e3mf7O3XxL2wbgT6yYI6vGl5T9-F6w8xW30TCqdFXSxGDCthuDGz5dixKvCCbjjq6sZ4TtdsaHUrfKK8S7sTeNC3iHVe7CDmnwR8CdEGsDCAzpXJZfIGK8w1TM7TiEWJYvWRNgl1Ic031opu6Izn4vegNy65Px5lh0hLqPyzTTNkaVTOczTIQ_8_5Sn5VVMj9XtZsnizBRotC0mnKB0"/>
+</div>
+</div>
+</header>
+<!-- SideNavBar -->
+<aside class="fixed left-0 top-0 h-full z-40 bg-primary dark:bg-primary-container h-screen w-64 hidden md:flex flex-col shadow-md">
+<div class="pt-24 px-6 pb-8">
+<div class="flex items-center gap-3 mb-2">
+<div class="w-10 h-10 bg-secondary-container rounded-lg flex items-center justify-center">
+<span class="material-symbols-outlined text-primary" style="font-variation-settings: 'FILL' 1;">hub</span>
+</div>
+<div>
+<h2 class="font-headline-md text-on-primary text-[18px]">STRAT-MED</h2>
+<p class="font-label-caps text-[10px] text-secondary-fixed-dim/70">Secure Node: JOD-01</p>
+</div>
+</div>
+</div>
+<nav class="flex-grow space-y-1">
+<a class="bg-secondary-container text-on-secondary-container rounded-lg mx-2 my-1 px-4 py-3 flex items-center gap-3 translate-x-1 duration-200" href="#">
+<span class="material-symbols-outlined">dashboard</span>
+<span class="font-label-caps text-label-caps">Command Center</span>
+</a>
+<a class="text-on-primary-fixed-variant hover:text-white mx-2 my-1 px-4 py-3 flex items-center gap-3 transition-all" href="#">
+<span class="material-symbols-outlined">monitor_heart</span>
+<span class="font-label-caps text-label-caps">Patient Vitals</span>
+</a>
+<a class="text-on-primary-fixed-variant hover:text-white mx-2 my-1 px-4 py-3 flex items-center gap-3 transition-all" href="#">
+<span class="material-symbols-outlined">vpn_key</span>
+<span class="font-label-caps text-label-caps">Encryption Keys</span>
+</a>
+<a class="text-on-primary-fixed-variant hover:text-white mx-2 my-1 px-4 py-3 flex items-center gap-3 transition-all" href="#">
+<span class="material-symbols-outlined">local_shipping</span>
+<span class="font-label-caps text-label-caps">Medical Logistics</span>
+</a>
+<a class="text-on-primary-fixed-variant hover:text-white mx-2 my-1 px-4 py-3 flex items-center gap-3 transition-all" href="#">
+<span class="material-symbols-outlined">hub</span>
+<span class="font-label-caps text-label-caps">Field Comms</span>
+</a>
+</nav>
+<div class="p-4 mt-auto">
+<button class="w-full bg-error text-white font-label-caps text-label-caps py-4 rounded-lg flex items-center justify-center gap-2 pulse-emergency">
+<span class="material-symbols-outlined">emergency</span>
+                Emergency SOS
+            </button>
+<div class="mt-6 border-t border-white/10 pt-4 pb-4">
+<a class="text-on-primary-fixed-variant hover:text-white px-4 py-2 flex items-center gap-3" href="#">
+<span class="material-symbols-outlined text-[20px]">settings</span>
+<span class="font-label-caps text-label-caps">Settings</span>
+</a>
+<a class="text-on-primary-fixed-variant hover:text-white px-4 py-2 flex items-center gap-3" href="#">
+<span class="material-symbols-outlined text-[20px]">help</span>
+<span class="font-label-caps text-label-caps">Support</span>
+</a>
+</div>
+</div>
+</aside>
+<!-- Main Content Canvas -->
+<main class="md:ml-64 pt-24 pb-20 px-4 md:px-margin-desktop">
+<!-- Page Header -->
+<div class="mb-8 flex flex-col md:flex-row md:items-end justify-between gap-4">
+<div>
+<p class="font-label-caps text-secondary font-bold mb-1">REAL-TIME OPERATIONAL OVERVIEW</p>
+<h1 class="font-headline-lg text-headline-lg text-primary tracking-tight">Strategic Medical Command Center</h1>
+</div>
+<div class="flex gap-2">
+<div class="flex items-center gap-2 px-4 py-2 bg-surface-container rounded-lg border border-outline-variant">
+<span class="w-2 h-2 rounded-full bg-secondary-fixed-dim shadow-[0_0_8px_#00dbe9]"></span>
+<span class="font-data-mono text-primary uppercase text-[12px]">System: Operational</span>
+</div>
+<div class="flex items-center gap-2 px-4 py-2 bg-surface-container rounded-lg border border-outline-variant">
+<span class="material-symbols-outlined text-secondary text-[18px]">verified_user</span>
+<span class="font-data-mono text-primary uppercase text-[12px]">Encrypted</span>
+</div>
+</div>
+</div>
+<!-- Stats Row -->
+<div class="grid grid-cols-2 lg:grid-cols-5 gap-4 mb-8">
+<div class="glass-card p-6 rounded-xl border-l-4 border-secondary shadow-sm">
+<p class="font-label-caps text-on-surface-variant mb-2">Active Sessions</p>
+<div class="flex items-end justify-between">
+<span class="font-headline-lg text-primary">12</span>
+<span class="font-data-mono text-secondary text-[12px] mb-1">+4%</span>
+</div>
+</div>
+<div class="glass-card p-6 rounded-xl border-l-4 border-error shadow-sm bg-error-container/10">
+<p class="font-label-caps text-error mb-2">Critical Alerts</p>
+<div class="flex items-end justify-between">
+<span class="font-headline-lg text-error">03</span>
+<span class="material-symbols-outlined text-error animate-pulse">warning</span>
+</div>
+</div>
+<div class="glass-card p-6 rounded-xl border-l-4 border-primary shadow-sm">
+<p class="font-label-caps text-on-surface-variant mb-2">Unit Strength</p>
+<div class="flex items-end justify-between">
+<span class="font-headline-lg text-primary">142</span>
+<span class="font-data-mono text-outline text-[12px] mb-1">Live</span>
+</div>
+</div>
+<div class="glass-card p-6 rounded-xl border-l-4 border-secondary-fixed-dim shadow-sm">
+<p class="font-label-caps text-on-surface-variant mb-2">Health Index</p>
+<div class="flex items-end justify-between">
+<span class="font-headline-lg text-primary">94%</span>
+<div class="w-12 h-1 bg-surface-container-highest rounded-full mb-2 overflow-hidden">
+<div class="w-full h-full bg-secondary-fixed-dim"></div>
+</div>
+</div>
+</div>
+<div class="glass-card p-6 rounded-xl border-l-4 border-tertiary shadow-sm">
+<p class="font-label-caps text-on-surface-variant mb-2">AI Insights</p>
+<div class="flex items-end justify-between">
+<span class="font-headline-lg text-primary">08</span>
+<span class="material-symbols-outlined text-tertiary">psychology</span>
+</div>
+</div>
+</div>
+<div class="grid grid-cols-1 lg:grid-cols-12 gap-gutter">
+<!-- Left: Patient Grid & Alerts -->
+<div class="lg:col-span-8 space-y-gutter">
+<!-- Emergency Alerts Panel -->
+<section class="glass-card p-6 rounded-xl border border-error/20 bg-error/5">
+<div class="flex items-center justify-between mb-4">
+<div class="flex items-center gap-2">
+<span class="material-symbols-outlined text-error">crisis_alert</span>
+<h3 class="font-headline-md text-[20px] text-on-surface">Emergency Response Queue</h3>
+</div>
+<span class="font-label-caps text-error bg-error/10 px-3 py-1 rounded-full">3 HIGH PRIORITY</span>
+</div>
+<div class="space-y-3">
+<div class="flex items-center justify-between p-4 bg-white/60 rounded-lg border border-error/10 hover:border-error transition-all cursor-pointer">
+<div class="flex items-center gap-4">
+<div class="w-2 h-12 bg-error rounded-full"></div>
+<div>
+<p class="font-headline-md text-[16px]">Cpt. Arjun Mehra (ID: AM-902)</p>
+<p class="font-label-caps text-on-surface-variant text-[10px]">ZONE: NORTH-SECTOR-04 | SP02 DROP: 88%</p>
+</div>
+</div>
+<button class="bg-primary text-white font-label-caps px-4 py-2 rounded shadow-md hover:bg-secondary transition-all">INITIATE CALL</button>
+</div>
+<div class="flex items-center justify-between p-4 bg-white/60 rounded-lg border border-error/10 opacity-80">
+<div class="flex items-center gap-4">
+<div class="w-2 h-12 bg-error/40 rounded-full"></div>
+<div>
+<p class="font-headline-md text-[16px]">Hav. Suresh K. (ID: SK-114)</p>
+<p class="font-label-caps text-on-surface-variant text-[10px]">ZONE: DEP-BASE-ALPHA | TACHYCARDIA DETECTED</p>
+</div>
+</div>
+<button class="border border-primary text-primary font-label-caps px-4 py-2 rounded hover:bg-primary hover:text-white transition-all">MONITOR</button>
+</div>
+</div>
+</section>
+<!-- Active Patient Cards Grid -->
+<section>
+<div class="flex items-center justify-between mb-4">
+<h3 class="font-headline-md text-[20px] text-on-surface">Unit Monitoring</h3>
+<div class="flex gap-2">
+<button class="text-secondary text-[14px] font-label-caps">View All</button>
+</div>
+</div>
+<div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+<!-- Patient Card 1 -->
+<div class="glass-card p-5 rounded-xl hover:shadow-lg transition-all border-b-2 border-transparent hover:border-secondary group relative overflow-hidden">
+<div class="flex justify-between items-start mb-4">
+<div class="flex gap-3">
+<div class="w-12 h-12 rounded-lg bg-surface-container overflow-hidden">
+<img alt="Soldier Avatar" class="w-full h-full object-cover" src="https://lh3.googleusercontent.com/aida-public/AB6AXuDcjQNO1HtclqymeKx6ekrPuB-alo0aV3i5baqbatAaz3Vg0qV9DdsOC-koKgH-R6KX99T-divZhbApuye0c5DFORnsfQE9kA9bah1FhXndKLV1LRc3iBZ9a5FF2P6EPl94Z2hao-Rdbek_KJeVjAVU29PEDjU-mM5n81vQZVKDjuucqDfoXbMiz1kC9UX7VReH5JtV3jvexiPx6RJ1-4fcOXQA1ZjUZLFC2E3StypoW_wVCpEuXSOGHSRYvj6ZnyCyDOSGXvA2mPI"/>
+</div>
+<div>
+<h4 class="font-headline-md text-[16px] text-primary">Sub. Vikram S.</h4>
+<p class="font-label-caps text-[10px] text-on-surface-variant">ID: VS-7721 | PARA SF</p>
+</div>
+</div>
+<div class="bg-secondary/10 text-secondary px-2 py-1 rounded text-[10px] font-label-caps">STABLE</div>
+</div>
+<div class="flex gap-4 items-center">
+<div class="relative w-20 h-32 bg-surface-container-low rounded-lg overflow-hidden flex items-center justify-center p-2">
+<img class="w-full h-full object-contain opacity-60" data-alt="A futuristic semi-transparent medical wireframe human body silhouette with neon cyan glow points on critical vitals like heart, lungs, and joints. The style is digital hologram, clean high-tech military interface with a soft light-mode background and medical aesthetic." src="https://lh3.googleusercontent.com/aida-public/AB6AXuDyktVXZUT3V3jCcH8h28haDRunIi9T8zYkqorxRlS1CYvZVzuX_RAdQDHUDeLVFPOJhLVU_atb4qwyNxrqLKT2QMI8jIpDj-oAvXS1uj0p_WP4D44xF86PnzYeVKMGqvBhtpeL2TFhm_x81ulwWZJrEffWmTPRKAB_4u_JpZ0r1vM0tEtKxJWCZpFQzj3z7xnIrmEE6-v0sJIYVT2tuYyUQy5LABFk-q18YWbXapKRmVtPgtYsDBt9ZTOJzMlT4rkVMeX5_eP8yGU"/>
+<div class="scan-line absolute w-full left-0 opacity-40"></div>
+<!-- Status dots -->
+<div class="absolute top-1/4 left-1/2 w-2 h-2 bg-secondary-fixed-dim rounded-full shadow-[0_0_8px_#00dbe9]"></div>
+<div class="absolute top-1/2 left-1/3 w-1.5 h-1.5 bg-secondary-fixed-dim rounded-full shadow-[0_0_8px_#00dbe9]"></div>
+</div>
+<div class="flex-grow space-y-3">
+<div class="flex justify-between items-center">
+<span class="font-label-caps text-[10px] text-on-surface-variant">HEART RATE</span>
+<span class="font-data-mono text-primary text-[14px]">72 BPM</span>
+</div>
+<div class="w-full bg-surface-container-high h-1 rounded-full overflow-hidden">
+<div class="bg-secondary h-full w-[70%]"></div>
+</div>
+<div class="flex justify-between items-center">
+<span class="font-label-caps text-[10px] text-on-surface-variant">STRESS LVL</span>
+<span class="font-data-mono text-primary text-[14px]">LOW</span>
+</div>
+<div class="w-full bg-surface-container-high h-1 rounded-full overflow-hidden">
+<div class="bg-secondary-fixed-dim h-full w-[25%]"></div>
+</div>
+</div>
+</div>
+<button class="mt-4 w-full py-2 border border-outline-variant text-on-surface font-label-caps text-[11px] rounded hover:bg-primary-container hover:text-white transition-all opacity-0 group-hover:opacity-100">FULL DIAGNOSTICS</button>
+</div>
+<!-- Patient Card 2 -->
+<div class="glass-card p-5 rounded-xl hover:shadow-lg transition-all border-b-2 border-transparent hover:border-secondary group relative overflow-hidden">
+<div class="flex justify-between items-start mb-4">
+<div class="flex gap-3">
+<div class="w-12 h-12 rounded-lg bg-surface-container overflow-hidden">
+<img alt="Soldier Avatar" class="w-full h-full object-cover" src="https://lh3.googleusercontent.com/aida-public/AB6AXuB_Fn6Yz9z8UomM6JZhM_0rdKCsNeYWoE3vVQ9h3GnPYgTIvnfWYLWAZzELxdeI60v-AXqCSiNqpOFdodkjXkiQGlQeeFCoGmRhC94k7gtjiTKQ3dA3iMG-Ui2YyJV83ykGjBeu1KqdtVhndBGNtsyIuohC75T2MKBIMpYcw2d6K1E17hgUk0EoaPHpHHMNiAs6KOyMufzqNsNjc--StDQGxkjUOSnLt3cLBA3QdEm2erF83bbk_1QFToYLsAL9zPj-A0cFprvB4Ik"/>
+</div>
+<div>
+<h4 class="font-headline-md text-[16px] text-primary">Maj. Rahul D.</h4>
+<p class="font-label-caps text-[10px] text-on-surface-variant">ID: RD-2291 | INFANTRY</p>
+</div>
+</div>
+<div class="bg-error/10 text-error px-2 py-1 rounded text-[10px] font-label-caps">WARNING</div>
+</div>
+<div class="flex gap-4 items-center">
+<div class="relative w-20 h-32 bg-surface-container-low rounded-lg overflow-hidden flex items-center justify-center p-2">
+<img class="w-full h-full object-contain opacity-60" data-alt="A futuristic semi-transparent medical wireframe human body silhouette with neon cyan glow points on critical vitals like heart, lungs, and joints. The style is digital hologram, clean high-tech military interface with a soft light-mode background and medical aesthetic." src="https://lh3.googleusercontent.com/aida-public/AB6AXuCrDJQsZbh7fq9wBnQflChiEGuzOR-fhnE9tQ9fIXMaAUoEp2W4vkezp6tzVeNngxWV-1pkRqWuwmxT3Mu6Pm7LA_2I_E9ItN82kTvq3lWoIHEWMj1mb1pbBvUzHS3rrEaench4FPEhZyfAyGKhVdTKNA9c14mTp0y9BxsPOvGHfZbur0XnA_CcDVS9W7ix1W8SjXhwns4LJZsiZV4Ke1MBAoY2OJYVPMbt1zICen7bN9R699zt-gqVK9VCJxzbM8sBL8iuG0rUEnk"/>
+<div class="scan-line absolute w-full left-0 opacity-40"></div>
+<!-- Warning dot -->
+<div class="absolute top-1/3 left-1/2 w-2.5 h-2.5 bg-error rounded-full animate-pulse shadow-[0_0_10px_#ba1a1a]"></div>
+</div>
+<div class="flex-grow space-y-3">
+<div class="flex justify-between items-center">
+<span class="font-label-caps text-[10px] text-on-surface-variant">HEART RATE</span>
+<span class="font-data-mono text-error text-[14px]">104 BPM</span>
+</div>
+<div class="w-full bg-surface-container-high h-1 rounded-full overflow-hidden">
+<div class="bg-error h-full w-[90%]"></div>
+</div>
+<div class="flex justify-between items-center">
+<span class="font-label-caps text-[10px] text-on-surface-variant">STRESS LVL</span>
+<span class="font-data-mono text-primary text-[14px]">ELEVATED</span>
+</div>
+<div class="w-full bg-surface-container-high h-1 rounded-full overflow-hidden">
+<div class="bg-secondary-fixed-dim h-full w-[65%]"></div>
+</div>
+</div>
+</div>
+<button class="mt-4 w-full py-2 border border-outline-variant text-on-surface font-label-caps text-[11px] rounded hover:bg-primary-container hover:text-white transition-all opacity-0 group-hover:opacity-100">FULL DIAGNOSTICS</button>
+</div>
+</div>
+</section>
+</div>
+<!-- Right: Real-time Graphs -->
+<div class="lg:col-span-4 space-y-gutter">
+<section class="glass-card p-6 rounded-xl h-full flex flex-col">
+<div class="mb-6">
+<h3 class="font-headline-md text-[18px] text-primary flex items-center gap-2">
+<span class="material-symbols-outlined text-secondary-fixed-dim">analytics</span>
+                            Unit Unit Biometrics
+                        </h3>
+<p class="font-label-caps text-[10px] text-on-surface-variant">Aggregated Real-time Data Streams</p>
+</div>
+<!-- HR Chart Placeholder -->
+<div class="flex-grow space-y-8">
+<div>
+<div class="flex justify-between items-end mb-2">
+<p class="font-label-caps text-on-surface-variant text-[11px]">AVG HEART RATE (72H)</p>
+<span class="font-data-mono text-secondary">74 BPM</span>
+</div>
+<div class="relative h-24 w-full bg-surface-container-low rounded-lg overflow-hidden border border-outline-variant/30 flex items-center">
+<!-- Waveform SVG -->
+<svg class="w-full h-full" preserveaspectratio="none" viewbox="0 0 400 100">
+<path class="opacity-80" d="M0,50 L20,50 L30,20 L40,80 L50,50 L100,50 L110,10 L120,90 L130,50 L200,50 L210,30 L220,70 L230,50 L300,50 L310,40 L320,60 L330,50 L400,50" fill="none" stroke="#00dbe9" stroke-width="2"></path>
+</svg>
+<div class="absolute inset-0 bg-gradient-to-r from-transparent via-white/5 to-transparent"></div>
+</div>
+</div>
+<div>
+<div class="flex justify-between items-end mb-2">
+<p class="font-label-caps text-on-surface-variant text-[11px]">UNIT STRESS INDICATOR</p>
+<span class="font-data-mono text-secondary-fixed-dim">OPTIMAL</span>
+</div>
+<div class="relative h-24 w-full bg-surface-container-low rounded-lg overflow-hidden border border-outline-variant/30 flex items-center">
+<!-- Waveform SVG -->
+<svg class="w-full h-full" preserveaspectratio="none" viewbox="0 0 400 100">
+<path class="opacity-60" d="M0,70 Q50,40 100,70 T200,70 T300,70 T400,70" fill="none" stroke="#006970" stroke-width="2"></path>
+<path class="opacity-40" d="M0,80 Q60,30 120,80 T240,80 T360,80 T480,80" fill="none" stroke="#00eefc" stroke-width="1.5"></path>
+</svg>
+</div>
+</div>
+<div class="p-4 bg-primary-container rounded-xl border border-secondary/20 mt-auto">
+<div class="flex items-center gap-3 mb-2">
+<span class="material-symbols-outlined text-secondary-fixed-dim" style="font-variation-settings: 'FILL' 1;">bolt</span>
+<h4 class="font-headline-md text-[14px] text-white">AI Health Risk Summary</h4>
+</div>
+<p class="text-on-primary-container text-[12px] leading-relaxed mb-4">
+                                Unit fatigue levels rising in Sector 4. Recommend tactical pause and hydration cycle for Platoon B within next 45 minutes.
+                            </p>
+<button class="w-full py-2 bg-secondary text-primary font-bold font-label-caps text-[10px] rounded hover:bg-secondary-fixed transition-all">GENERATE ACTION PLAN</button>
+</div>
+</div>
+</section>
+</div>
+</div>
+</main>
+<!-- BottomNavBar (Mobile Only) -->
+<nav class="fixed bottom-0 left-0 w-full z-50 flex justify-around items-center px-4 pb-6 pt-2 bg-surface/90 dark:bg-primary/95 backdrop-blur-2xl border-t border-secondary/20 shadow-[0_-4px_10px_rgba(0,238,252,0.1)] md:hidden">
+<a class="flex flex-col items-center justify-center bg-secondary-container/20 text-secondary-container rounded-xl p-2 scale-90 transition-transform" href="#">
+<span class="material-symbols-outlined">grid_view</span>
+<span class="font-label-caps text-[10px] mt-1">HUD</span>
+</a>
+<a class="flex flex-col items-center justify-center text-on-surface-variant dark:text-outline-variant p-2 hover:bg-secondary/10 transition-colors" href="#">
+<span class="material-symbols-outlined">analytics</span>
+<span class="font-label-caps text-[10px] mt-1">Vitals</span>
+</a>
+<a class="flex flex-col items-center justify-center text-on-surface-variant dark:text-outline-variant p-2 hover:bg-secondary/10 transition-colors" href="#">
+<span class="material-symbols-outlined">emergency_share</span>
+<span class="font-label-caps text-[10px] mt-1">Secure Chat</span>
+</a>
+<a class="flex flex-col items-center justify-center text-on-surface-variant dark:text-outline-variant p-2 hover:bg-secondary/10 transition-colors" href="#">
+<span class="material-symbols-outlined">account_circle</span>
+<span class="font-label-caps text-[10px] mt-1">Profile</span>
+</a>
+</nav>
+<script>
+        // Micro-interaction: Update local time in HUD
+        function updateHUDTime() {
+            const now = new Date();
+            // This is just a conceptual placeholder if I wanted a clock
+        }
+        
+        // Simulating live data shifts
+        setInterval(() => {
+            const hrElements = document.querySelectorAll('.font-data-mono');
+            hrElements.forEach(el => {
+                if (el.innerText.includes('BPM')) {
+                    const current = parseInt(el.innerText);
+                    const shift = Math.floor(Math.random() * 3) - 1;
+                    el.innerText = (current + shift) + ' BPM';
+                }
+            });
+        }, 3000);
+    </script>
+</body></html>
