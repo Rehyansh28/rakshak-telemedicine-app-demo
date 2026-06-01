@@ -84,10 +84,7 @@ export default function DoctorLoginPage() {
             {loading ? 'Authenticating...' : 'Secure Login'}
           </Button>
 
-          <p className="text-center text-xs text-on-surface-variant flex items-center justify-center gap-1">
-            <Lock className="w-3 h-3" />
-            Demo: doctor / rakshak2026
-          </p>
+          
         </form>
 
         <div className="mt-8 pt-6 border-t border-outline-variant/30">
