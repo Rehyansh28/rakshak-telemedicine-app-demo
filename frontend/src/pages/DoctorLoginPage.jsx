@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import { useNavigate, useLocation, Link } from 'react-router-dom';
 import { motion } from 'framer-motion';
-import { Lock, Fingerprint } from 'lucide-react';
+import { Fingerprint } from 'lucide-react';
 import { useApp } from '../context/useApp';
 import { PATHS } from '../routes/paths';
 import Button from '../components/ui/Button';
