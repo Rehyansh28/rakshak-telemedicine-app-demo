@@ -14,6 +14,7 @@ import MedicalReportPage from '../pages/MedicalReportPage';
 import SensorConnectionPage from '../pages/SensorConnectionPage';
 import CameraAlignmentPage from '../pages/CameraAlignmentPage';
 import WaitingRoomPage from '../pages/WaitingRoomPage';
+import SuperAdminPage from '../pages/SuperAdminPage';
 import { PATHS } from './paths';
 
 export default function AppRouter() {
@@ -23,6 +24,7 @@ export default function AppRouter() {
         <Route path={PATHS.home} element={<SplashPage />} />
         <Route path={PATHS.roleSelection} element={<RoleSelectionPage />} />
         <Route path={PATHS.doctor.login} element={<DoctorLoginPage />} />
+        <Route path={PATHS.superadminuser} element={<SuperAdminPage />} />
 
         <Route path="/doctor" element={<DoctorLayout />}>
           <Route index element={<Navigate to="dashboard" replace />} />

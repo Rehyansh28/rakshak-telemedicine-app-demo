@@ -2,29 +2,42 @@ import { useState } from 'react';
 import { useNavigate, useLocation, Link } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import { Lock, Fingerprint } from 'lucide-react';
-import { useApp } from '../context/AppContext';
+import { useApp } from '../context/useApp';
 import { PATHS } from '../routes/paths';
 import Button from '../components/ui/Button';
 import BrandLogo from '../components/brand/BrandLogo';
 import IITJodhpurBadge from '../components/brand/IITJodhpurBadge';
+import { apiPost, setToken } from '../api/client';
 
 export default function DoctorLoginPage() {
   const navigate = useNavigate();
   const location = useLocation();
-  const { setIsAuthenticated, secureNode } = useApp();
+  const { setIsAuthenticated, setDoctor, secureNode, showToast } = useApp();
   const [credentials, setCredentials] = useState({ id: '', pass: '' });
   const [loading, setLoading] = useState(false);
+  const [error, setError] = useState(null);
 
   const from = location.state?.from?.pathname || PATHS.doctor.dashboard;
 
-  const handleLogin = (e) => {
+  const handleLogin = async (e) => {
     e.preventDefault();
     setLoading(true);
-    setTimeout(() => {
+    setError(null);
+    try {
+      const data = await apiPost('/auth/login/', {
+        username: credentials.id,
+        password: credentials.pass,
+      });
+      setToken(data.token);
+      setDoctor(data.doctor);
       setIsAuthenticated(true);
-      setLoading(false);
+      showToast('Secure uplink established', 'success');
       navigate(from, { replace: true });
-    }, 1200);
+    } catch (err) {
+      setError(err.message || 'Login failed');
+    } finally {
+      setLoading(false);
+    }
   };
 
   return (
@@ -41,48 +54,48 @@ export default function DoctorLoginPage() {
         </div>
 
         <form onSubmit={handleLogin} className="space-y-6">
+          {error && (
+            <p className="text-sm text-error bg-error-container/30 rounded-lg px-3 py-2">{error}</p>
+          )}
           <div>
-            <label className="label-caps text-on-surface-variant block mb-2">Officer ID</label>
+            <label className="label-caps text-on-surface-variant block mb-2">Username or email</label>
             <input
               type="text"
               value={credentials.id}
               onChange={(e) => setCredentials({ ...credentials, id: e.target.value })}
-              placeholder="AMC-2847-JOD"
-              className="w-full bg-transparent border-b-2 border-outline-variant focus:border-secondary-container py-3 font-mono text-sm outline-none transition-colors"
+              placeholder="username or email"
+              className="w-full bg-surface-container-low border border-outline-variant/50 rounded-lg px-4 py-3 text-sm outline-none focus:ring-2 focus:ring-secondary/40"
+              autoComplete="username"
             />
           </div>
           <div>
-            <label className="label-caps text-on-surface-variant block mb-2">Access Code</label>
+            <label className="label-caps text-on-surface-variant block mb-2">Passphrase</label>
             <input
               type="password"
               value={credentials.pass}
               onChange={(e) => setCredentials({ ...credentials, pass: e.target.value })}
               placeholder="••••••••"
-              className="w-full bg-transparent border-b-2 border-outline-variant focus:border-secondary-container py-3 font-mono text-sm outline-none transition-colors"
+              className="w-full bg-surface-container-low border border-outline-variant/50 rounded-lg px-4 py-3 text-sm outline-none focus:ring-2 focus:ring-secondary/40"
+              autoComplete="current-password"
             />
           </div>
 
-          <div className="flex items-center gap-2 text-xs text-on-surface-variant">
-            <Lock className="w-4 h-4 text-secondary" />
-            <span>AES-256 encrypted · STRAT-LINK verified</span>
-          </div>
-
-          <Button type="submit" loading={loading} className="w-full" icon={loading ? Fingerprint : undefined}>
-            Authenticate & Enter
+          <Button type="submit" className="w-full" disabled={loading} icon={loading ? undefined : Fingerprint}>
+            {loading ? 'Authenticating...' : 'Secure Login'}
           </Button>
+
+          
         </form>
 
-        <p className="text-center mt-6 text-sm text-on-surface-variant">
-          <Link to={PATHS.roleSelection} className="text-secondary hover:underline">
-            ← Change role
-          </Link>
-        </p>
-        <p className="text-center mt-2 text-xs text-on-surface-variant/70">Demo: any credentials accepted</p>
+        <div className="mt-8 pt-6 border-t border-outline-variant/30">
+          <IITJodhpurBadge size="sm" className="justify-center" />
+          <p className="text-center mt-4">
+            <Link to={PATHS.roleSelection} className="text-xs text-secondary hover:underline">
+              ← Back to role selection
+            </Link>
+          </p>
+        </div>
       </motion.div>
-
-      <div className="relative z-10 mt-10">
-        <IITJodhpurBadge />
-      </div>
     </div>
   );
 }

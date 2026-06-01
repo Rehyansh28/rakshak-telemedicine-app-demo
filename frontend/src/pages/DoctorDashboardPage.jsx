@@ -1,3 +1,4 @@
+import { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import { AlertTriangle, Users, Activity, Brain, FileText, ArrowRight, Mountain, Scan } from 'lucide-react';
@@ -9,19 +10,68 @@ import PageContainer from '../components/layout/PageContainer';
 import PageHeader from '../components/layout/PageHeader';
 import Button from '../components/ui/Button';
 import { PATHS } from '../routes/paths';
-import { emergencyAlerts, aiRecommendations, recentActivity, patients } from '../data/mockData';
-import { useApp } from '../context/AppContext';
-
-const statLinks = [
-  { label: 'Active Consultations', value: '3', icon: Activity, color: 'text-secondary', to: PATHS.doctor.consultation },
-  { label: 'Critical Alerts', value: '2', icon: AlertTriangle, color: 'text-error', to: PATHS.doctor.patients },
-  { label: 'AI Recommendations', value: '5', icon: Brain, color: 'text-primary', to: PATHS.doctor.aiInsights },
-  { label: 'Reports Today', value: '12', icon: FileText, color: 'text-[#5398eb]', to: PATHS.doctor.report },
-];
+import { useApp } from '../context/useApp';
+import { apiGet } from '../api/client';
 
 export default function DoctorDashboardPage() {
   const navigate = useNavigate();
-  const { selectedPatient, setSelectedPatient, vitals, patientList, showToast } = useApp();
+  const { selectedPatient, setSelectedPatient, vitals, patientList, showToast, loading } = useApp();
+  const [emergencyAlerts, setEmergencyAlerts] = useState([]);
+  const [aiRecommendations, setAiRecommendations] = useState([]);
+  const [recentActivity, setRecentActivity] = useState([]);
+  const [stats, setStats] = useState({
+    activeConsultations: 0,
+    criticalAlerts: 0,
+    aiRecommendations: 0,
+    reportsToday: 0,
+  });
+
+  useEffect(() => {
+    Promise.all([
+      apiGet('/emergency-alerts/'),
+      apiGet('/ai-recommendations/'),
+      apiGet('/activity/'),
+      apiGet('/dashboard/stats/'),
+    ])
+      .then(([alerts, recs, activity, dashboardStats]) => {
+        setEmergencyAlerts(alerts);
+        setAiRecommendations(recs);
+        setRecentActivity(activity);
+        setStats(dashboardStats);
+      })
+      .catch(() => showToast('Failed to load dashboard data', 'info'));
+  }, [showToast]);
+
+  const statLinks = [
+    {
+      label: 'Active Consultations',
+      value: String(stats.activeConsultations),
+      icon: Activity,
+      color: 'text-secondary',
+      to: PATHS.doctor.consultation,
+    },
+    {
+      label: 'Critical Alerts',
+      value: String(stats.criticalAlerts),
+      icon: AlertTriangle,
+      color: 'text-error',
+      to: PATHS.doctor.patients,
+    },
+    {
+      label: 'AI Recommendations',
+      value: String(stats.aiRecommendations),
+      icon: Brain,
+      color: 'text-primary',
+      to: PATHS.doctor.aiInsights,
+    },
+    {
+      label: 'Reports Today',
+      value: String(stats.reportsToday),
+      icon: FileText,
+      color: 'text-[#5398eb]',
+      to: PATHS.doctor.report,
+    },
+  ];
 
   const openConsultation = (patient) => {
     setSelectedPatient(patient);
@@ -33,6 +83,14 @@ export default function DoctorDashboardPage() {
     if (patient) openConsultation(patient);
     else showToast('Patient record loaded', 'info');
   };
+
+  if (loading || !selectedPatient) {
+    return (
+      <PageContainer>
+        <p className="text-on-surface-variant text-sm">Loading command center...</p>
+      </PageContainer>
+    );
+  }
 
   return (
     <PageContainer>
@@ -109,14 +167,14 @@ export default function DoctorDashboardPage() {
                   View AR Vitals
                 </Button>
               </div>
-              <MiniECG height={100} />
+              <MiniECG height={100} patientId={selectedPatient.id} />
             </div>
           </GlassCard>
 
           <div>
             <h2 className="font-sora font-semibold text-lg text-primary mb-4">Soldier Status</h2>
             <div className="grid md:grid-cols-2 gap-4">
-              {patients.slice(0, 4).map((p) => (
+              {patientList.slice(0, 4).map((p) => (
                 <PatientCard
                   key={p.id}
                   patient={p}

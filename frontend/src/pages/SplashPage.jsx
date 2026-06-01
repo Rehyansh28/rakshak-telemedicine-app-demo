@@ -2,7 +2,7 @@ import { useNavigate } from 'react-router-dom';
 import { PATHS } from '../routes/paths';
 import { motion } from 'framer-motion';
 import { ArrowRight, Lock, Verified } from 'lucide-react';
-import { useApp } from '../context/AppContext';
+import { useApp } from '../context/useApp';
 import BrandLogo from '../components/brand/BrandLogo';
 import PartnerFooter from '../components/brand/PartnerFooter';
 import { BRAND } from '../data/brand';

@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import { useParams } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import { Activity, Volume2 } from 'lucide-react';
@@ -9,15 +9,44 @@ import PageContainer from '../components/layout/PageContainer';
 import PageHeader from '../components/layout/PageHeader';
 import Button from '../components/ui/Button';
 import { PATHS } from '../routes/paths';
-import { organData, aiInsights } from '../data/mockData';
-import { useApp } from '../context/AppContext';
+import { useApp } from '../context/useApp';
+import { apiGet } from '../api/client';
 
 export default function OrganDetailPage() {
   const { organId = 'heart' } = useParams();
   const { selectedPatient, vitals, showToast } = useApp();
-  const data = organData[organId] || organData.heart;
+  const [organData, setOrganData] = useState({});
+  const [aiInsights, setAiInsights] = useState(null);
   const [playing, setPlaying] = useState(false);
+  const audioBars = useMemo(
+    () =>
+      Array.from({ length: 32 }, (_, i) => {
+        const wave = 0.5 + 0.5 * Math.sin(i * 1.7);
+        return 20 + wave * 40;
+      }),
+    []
+  );
 
+  useEffect(() => {
+    if (!selectedPatient?.id) return;
+    Promise.all([
+      apiGet(`/patients/${selectedPatient.id}/organs/`),
+      apiGet(`/patients/${selectedPatient.id}/ai-insights/`),
+    ]).then(([organs, insights]) => {
+      setOrganData(organs);
+      setAiInsights(insights);
+    });
+  }, [selectedPatient?.id]);
+
+  if (!selectedPatient || !aiInsights) {
+    return (
+      <PageContainer>
+        <p className="text-on-surface-variant text-sm">Loading organ data...</p>
+      </PageContainer>
+    );
+  }
+
+  const data = organData[organId] || organData.heart || {};
   const organLabel = data.label || organId;
 
   return (
@@ -48,7 +77,7 @@ export default function OrganDetailPage() {
               </h2>
               <span className="label-caps text-secondary animate-pulse">LIVE</span>
             </div>
-            <MiniECG height={180} />
+            <MiniECG height={180} patientId={selectedPatient.id} ecgPoints={data.ecgPoints} />
             <div className="grid grid-cols-3 gap-4 mt-6">
               <div>
                 <p className="label-caps text-[10px] text-on-surface-variant">BPM</p>
@@ -79,7 +108,7 @@ export default function OrganDetailPage() {
                   key={i}
                   className="w-1 bg-secondary rounded-full"
                   animate={{
-                    height: playing ? [8, 20 + Math.random() * 40, 8] : 8,
+                      height: playing ? [8, audioBars[i], 8] : 8,
                   }}
                   transition={{ repeat: playing ? Infinity : 0, duration: 0.8, delay: i * 0.03 }}
                 />

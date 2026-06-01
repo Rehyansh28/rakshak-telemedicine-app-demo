@@ -10,9 +10,8 @@ import {
   FileText,
   ChevronDown,
 } from 'lucide-react';
-import { doctorProfile } from '../../data/mockData';
 import { PATHS } from '../../routes/paths';
-import { useApp } from '../../context/AppContext';
+import { useApp } from '../../context/useApp';
 
 export default function ProfileMenu({ onSettings, onSupport, onShieldClick }) {
   const navigate = useNavigate();
@@ -20,10 +19,18 @@ export default function ProfileMenu({ onSettings, onSupport, onShieldClick }) {
   const {
     profileOpen,
     setProfileOpen,
-    setIsAuthenticated,
+    logout,
     showToast,
     secureNode,
+    doctor,
   } = useApp();
+
+  const doctorProfile = doctor || {
+    name: 'Officer',
+    rank: '',
+    unit: '',
+    avatar: '',
+  };
 
   useEffect(() => {
     const handleClickOutside = (e) => {
@@ -41,7 +48,7 @@ export default function ProfileMenu({ onSettings, onSupport, onShieldClick }) {
 
   const handleLogout = () => {
     close();
-    setIsAuthenticated(false);
+    logout();
     showToast('Session ended — logged out securely', 'success');
     navigate(PATHS.doctor.login);
   };
@@ -103,7 +110,13 @@ export default function ProfileMenu({ onSettings, onSupport, onShieldClick }) {
         }`}
       >
         <div className="h-8 w-8 rounded-full bg-primary-container overflow-hidden border border-secondary/30 shrink-0">
-          <img src={doctorProfile.avatar} alt={doctorProfile.name} className="w-full h-full object-cover" />
+          {doctorProfile.avatar ? (
+            <img src={doctorProfile.avatar} alt={doctorProfile.name} className="w-full h-full object-cover" />
+          ) : (
+            <div className="w-full h-full bg-primary flex items-center justify-center text-on-primary text-xs font-bold">
+              {doctorProfile.name.charAt(0)}
+            </div>
+          )}
         </div>
         <span className="hidden lg:block text-sm font-medium text-primary max-w-[120px] truncate">
           {doctorProfile.name.split(' ').slice(-2).join(' ')}
@@ -126,14 +139,23 @@ export default function ProfileMenu({ onSettings, onSupport, onShieldClick }) {
           >
             <div className="p-4 border-b border-outline-variant/30 bg-surface-container-low">
               <div className="flex items-center gap-3">
-                <img
-                  src={doctorProfile.avatar}
-                  alt=""
-                  className="w-11 h-11 rounded-full object-cover border border-secondary/30"
-                />
+                {doctorProfile.avatar ? (
+                  <img
+                    src={doctorProfile.avatar}
+                    alt=""
+                    className="w-11 h-11 rounded-full object-cover border border-secondary/30"
+                  />
+                ) : (
+                  <div className="w-11 h-11 rounded-full bg-primary flex items-center justify-center text-on-primary font-bold">
+                    {doctorProfile.name.charAt(0)}
+                  </div>
+                )}
                 <div className="min-w-0">
                   <p className="font-sora font-semibold text-sm text-primary truncate">{doctorProfile.name}</p>
-                  <p className="text-xs text-on-surface-variant">{doctorProfile.rank} · {doctorProfile.unit}</p>
+                  <p className="text-xs text-on-surface-variant">
+                    {doctorProfile.rank}
+                    {doctorProfile.unit ? ` · ${doctorProfile.unit}` : ''}
+                  </p>
                   <p className="font-mono text-[10px] text-secondary mt-0.5">NODE {secureNode}</p>
                 </div>
               </div>

@@ -8,7 +8,7 @@ import PageContainer from '../components/layout/PageContainer';
 import PageHeader from '../components/layout/PageHeader';
 import Button from '../components/ui/Button';
 import { PATHS } from '../routes/paths';
-import { useApp } from '../context/AppContext';
+import { useApp } from '../context/useApp';
 
 export default function LiveConsultationPage() {
   const navigate = useNavigate();

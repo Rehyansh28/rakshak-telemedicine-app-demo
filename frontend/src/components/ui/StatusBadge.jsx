@@ -3,7 +3,6 @@ const styles = {
   warning: 'bg-amber-500 text-white',
   stable: 'bg-success text-white',
   monitoring: 'bg-secondary text-white',
-  warning: 'bg-amber-500 text-white',
   consultation: 'bg-secondary-container text-on-secondary-container',
   connected: 'bg-success/10 text-success border border-success/30',
   syncing: 'bg-secondary-container/20 text-secondary border border-secondary/30',
