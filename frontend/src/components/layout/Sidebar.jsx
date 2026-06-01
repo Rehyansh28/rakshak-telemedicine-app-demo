@@ -16,7 +16,7 @@ import {
   PanelLeftOpen,
 } from 'lucide-react';
 import { PATHS } from '../../routes/paths';
-import { useApp } from '../../context/AppContext';
+import { useApp } from '../../context/useApp';
 import { BRAND } from '../../data/brand';
 
 const navItems = [

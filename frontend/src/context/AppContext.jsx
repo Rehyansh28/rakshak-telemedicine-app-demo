@@ -1,7 +1,6 @@
 import { useState, useEffect, useCallback } from 'react';
 import { apiGet, apiPost, getStoredDoctor, getToken, setStoredDoctor, clearAuth } from '../api/client';
-
-import { AppContext } from './appContext';
+import { AppContext } from './app-context';
 
 export function AppProvider({ children }) {
   const [selectedPatient, setSelectedPatientState] = useState(null);

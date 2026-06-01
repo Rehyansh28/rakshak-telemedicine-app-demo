@@ -1,7 +1,7 @@
 import { useNavigate, Link } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import { Stethoscope, User, Wifi, ArrowLeft } from 'lucide-react';
-import { useApp } from '../context/appContext';
+import { useApp } from '../context/useApp';
 import { PATHS } from '../routes/paths';
 import BrandLogo from '../components/brand/BrandLogo';
 import IITJodhpurBadge from '../components/brand/IITJodhpurBadge';

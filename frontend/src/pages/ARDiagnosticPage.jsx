@@ -7,7 +7,7 @@ import PageContainer from '../components/layout/PageContainer';
 import PageHeader from '../components/layout/PageHeader';
 import Button from '../components/ui/Button';
 import { PATHS } from '../routes/paths';
-import { useApp } from '../context/appContext';
+import { useApp } from '../context/useApp';
 
 const ORGANS = ['heart', 'lungs', 'brain', 'chest', 'arms', 'legs', 'nose'];
 

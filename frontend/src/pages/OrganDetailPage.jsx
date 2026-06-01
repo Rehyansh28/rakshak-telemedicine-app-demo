@@ -9,7 +9,7 @@ import PageContainer from '../components/layout/PageContainer';
 import PageHeader from '../components/layout/PageHeader';
 import Button from '../components/ui/Button';
 import { PATHS } from '../routes/paths';
-import { useApp } from '../context/appContext';
+import { useApp } from '../context/useApp';
 import { apiGet } from '../api/client';
 
 export default function OrganDetailPage() {

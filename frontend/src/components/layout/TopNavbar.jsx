@@ -2,7 +2,7 @@ import { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import { Search, Bell, Shield, Menu } from 'lucide-react';
-import { useApp } from '../../context/AppContext';
+import { useApp } from '../../context/useApp';
 import { formatLiveTime } from '../../utils/formatTime';
 import { PATHS } from '../../routes/paths';
 import { apiGet } from '../../api/client';

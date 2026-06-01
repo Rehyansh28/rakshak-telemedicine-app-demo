@@ -3,7 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
 import { X, Activity, Wind, Brain, Heart, ExternalLink } from 'lucide-react';
 import { PATHS } from '../../routes/paths';
-import { useApp } from '../../context/AppContext';
+import { useApp } from '../../context/useApp';
 import { apiGet } from '../../api/client';
 import MiniECG from '../charts/MiniECG';
 import GlassCard from '../ui/GlassCard';

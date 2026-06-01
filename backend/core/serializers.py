@@ -1,7 +1,5 @@
 from rest_framework import serializers
 
-from django.contrib.auth.models import User
-
 from .models import (
     ActivityLog,
     AIInsight,
@@ -64,50 +62,6 @@ class DoctorSerializer(CamelCaseSerializerMixin, serializers.ModelSerializer):
     class Meta:
         model = Doctor
         fields = ["name", "rank", "unit", "avatar"]
-
-
-class AdminUserSummarySerializer(CamelCaseSerializerMixin, serializers.ModelSerializer):
-    class Meta:
-        model = User
-        fields = ["id", "username", "email", "is_staff", "is_superuser", "is_active"]
-
-
-class AdminDoctorSerializer(CamelCaseSerializerMixin, serializers.ModelSerializer):
-    user = AdminUserSummarySerializer(read_only=True)
-    userId = serializers.IntegerField(source="user_id", read_only=True)
-
-    class Meta:
-        model = Doctor
-        fields = ["id", "userId", "user", "name", "rank", "unit", "avatar_url"]
-
-
-class AdminPatientSerializer(CamelCaseSerializerMixin, serializers.ModelSerializer):
-    id = serializers.CharField(source="soldier_id")
-    user = AdminUserSummarySerializer(read_only=True)
-    userId = serializers.IntegerField(source="user_id", read_only=True)
-
-    class Meta:
-        model = Patient
-        fields = [
-            "id",
-            "userId",
-            "user",
-            "name",
-            "rank",
-            "regiment",
-            "status",
-            "altitude",
-            "heart_rate",
-            "spo2",
-            "temp",
-            "fatigue",
-            "stress",
-            "location",
-            "last_update_label",
-            "respiration",
-            "bp_systolic",
-            "bp_diastolic",
-        ]
 
 
 class EmergencyAlertSerializer(CamelCaseSerializerMixin, serializers.ModelSerializer):

@@ -22,7 +22,7 @@ import Button from '../components/ui/Button';
 import PatientPageHeader from '../components/layout/PatientPageHeader';
 import StatusBadge from '../components/ui/StatusBadge';
 import { PATHS } from '../routes/paths';
-import { useApp } from '../context/appContext';
+import { useApp } from '../context/useApp';
 
 const icons = { heart: Heart, droplets: Droplets, thermometer: Thermometer, shield: Shield };
 

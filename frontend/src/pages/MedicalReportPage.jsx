@@ -6,7 +6,7 @@ import PageHeader from '../components/layout/PageHeader';
 import Button from '../components/ui/Button';
 import { PATHS } from '../routes/paths';
 import { formatDate } from '../utils/formatTime';
-import { useApp } from '../context/appContext';
+import { useApp } from '../context/useApp';
 import { BRAND } from '../data/brand';
 import BrandLogo from '../components/brand/BrandLogo';
 import IITJodhpurBadge from '../components/brand/IITJodhpurBadge';

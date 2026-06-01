@@ -9,7 +9,7 @@ import {
   Bell,
 } from 'lucide-react';
 import { PATHS } from '../../routes/paths';
-import { useApp } from '../../context/AppContext';
+import { useApp } from '../../context/useApp';
 import ToastContainer from '../ui/Toast';
 import BrandLogo from '../brand/BrandLogo';
 import PatientProfileMenu from './PatientProfileMenu';

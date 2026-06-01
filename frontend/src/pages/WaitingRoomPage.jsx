@@ -17,7 +17,7 @@ import Button from '../components/ui/Button';
 import PatientPageHeader from '../components/layout/PatientPageHeader';
 import StatusBadge from '../components/ui/StatusBadge';
 import { PATHS } from '../routes/paths';
-import { useApp } from '../context/appContext';
+import { useApp } from '../context/useApp';
 
 export default function WaitingRoomPage() {
   const navigate = useNavigate();

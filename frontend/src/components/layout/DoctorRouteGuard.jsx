@@ -1,5 +1,5 @@
 import { Navigate, useLocation } from 'react-router-dom';
-import { useApp } from '../../context/AppContext';
+import { useApp } from '../../context/useApp';
 import { PATHS } from '../../routes/paths';
 
 export default function DoctorRouteGuard({ children }) {

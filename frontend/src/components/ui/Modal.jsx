@@ -2,7 +2,7 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { X } from 'lucide-react';
 
 export default function Modal({ open, onClose, title, children, size = 'md' }) {
-  const widths = { sm: 'max-w-sm', md: 'max-w-md', lg: 'max-w-lg' };
+  const widths = { sm: 'max-w-sm', md: 'max-w-md', lg: 'max-w-lg', xl: 'max-w-3xl', full: 'max-w-5xl' };
 
   return (
     <AnimatePresence>

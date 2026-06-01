@@ -11,7 +11,7 @@ import {
   ChevronDown,
 } from 'lucide-react';
 import { PATHS } from '../../routes/paths';
-import { useApp } from '../../context/AppContext';
+import { useApp } from '../../context/useApp';
 
 export default function ProfileMenu({ onSettings, onSupport, onShieldClick }) {
   const navigate = useNavigate();

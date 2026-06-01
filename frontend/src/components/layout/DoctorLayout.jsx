@@ -7,7 +7,7 @@ import DoctorRouteGuard from './DoctorRouteGuard';
 import Modal from '../ui/Modal';
 import ToastContainer from '../ui/Toast';
 import Button from '../ui/Button';
-import { useApp } from '../../context/AppContext';
+import { useApp } from '../../context/useApp';
 import { PATHS } from '../../routes/paths';
 import { BRAND } from '../../data/brand';
 import IITJodhpurBadge from '../brand/IITJodhpurBadge';

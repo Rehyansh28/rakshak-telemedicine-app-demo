@@ -6,7 +6,7 @@ import PatientCard from '../components/patient/PatientCard';
 import PageContainer from '../components/layout/PageContainer';
 import PageHeader from '../components/layout/PageHeader';
 import { PATHS } from '../routes/paths';
-import { useApp } from '../context/appContext';
+import { useApp } from '../context/useApp';
 
 const FILTERS = [
   { id: 'all', label: 'All' },

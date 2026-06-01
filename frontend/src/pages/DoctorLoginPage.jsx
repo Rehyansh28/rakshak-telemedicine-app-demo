@@ -2,7 +2,7 @@ import { useState } from 'react';
 import { useNavigate, useLocation, Link } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import { Lock, Fingerprint } from 'lucide-react';
-import { useApp } from '../context/appContext';
+import { useApp } from '../context/useApp';
 import { PATHS } from '../routes/paths';
 import Button from '../components/ui/Button';
 import BrandLogo from '../components/brand/BrandLogo';
@@ -58,12 +58,12 @@ export default function DoctorLoginPage() {
             <p className="text-sm text-error bg-error-container/30 rounded-lg px-3 py-2">{error}</p>
           )}
           <div>
-            <label className="label-caps text-on-surface-variant block mb-2">Officer ID</label>
+            <label className="label-caps text-on-surface-variant block mb-2">Username or email</label>
             <input
               type="text"
               value={credentials.id}
               onChange={(e) => setCredentials({ ...credentials, id: e.target.value })}
-              placeholder="doctor"
+              placeholder="username or email"
               className="w-full bg-surface-container-low border border-outline-variant/50 rounded-lg px-4 py-3 text-sm outline-none focus:ring-2 focus:ring-secondary/40"
               autoComplete="username"
             />
