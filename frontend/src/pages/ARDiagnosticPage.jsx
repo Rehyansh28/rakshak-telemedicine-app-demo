@@ -1,5 +1,5 @@
 import { useNavigate } from 'react-router-dom';
-import HumanBody3D from '../components/ar/HumanBody3D';
+import HumanBodyMap from '../components/ar/HumanBodyMap';
 import OrganInfoPanel from '../components/ar/OrganInfoPanel';
 import MetricWidget from '../components/ui/MetricWidget';
 import MiniECG from '../components/charts/MiniECG';
@@ -54,9 +54,9 @@ export default function ARDiagnosticPage() {
         </div>
 
         <div className="flex-1 relative min-h-[280px]">
-          <HumanBody3D onOrganClick={handleOrganClick} activeOrgan={selectedOrgan} />
-          <p className="absolute bottom-4 left-1/2 -translate-x-1/2 label-caps text-[10px] text-on-surface-variant bg-white/90 px-4 py-2 rounded-full shadow-sm">
-            Click organ hotspots · Open full diagnostic from panel
+          <HumanBodyMap onOrganClick={handleOrganClick} activeOrgan={selectedOrgan} />
+          <p className="absolute bottom-4 left-1/2 -translate-x-1/2 label-caps text-[10px] text-on-surface-variant bg-white/90 px-4 py-2 rounded-full shadow-sm z-20">
+            Tap body regions · Open full diagnostic from panel
           </p>
         </div>
 
