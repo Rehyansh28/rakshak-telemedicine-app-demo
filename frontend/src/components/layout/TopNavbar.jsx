@@ -1,10 +1,11 @@
+import { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import { Search, Bell, Shield, Menu } from 'lucide-react';
 import { useApp } from '../../context/AppContext';
-import { emergencyAlerts } from '../../data/mockData';
 import { formatLiveTime } from '../../utils/formatTime';
 import { PATHS } from '../../routes/paths';
+import { apiGet } from '../../api/client';
 import SlideOver from '../ui/SlideOver';
 import ProfileMenu from './ProfileMenu';
 
@@ -24,6 +25,13 @@ export default function TopNavbar({
     showToast,
   } = useApp();
   const navigate = useNavigate();
+  const [emergencyAlerts, setEmergencyAlerts] = useState([]);
+
+  useEffect(() => {
+    apiGet('/emergency-alerts/')
+      .then(setEmergencyAlerts)
+      .catch(() => {});
+  }, []);
 
   const handleAlertClick = (alert) => {
     const patient = patientList.find((p) => p.id === alert.soldierId);

@@ -9,7 +9,6 @@ import ToastContainer from '../ui/Toast';
 import Button from '../ui/Button';
 import { useApp } from '../../context/AppContext';
 import { PATHS } from '../../routes/paths';
-import { patients } from '../../data/mockData';
 import { BRAND } from '../../data/brand';
 import IITJodhpurBadge from '../brand/IITJodhpurBadge';
 
@@ -22,6 +21,7 @@ export default function DoctorLayout() {
     showToast,
     secureNode,
     sidebarCollapsed,
+    patientList,
   } = useApp();
 
   const [placeholderModal, setPlaceholderModal] = useState(null);
@@ -35,7 +35,8 @@ export default function DoctorLayout() {
   const onSettings = (isSupport = false) => setSettingsModal(isSupport ? 'support' : 'settings');
 
   const confirmSOS = () => {
-    const critical = patients.find((p) => p.status === 'critical') || patients[0];
+    const critical = patientList.find((p) => p.status === 'critical') || patientList[0];
+    if (!critical) return;
     setSelectedPatient(critical);
     setSosModal(false);
     setMobileNavOpen(false);

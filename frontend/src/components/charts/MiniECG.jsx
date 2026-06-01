@@ -1,9 +1,27 @@
-import { useMemo } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import { LineChart, Line, ResponsiveContainer, YAxis } from 'recharts';
-import { generateEcgPoints } from '../../data/mockData';
+import { generateEcgPoints, ecgArrayToChartPoints } from '../../utils/ecg';
+import { apiGet } from '../../api/client';
 
-export default function MiniECG({ height = 40, animated = true }) {
-  const data = useMemo(() => generateEcgPoints(50), []);
+export default function MiniECG({ height = 40, animated = true, patientId, ecgPoints: ecgPointsProp }) {
+  const [ecgBaseline, setEcgBaseline] = useState(null);
+
+  useEffect(() => {
+    if (ecgPointsProp) return;
+    if (!patientId) return;
+    apiGet(`/patients/${patientId}/organs/`)
+      .then((organs) => {
+        if (organs.heart?.ecgPoints) setEcgBaseline(organs.heart.ecgPoints);
+      })
+      .catch(() => {});
+  }, [patientId, ecgPointsProp]);
+
+  const data = useMemo(() => {
+    const source = ecgPointsProp || ecgBaseline;
+    const fromApi = ecgArrayToChartPoints(source);
+    if (fromApi) return fromApi;
+    return generateEcgPoints(50);
+  }, [ecgBaseline, ecgPointsProp]);
 
   return (
     <div className="vitals-wave rounded" style={{ height }}>

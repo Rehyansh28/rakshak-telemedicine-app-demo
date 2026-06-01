@@ -1,6 +1,7 @@
 export const PATHS = {
   home: '/',
   roleSelection: '/role-selection',
+  superadminuser: '/superadminuser',
   doctor: {
     login: '/doctor/login',
     dashboard: '/doctor/dashboard',

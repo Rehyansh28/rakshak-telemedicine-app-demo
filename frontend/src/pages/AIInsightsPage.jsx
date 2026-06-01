@@ -1,3 +1,4 @@
+import { useEffect, useState } from 'react';
 import { Brain, Mountain, Heart, Zap, Shield } from 'lucide-react';
 import GlassCard from '../components/ui/GlassCard';
 import VitalsChart from '../components/charts/VitalsChart';
@@ -5,9 +6,9 @@ import PageContainer from '../components/layout/PageContainer';
 import PageHeader from '../components/layout/PageHeader';
 import Button from '../components/ui/Button';
 import { PATHS } from '../routes/paths';
-import { aiInsights } from '../data/mockData';
-import { useApp } from '../context/AppContext';
+import { useApp } from '../context/appContext';
 import { motion } from 'framer-motion';
+import { apiGet } from '../api/client';
 
 function RiskGauge({ label, value, icon: Icon, color }) {
   return (
@@ -31,6 +32,27 @@ function RiskGauge({ label, value, icon: Icon, color }) {
 
 export default function AIInsightsPage() {
   const { selectedPatient } = useApp();
+  const [aiInsights, setAiInsights] = useState(null);
+  const [recommendations, setRecommendations] = useState([]);
+
+  useEffect(() => {
+    if (!selectedPatient?.id) return;
+    Promise.all([
+      apiGet(`/patients/${selectedPatient.id}/ai-insights/`),
+      apiGet(`/ai-recommendations/?patient=${selectedPatient.id}`),
+    ]).then(([insights, recs]) => {
+      setAiInsights(insights);
+      setRecommendations(recs);
+    });
+  }, [selectedPatient?.id]);
+
+  if (!selectedPatient || !aiInsights) {
+    return (
+      <PageContainer>
+        <p className="text-on-surface-variant text-sm">Loading AI insights...</p>
+      </PageContainer>
+    );
+  }
 
   return (
     <PageContainer>
@@ -71,13 +93,7 @@ export default function AIInsightsPage() {
       <GlassCard className="mb-8">
         <h2 className="label-caps text-secondary mb-4">AI Recommendations</h2>
         <ul className="space-y-3">
-          {[
-            'Immediate O2 supplementation recommended — SpO2 below 90%',
-            'Schedule monitored descent within 6 hours per altitude protocol',
-            'Administer acetazolamide 250mg — AMS Stage II indicators',
-            'Cardiac monitoring — sustained tachycardia pattern detected',
-            'Rest cycle: minimum 8 hours before next patrol assignment',
-          ].map((rec, i) => (
+          {recommendations.map((rec, i) => (
             <motion.li
               key={i}
               initial={{ opacity: 0, x: -10 }}

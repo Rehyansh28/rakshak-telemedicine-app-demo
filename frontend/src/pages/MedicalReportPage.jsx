@@ -1,24 +1,49 @@
+import { useEffect, useState } from 'react';
 import { Printer, Download, Shield, CheckCircle } from 'lucide-react';
 import VitalsChart from '../components/charts/VitalsChart';
 import PageContainer from '../components/layout/PageContainer';
 import PageHeader from '../components/layout/PageHeader';
 import Button from '../components/ui/Button';
 import { PATHS } from '../routes/paths';
-import { medicalReport, aiInsights } from '../data/mockData';
 import { formatDate } from '../utils/formatTime';
-import { useApp } from '../context/AppContext';
+import { useApp } from '../context/appContext';
 import { BRAND } from '../data/brand';
 import BrandLogo from '../components/brand/BrandLogo';
 import IITJodhpurBadge from '../components/brand/IITJodhpurBadge';
+import { apiGet } from '../api/client';
 
 export default function MedicalReportPage() {
-  const { showToast } = useApp();
-  const { patient, doctor, organs, timeline, notes, hash, reportId, diagnosis } = medicalReport;
+  const { showToast, selectedPatient } = useApp();
+  const [medicalReport, setMedicalReport] = useState(null);
+  const [aiInsights, setAiInsights] = useState(null);
+
+  useEffect(() => {
+    if (!selectedPatient?.id) return;
+    Promise.all([
+      apiGet(`/patients/${selectedPatient.id}/medical-report/`),
+      apiGet(`/patients/${selectedPatient.id}/ai-insights/`),
+    ])
+      .then(([report, insights]) => {
+        setMedicalReport(report);
+        setAiInsights(insights);
+      })
+      .catch(() => showToast('Failed to load medical report', 'info'));
+  }, [selectedPatient?.id, showToast]);
 
   const handleDownload = () => {
     window.print();
     showToast('Report exported — PDF saved (demo)', 'success');
   };
+
+  if (!medicalReport) {
+    return (
+      <PageContainer>
+        <p className="text-on-surface-variant text-sm">Loading medical report...</p>
+      </PageContainer>
+    );
+  }
+
+  const { patient, doctor, organs, timeline, notes, hash, reportId, diagnosis } = medicalReport;
 
   return (
     <PageContainer>
@@ -91,10 +116,12 @@ export default function MedicalReportPage() {
           </div>
         </section>
 
-        <section className="mb-8">
-          <h2 className="label-caps text-secondary mb-4">Vitals Chart</h2>
-          <VitalsChart data={aiInsights.trends.heartRate} dataKey="v" color="#002d62" height={160} />
-        </section>
+        {aiInsights && (
+          <section className="mb-8">
+            <h2 className="label-caps text-secondary mb-4">Vitals Chart</h2>
+            <VitalsChart data={aiInsights.trends.heartRate} dataKey="v" color="#002d62" height={160} />
+          </section>
+        )}
 
         <section className="mb-8">
           <h2 className="label-caps text-secondary mb-4">Diagnostic Timeline</h2>
@@ -111,9 +138,11 @@ export default function MedicalReportPage() {
         <section className="mb-8">
           <h2 className="label-caps text-secondary mb-4">Doctor Notes</h2>
           <p className="text-sm leading-relaxed bg-surface-container-low p-4 rounded-lg">{notes}</p>
-          <p className="mt-4 text-sm">
-            <strong>{doctor.name}</strong> · {doctor.rank} · {doctor.unit}
-          </p>
+          {doctor && (
+            <p className="mt-4 text-sm">
+              <strong>{doctor.name}</strong> · {doctor.rank} · {doctor.unit}
+            </p>
+          )}
         </section>
 
         <div className="mb-8 pt-6 border-t border-outline-variant/20">

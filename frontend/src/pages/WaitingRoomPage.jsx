@@ -1,4 +1,6 @@
+import { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
+import { apiGet } from '../api/client';
 import { motion } from 'framer-motion';
 import {
   Clock,
@@ -15,13 +17,23 @@ import Button from '../components/ui/Button';
 import PatientPageHeader from '../components/layout/PatientPageHeader';
 import StatusBadge from '../components/ui/StatusBadge';
 import { PATHS } from '../routes/paths';
-import { useApp } from '../context/AppContext';
+import { useApp } from '../context/appContext';
 
 export default function WaitingRoomPage() {
   const navigate = useNavigate();
   const { vitals, showToast, setIsAuthenticated, setRole, selectedPatient } = useApp();
-  const queuePosition = 2;
-  const waitTime = 4;
+  const [queuePosition, setQueuePosition] = useState(2);
+  const [waitTime, setWaitTime] = useState(4);
+
+  useEffect(() => {
+    if (!selectedPatient?.id) return;
+    apiGet(`/queue/${selectedPatient.id}/`)
+      .then((data) => {
+        setQueuePosition(data.queuePosition);
+        setWaitTime(data.waitTime);
+      })
+      .catch(() => {});
+  }, [selectedPatient?.id]);
 
   const simulateDoctorJoined = () => {
     showToast('Medical officer connected — uplink established', 'success');

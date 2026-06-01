@@ -1,4 +1,5 @@
 import { useEffect, useState } from 'react';
+import { apiGet } from '../api/client';
 import { useNavigate } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import {
@@ -21,8 +22,7 @@ import Button from '../components/ui/Button';
 import PatientPageHeader from '../components/layout/PatientPageHeader';
 import StatusBadge from '../components/ui/StatusBadge';
 import { PATHS } from '../routes/paths';
-import { sensorSteps } from '../data/mockData';
-import { useApp } from '../context/AppContext';
+import { useApp } from '../context/appContext';
 
 const icons = { heart: Heart, droplets: Droplets, thermometer: Thermometer, shield: Shield };
 
@@ -37,12 +37,16 @@ export default function SensorConnectionPage() {
   const navigate = useNavigate();
   const { sensorProgress, setSensorProgress, showToast, selectedPatient, vitals } = useApp();
   const [syncing, setSyncing] = useState(true);
+  const [sensorSteps, setSensorSteps] = useState([]);
+
+  useEffect(() => {
+    if (!selectedPatient?.id) return;
+    apiGet(`/patients/${selectedPatient.id}/sensor-steps/`).then(setSensorSteps).catch(() => {});
+  }, [selectedPatient?.id]);
 
   const progress = Math.min(sensorProgress, 100);
 
   useEffect(() => {
-    setSensorProgress(0);
-    setSyncing(true);
     const interval = setInterval(() => {
       setSensorProgress((p) => {
         if (p >= 100) {
