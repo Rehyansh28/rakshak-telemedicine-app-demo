@@ -1,6 +1,6 @@
 import { useNavigate, Link } from 'react-router-dom';
 import { motion } from 'framer-motion';
-import { Stethoscope, User, Wifi, ArrowLeft } from 'lucide-react';
+import { Stethoscope, ClipboardList, Wifi, ArrowLeft } from 'lucide-react';
 import { useApp } from '../context/useApp';
 import { PATHS } from '../routes/paths';
 import BrandLogo from '../components/brand/BrandLogo';
@@ -10,20 +10,20 @@ import { BRAND } from '../data/brand';
 const roles = [
   {
     id: 'doctor',
-    title: 'Medical Officer',
-    subtitle: 'Command Center Access',
-    description: 'Remote diagnostics, AR body mapping, AI insights & emergency triage',
+    title: 'Doctor View',
+    subtitle: 'Consultation Access',
+    description: 'Live video consultations, AR diagnostics, AI insights & emergency triage',
     icon: Stethoscope,
     path: PATHS.doctor.login,
     accent: 'border-primary',
   },
   {
-    id: 'patient',
-    title: 'Field Soldier',
-    subtitle: 'Bio-Suit Interface',
-    description: 'Sensor pairing, camera alignment & waiting room for telemedicine',
-    icon: User,
-    path: PATHS.patient.sensors,
+    id: 'staff',
+    title: 'Medical Staff View',
+    subtitle: 'Patient Management',
+    description: 'Register soldiers, prepare sensors & camera, and connect patients to doctors',
+    icon: ClipboardList,
+    path: PATHS.staff.login,
     accent: 'border-secondary',
   },
 ];
@@ -67,10 +67,11 @@ export default function RoleSelectionPage() {
           className="text-center mb-12"
         >
           <h2 className="font-sora text-3xl md:text-4xl font-bold text-primary mb-3">
-            Select Operational Role
+            Select Access View
           </h2>
           <p className="text-on-surface-variant max-w-lg mx-auto">
-            Choose your access profile for the {BRAND.name} tactical telemedicine platform
+            Medical personnel only. Soldiers are registered and assisted by staff — no direct soldier
+            login to this portal.
           </p>
         </motion.div>
 

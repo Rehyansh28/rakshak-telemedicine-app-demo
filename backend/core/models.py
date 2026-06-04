@@ -24,6 +24,16 @@ class Doctor(models.Model):
         return self.name
 
 
+class MedicalStaff(models.Model):
+    user = models.OneToOneField(User, on_delete=models.CASCADE, related_name="medical_staff_profile")
+    name = models.CharField(max_length=128)
+    rank = models.CharField(max_length=64)
+    post = models.CharField(max_length=128)
+
+    def __str__(self):
+        return self.name
+
+
 class Patient(models.Model):
     STATUS_CHOICES = [
         ("critical", "Critical"),

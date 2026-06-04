@@ -8,6 +8,7 @@ from core.models import (
     AIRecommendation,
     ConsultationQueue,
     Doctor,
+    MedicalStaff,
     EmergencyAlert,
     MedicalReport,
     OrganDiagnostic,
@@ -158,6 +159,7 @@ class Command(BaseCommand):
             ConsultationQueue,
             Patient,
             Doctor,
+            MedicalStaff,
             SystemConfig,
         ]:
             model.objects.all().delete()
@@ -199,6 +201,23 @@ class Command(BaseCommand):
         if admin_created:
             admin_user.set_password("rakshak2026")
             admin_user.save()
+
+        staff_user, staff_created = User.objects.get_or_create(
+            username="fieldmedic",
+            defaults={"email": "fieldmedic@rakshak.mil"},
+        )
+        if staff_created:
+            staff_user.set_password("rakshak2026")
+            staff_user.save()
+
+        MedicalStaff.objects.update_or_create(
+            user=staff_user,
+            defaults={
+                "name": "Capt. Priya Sharma",
+                "rank": "Captain",
+                "post": "Field Medical Post — Ladakh",
+            },
+        )
 
         patients = {}
         for pdata in PATIENTS:

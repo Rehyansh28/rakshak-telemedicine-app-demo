@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { apiGet } from '../api/client';
+import { apiGet, staffApiPost } from '../api/client';
 import { motion } from 'framer-motion';
 import {
   Clock,
@@ -10,6 +10,7 @@ import {
   Video,
   MessageSquare,
   ArrowLeft,
+  Bell,
 } from 'lucide-react';
 import GlassCard from '../components/ui/GlassCard';
 import MiniECG from '../components/charts/MiniECG';
@@ -21,7 +22,7 @@ import { useApp } from '../context/useApp';
 
 export default function WaitingRoomPage() {
   const navigate = useNavigate();
-  const { vitals, showToast, setIsAuthenticated, setRole, selectedPatient } = useApp();
+  const { vitals, showToast, selectedPatient } = useApp();
   const [queuePosition, setQueuePosition] = useState(2);
   const [waitTime, setWaitTime] = useState(4);
 
@@ -35,19 +36,27 @@ export default function WaitingRoomPage() {
       .catch(() => {});
   }, [selectedPatient?.id]);
 
-  const simulateDoctorJoined = () => {
-    showToast('Medical officer connected — uplink established', 'success');
-    setRole('doctor');
-    setIsAuthenticated(true);
-    setTimeout(() => navigate(PATHS.doctor.consultation), 800);
+  const notifyDoctor = async () => {
+    if (!selectedPatient?.id) return;
+    try {
+      const data = await staffApiPost(`/queue/${selectedPatient.id}/enqueue/`, {});
+      setQueuePosition(data.queuePosition);
+      setWaitTime(data.waitTime);
+      showToast(
+        `${selectedPatient.name} is in queue (#${data.queuePosition}) — doctor notified`,
+        'success'
+      );
+    } catch (e) {
+      showToast(e.message || 'Could not add to queue', 'info');
+    }
   };
 
   return (
     <div>
       <PatientPageHeader
-        eyebrow="Telemedicine Uplink · Step 3 of 3"
-        title="Patient Waiting Room"
-        description="You are in queue for a secure consultation with a medical officer. Keep bio-suit connected."
+        eyebrow="Connect to Doctor · Handoff"
+        title="Doctor Handoff — Waiting Room"
+        description="Keep the soldier connected while they wait for a medical officer. You may assist with positioning, vitals checks, and relaying messages during the consultation."
         actions={<StatusBadge status="consultation" label="IN QUEUE" />}
       />
 
@@ -61,10 +70,10 @@ export default function WaitingRoomPage() {
             >
               <Users className="w-12 h-12 text-secondary" />
             </motion.div>
-            <p className="label-caps text-secondary mb-2">Awaiting Medical Officer</p>
+            <p className="label-caps text-secondary mb-2">Awaiting Doctor</p>
             <p className="font-sora text-2xl font-bold text-primary">Position #{queuePosition} in queue</p>
             <p className="text-on-surface-variant text-sm mt-2">
-              Estimated wait: ~{waitTime} minutes · Do not disconnect sensors
+              Estimated wait: ~{waitTime} minutes · Keep bio-suit sensors attached on the soldier
             </p>
             <motion.div
               animate={{ opacity: [0.4, 1, 0.4] }}
@@ -100,11 +109,11 @@ export default function WaitingRoomPage() {
           </GlassCard>
 
           <div className="flex flex-col sm:flex-row gap-3">
-            <Button variant="ghost" icon={ArrowLeft} onClick={() => navigate(PATHS.patient.camera)} className="flex-1">
+            <Button variant="ghost" icon={ArrowLeft} onClick={() => navigate(PATHS.staff.camera)} className="flex-1">
               Back
             </Button>
-            <Button onClick={simulateDoctorJoined} icon={Video} className="flex-[2]">
-              Simulate Doctor Joined (Demo)
+            <Button onClick={notifyDoctor} icon={Bell} className="flex-[2]">
+              Notify Doctor — Patient Ready
             </Button>
           </div>
         </div>
@@ -123,10 +132,14 @@ export default function WaitingRoomPage() {
           </div>
 
           <GlassCard className="bg-white">
-            <p className="label-caps text-on-surface-variant text-[10px] mb-3">Session Info</p>
+            <p className="label-caps text-on-surface-variant text-[10px] mb-3">Active Soldier</p>
             <div className="space-y-2 text-sm">
               <div className="flex justify-between">
-                <span className="text-on-surface-variant">Soldier</span>
+                <span className="text-on-surface-variant">Name</span>
+                <span className="font-semibold text-primary text-xs truncate ml-2">{selectedPatient.name}</span>
+              </div>
+              <div className="flex justify-between">
+                <span className="text-on-surface-variant">ID</span>
                 <span className="font-mono text-xs font-bold truncate ml-2">{selectedPatient.id}</span>
               </div>
               <div className="flex justify-between">
@@ -144,25 +157,26 @@ export default function WaitingRoomPage() {
             <div className="flex gap-3">
               <Shield className="w-6 h-6 text-secondary shrink-0" />
               <p className="text-xs text-on-surface-variant leading-relaxed">
-                STRAT-LINK encryption active. All vitals streamed securely to command center.
+                STRAT-LINK encryption active. Vitals stream securely to the doctor command center. Soldiers do not
+                log in to this portal — staff manage the session end-to-end.
               </p>
             </div>
           </GlassCard>
 
           <GlassCard className="bg-white">
-            <p className="label-caps text-on-surface-variant text-[10px] mb-3">While You Wait</p>
+            <p className="label-caps text-on-surface-variant text-[10px] mb-3">Staff Checklist</p>
             <ul className="space-y-2 text-xs text-on-surface-variant">
               <li className="flex items-center gap-2">
                 <MessageSquare className="w-3.5 h-3.5 text-secondary" />
-                Stay seated and relaxed
+                Keep soldier calm and seated
               </li>
               <li className="flex items-center gap-2">
                 <Heart className="w-3.5 h-3.5 text-secondary" />
-                Keep sensors attached
+                Verify sensors remain attached
               </li>
               <li className="flex items-center gap-2">
                 <Video className="w-3.5 h-3.5 text-secondary" />
-                Camera will activate when called
+                Camera active when doctor joins
               </li>
             </ul>
           </GlassCard>

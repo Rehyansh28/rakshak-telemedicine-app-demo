@@ -1,5 +1,16 @@
 import { useState, useEffect, useCallback } from 'react';
-import { apiGet, apiPost, getStoredDoctor, getToken, setStoredDoctor, clearAuth } from '../api/client';
+import {
+  apiGet,
+  apiPost,
+  getStoredDoctor,
+  getStoredStaff,
+  getToken,
+  getStaffToken,
+  setStoredDoctor,
+  setStoredStaff,
+  clearAuth,
+  clearStaffAuth,
+} from '../api/client';
 import { AppContext } from './app-context';
 
 export function AppProvider({ children }) {
@@ -21,6 +32,8 @@ export function AppProvider({ children }) {
   const [selectedOrgan, setSelectedOrgan] = useState(null);
   const [sensorProgress, setSensorProgress] = useState(0);
   const [isAuthenticated, setIsAuthenticated] = useState(!!getToken());
+  const [staff, setStaffState] = useState(getStoredStaff);
+  const [isStaffAuthenticated, setIsStaffAuthenticated] = useState(!!getStaffToken());
   const [role, setRole] = useState(null);
   const [patientFilter, setPatientFilter] = useState('all');
   const [patientSort, setPatientSort] = useState('priority');
@@ -56,10 +69,16 @@ export function AppProvider({ children }) {
   const selectPatient = useCallback(
     (patient) => {
       setSelectedPatientState(patient);
-      applyPatientVitals(patient);
+      if (patient) applyPatientVitals(patient);
     },
     [applyPatientVitals]
   );
+
+  const refreshPatientList = useCallback(async () => {
+    const patients = await apiGet('/patients/');
+    setPatientList(patients);
+    return patients;
+  }, []);
 
   const setDoctorProfile = useCallback((profile) => {
     setDoctor(profile);
@@ -70,6 +89,17 @@ export function AppProvider({ children }) {
     clearAuth();
     setIsAuthenticated(false);
     setDoctor(null);
+  }, []);
+
+  const setStaff = useCallback((profile) => {
+    setStaffState(profile);
+    setStoredStaff(profile);
+  }, []);
+
+  const staffLogout = useCallback(() => {
+    clearStaffAuth();
+    setIsStaffAuthenticated(false);
+    setStaffState(null);
   }, []);
 
   useEffect(() => {
@@ -151,11 +181,17 @@ export function AppProvider({ children }) {
     selectedPatient,
     setSelectedPatient: selectPatient,
     patientList,
+    refreshPatientList,
     loading,
     error,
     doctor,
     setDoctor: setDoctorProfile,
     logout,
+    staff,
+    setStaff,
+    isStaffAuthenticated,
+    setIsStaffAuthenticated,
+    staffLogout,
     liveTimestamp,
     vitals,
     selectedOrgan,

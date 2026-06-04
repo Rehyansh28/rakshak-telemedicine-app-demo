@@ -8,6 +8,7 @@ from .models import (
     Doctor,
     EmergencyAlert,
     MedicalReport,
+    MedicalStaff,
     OrganDiagnostic,
     Patient,
     ReportOrgan,
@@ -62,6 +63,12 @@ class DoctorSerializer(CamelCaseSerializerMixin, serializers.ModelSerializer):
     class Meta:
         model = Doctor
         fields = ["name", "rank", "unit", "avatar"]
+
+
+class MedicalStaffSerializer(CamelCaseSerializerMixin, serializers.ModelSerializer):
+    class Meta:
+        model = MedicalStaff
+        fields = ["name", "rank", "post"]
 
 
 class EmergencyAlertSerializer(CamelCaseSerializerMixin, serializers.ModelSerializer):

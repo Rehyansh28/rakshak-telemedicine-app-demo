@@ -1,7 +1,7 @@
 import { useNavigate } from 'react-router-dom';
-import { motion } from 'framer-motion';
-import { Video, Mic, MicOff, PhoneOff, Maximize2, MessageSquare, Scan, FileText, Brain } from 'lucide-react';
+import { Video, VideoOff, Mic, MicOff, PhoneOff, Maximize2, MessageSquare, Scan, FileText, Brain } from 'lucide-react';
 import GlassCard from '../components/ui/GlassCard';
+import LiveCameraPreview from '../components/camera/LiveCameraPreview';
 import StatusBadge from '../components/ui/StatusBadge';
 import MiniECG from '../components/charts/MiniECG';
 import PageContainer from '../components/layout/PageContainer';
@@ -38,11 +38,11 @@ export default function LiveConsultationPage() {
       active: !micMuted,
     },
     {
-      icon: videoOn ? Video : Video,
+      icon: videoOn ? Video : VideoOff,
       label: 'Video',
       onClick: () => {
         updateConsultationControl('videoOn', !videoOn);
-        showToast(videoOn ? 'Video paused' : 'Video resumed', 'info');
+        showToast(videoOn ? 'Camera off' : 'Camera on', 'info');
       },
       active: videoOn,
     },
@@ -89,30 +89,22 @@ export default function LiveConsultationPage() {
 
       <div className="flex-1 grid lg:grid-cols-3 gap-4 min-h-0">
         <div className="lg:col-span-2 relative rounded-xl overflow-hidden bg-primary-container/10 border border-outline-variant/30 min-h-[280px]">
-          <div className="absolute inset-0 flex items-center justify-center">
-            {videoOn ? (
-              <div className="text-center">
-                <motion.div
-                  animate={{ scale: [1, 1.05, 1] }}
-                  transition={{ repeat: Infinity, duration: 2 }}
-                  className="w-32 h-32 rounded-full bg-secondary-container/20 border-4 border-secondary-container flex items-center justify-center mx-auto mb-4"
-                >
-                  <Video className="w-12 h-12 text-secondary" />
-                </motion.div>
-                <p className="label-caps text-secondary">SAT-NODE Video Feed</p>
-                <p className="text-sm text-on-surface-variant mt-1">{selectedPatient.location}</p>
+          <LiveCameraPreview active={videoOn} className="absolute inset-0 min-h-[280px]">
+            {videoOn && (
+              <div className="absolute bottom-20 left-4 z-10 glass-panel px-3 py-2 rounded-lg max-w-[200px]">
+                <p className="label-caps text-[10px] text-secondary">Patient uplink</p>
+                <p className="text-xs text-on-surface-variant truncate">{selectedPatient.name}</p>
+                <p className="text-[10px] text-on-surface-variant/80">{selectedPatient.location}</p>
               </div>
-            ) : (
-              <p className="label-caps text-on-surface-variant">Video feed paused</p>
             )}
-          </div>
-          <div className="absolute top-4 left-4 glass-panel px-3 py-2 rounded-lg">
+          </LiveCameraPreview>
+          <div className="absolute top-4 left-4 glass-panel px-3 py-2 rounded-lg z-20">
             <span className="label-caps text-[10px] text-error flex items-center gap-1">
               <span className="w-2 h-2 bg-error rounded-full animate-pulse" />
               REC · LIVE
             </span>
           </div>
-          <div className="absolute bottom-4 left-1/2 -translate-x-1/2 flex gap-3">
+          <div className="absolute bottom-4 left-1/2 -translate-x-1/2 flex gap-3 z-20">
             {toolbar.map((item) => (
               <button
                 key={item.label}

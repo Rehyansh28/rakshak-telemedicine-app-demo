@@ -12,6 +12,7 @@ from .admin_serializers import (
     AdminAIRecommendationSerializer,
     AdminConsultationQueueSerializer,
     AdminDoctorSerializer,
+    AdminMedicalStaffSerializer,
     AdminEmergencyAlertSerializer,
     AdminMedicalReportSerializer,
     AdminOrganDiagnosticSerializer,
@@ -25,6 +26,7 @@ from .models import (
     AIRecommendation,
     ConsultationQueue,
     Doctor,
+    MedicalStaff,
     EmergencyAlert,
     MedicalReport,
     OrganDiagnostic,
@@ -32,39 +34,24 @@ from .models import (
     SensorStep,
     SystemConfig,
 )
+from .patient_utils import apply_patient_fields, bootstrap_patient_session, build_patient_create_data
 from .utils import keys_to_camel
 
 
-def _apply_patient_fields(patient, data):
-    mapping = {
-        "name": "name",
-        "rank": "rank",
-        "regiment": "regiment",
-        "status": "status",
-        "altitude": "altitude",
-        "heart_rate": "heart_rate",
-        "heartRate": "heart_rate",
-        "spo2": "spo2",
-        "temp": "temp",
-        "fatigue": "fatigue",
-        "stress": "stress",
-        "location": "location",
-        "last_update_label": "last_update_label",
-        "lastUpdate": "last_update_label",
-        "respiration": "respiration",
-        "bp_systolic": "bp_systolic",
-        "bpSystolic": "bp_systolic",
-        "bp_diastolic": "bp_diastolic",
-        "bpDiastolic": "bp_diastolic",
-    }
-    for key, field in mapping.items():
-        if key in data:
-            val = data.get(key)
-            if field in ("altitude", "heart_rate", "spo2", "fatigue", "stress", "respiration", "bp_systolic", "bp_diastolic"):
-                val = int(val)
-            elif field == "temp":
-                val = float(val)
-            setattr(patient, field, val)
+def _username_conflict_detail(username: str):
+    """Return a human-readable message if username is taken, else None."""
+    user = User.objects.filter(username=username).first()
+    if not user:
+        return None
+    if Doctor.objects.filter(user=user).exists():
+        return f"Username \"{username}\" is already used by a doctor. Pick another username or edit the existing doctor."
+    if MedicalStaff.objects.filter(user=user).exists():
+        return f"Username \"{username}\" is already used by medical staff. Pick another username or edit that account."
+    if user.is_superuser or user.is_staff:
+        return f"Username \"{username}\" is reserved for a system admin account (e.g. superadmin)."
+    if Patient.objects.filter(user=user).exists():
+        return f"Username \"{username}\" is linked to a soldier profile. Soldiers do not need login credentials."
+    return f"Username \"{username}\" already exists. Choose a different username."
 
 
 def _apply_user_credentials(user, data, create=False):
@@ -91,6 +78,7 @@ class AdminOverviewView(APIView):
                 {
                     "stats": {
                         "doctors": Doctor.objects.count(),
+                        "medical_staff": MedicalStaff.objects.count(),
                         "patients": Patient.objects.count(),
                         "alerts": EmergencyAlert.objects.count(),
                         "critical_alerts": EmergencyAlert.objects.filter(alert_type="critical").count(),
@@ -118,13 +106,16 @@ class AdminDoctorListCreateView(APIView):
         return Response(AdminDoctorSerializer(doctors, many=True).data)
 
     def post(self, request):
-        username = request.data.get("username", "")
+        username = (request.data.get("username") or "").strip()
         password = request.data.get("password", "")
         if not username or not password or not request.data.get("name"):
             return Response(
                 {"detail": "username, password, and name are required"},
                 status=status.HTTP_400_BAD_REQUEST,
             )
+        conflict = _username_conflict_detail(username)
+        if conflict:
+            return Response({"detail": conflict}, status=status.HTTP_409_CONFLICT)
         try:
             with transaction.atomic():
                 user = User.objects.create(
@@ -142,7 +133,10 @@ class AdminDoctorListCreateView(APIView):
                     avatar_url=request.data.get("avatarUrl", "") or request.data.get("avatar_url", ""),
                 )
         except IntegrityError:
-            return Response({"detail": "Username already exists"}, status=status.HTTP_409_CONFLICT)
+            return Response(
+                {"detail": _username_conflict_detail(username) or "Username already exists"},
+                status=status.HTTP_409_CONFLICT,
+            )
         return Response(AdminDoctorSerializer(doctor).data, status=status.HTTP_201_CREATED)
 
 
@@ -188,6 +182,88 @@ class AdminDoctorDetailView(APIView):
         return Response(status=status.HTTP_204_NO_CONTENT)
 
 
+class AdminMedicalStaffListCreateView(APIView):
+    permission_classes = [IsAdminUser]
+
+    def get(self, request):
+        staff_list = MedicalStaff.objects.select_related("user").order_by("id")
+        return Response(AdminMedicalStaffSerializer(staff_list, many=True).data)
+
+    def post(self, request):
+        username = (request.data.get("username") or "").strip()
+        password = request.data.get("password", "")
+        if not username or not password or not request.data.get("name"):
+            return Response(
+                {"detail": "username, password, and name are required"},
+                status=status.HTTP_400_BAD_REQUEST,
+            )
+        conflict = _username_conflict_detail(username)
+        if conflict:
+            return Response({"detail": conflict}, status=status.HTTP_409_CONFLICT)
+        try:
+            with transaction.atomic():
+                user = User.objects.create(
+                    username=username,
+                    email=request.data.get("email", ""),
+                    is_staff=False,
+                )
+                user.set_password(password)
+                user.save()
+                staff = MedicalStaff.objects.create(
+                    user=user,
+                    name=request.data.get("name", ""),
+                    rank=request.data.get("rank", ""),
+                    post=request.data.get("post", "") or request.data.get("unit", ""),
+                )
+        except IntegrityError:
+            return Response(
+                {"detail": _username_conflict_detail(username) or "Username already exists"},
+                status=status.HTTP_409_CONFLICT,
+            )
+        return Response(AdminMedicalStaffSerializer(staff).data, status=status.HTTP_201_CREATED)
+
+
+class AdminMedicalStaffDetailView(APIView):
+    permission_classes = [IsAdminUser]
+
+    def get(self, request, staff_id: int):
+        try:
+            staff = MedicalStaff.objects.select_related("user").get(pk=staff_id)
+        except MedicalStaff.DoesNotExist:
+            return Response({"detail": "Not found"}, status=status.HTTP_404_NOT_FOUND)
+        return Response({"staff": AdminMedicalStaffSerializer(staff).data})
+
+    def patch(self, request, staff_id: int):
+        try:
+            staff = MedicalStaff.objects.select_related("user").get(pk=staff_id)
+        except MedicalStaff.DoesNotExist:
+            return Response({"detail": "Not found"}, status=status.HTTP_404_NOT_FOUND)
+        try:
+            with transaction.atomic():
+                user = staff.user
+                if any(k in request.data for k in ("username", "email", "password")):
+                    _apply_user_credentials(user, request.data)
+                for field, key in [("name", "name"), ("rank", "rank")]:
+                    if key in request.data:
+                        setattr(staff, field, request.data[key])
+                if "post" in request.data:
+                    staff.post = request.data["post"]
+                elif "unit" in request.data:
+                    staff.post = request.data["unit"]
+                staff.save()
+        except IntegrityError:
+            return Response({"detail": "Username already exists"}, status=status.HTTP_409_CONFLICT)
+        return Response(AdminMedicalStaffSerializer(staff).data)
+
+    def delete(self, request, staff_id: int):
+        try:
+            staff = MedicalStaff.objects.select_related("user").get(pk=staff_id)
+        except MedicalStaff.DoesNotExist:
+            return Response({"detail": "Not found"}, status=status.HTTP_404_NOT_FOUND)
+        staff.user.delete()
+        return Response(status=status.HTTP_204_NO_CONTENT)
+
+
 class AdminPatientListCreateView(APIView):
     permission_classes = [IsAdminUser]
 
@@ -218,18 +294,10 @@ class AdminPatientListCreateView(APIView):
             "bp_diastolic": int(request.data.get("bpDiastolic", 80) or 80),
         }
         try:
-            with transaction.atomic():
-                patient = Patient.objects.create(**pdata)
-                username = request.data.get("username")
-                password = request.data.get("password")
-                if username and password:
-                    user = User.objects.create(username=username, email=request.data.get("email", ""))
-                    user.set_password(password)
-                    user.save()
-                    patient.user = user
-                    patient.save(update_fields=["user"])
+            patient = Patient.objects.create(**pdata)
+            bootstrap_patient_session(patient)
         except IntegrityError:
-            return Response({"detail": "soldierId or username already exists"}, status=status.HTTP_409_CONFLICT)
+            return Response({"detail": "soldierId already exists"}, status=status.HTTP_409_CONFLICT)
         return Response(AdminPatientSerializer(patient).data, status=status.HTTP_201_CREATED)
 
 
@@ -273,27 +341,10 @@ class AdminPatientDetailView(APIView):
         except Patient.DoesNotExist:
             return Response({"detail": "Not found"}, status=status.HTTP_404_NOT_FOUND)
         try:
-            with transaction.atomic():
-                username = request.data.get("username")
-                email = request.data.get("email")
-                password = request.data.get("password")
-                if username is not None or email is not None or password:
-                    if not patient.user:
-                        if not username or not password:
-                            return Response(
-                                {"detail": "username and password required to create credentials"},
-                                status=status.HTTP_400_BAD_REQUEST,
-                            )
-                        user = User.objects.create(username=username, email=email or "")
-                        user.set_password(password)
-                        user.save()
-                        patient.user = user
-                    else:
-                        _apply_user_credentials(patient.user, request.data)
-                _apply_patient_fields(patient, request.data)
-                patient.save()
+            apply_patient_fields(patient, request.data)
+            patient.save()
         except IntegrityError:
-            return Response({"detail": "Username already exists"}, status=status.HTTP_409_CONFLICT)
+            return Response({"detail": "Update failed"}, status=status.HTTP_409_CONFLICT)
         return Response(AdminPatientSerializer(patient).data)
 
     def delete(self, request, soldier_id: str):

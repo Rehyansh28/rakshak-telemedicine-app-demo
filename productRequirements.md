@@ -5,9 +5,9 @@
 **Samarth Medic** is a high-fidelity tactical telemedicine ecosystem developed by IIT Jodhpur for the Indian Army. It is designed to provide advanced remote healthcare, real-time physiological monitoring, and AI-driven diagnostic support for soldiers in extreme terrains and combat environments.
 
 ### 2. Core User Personas
-*   **Medical Officer (Command Center)**: Remote specialist providing advanced diagnostics and emergency consultations.
-*   **Field Medic**: On-site responder initiating sensor initialization and triage.
-*   **Soldier (Patient)**: The wearer of the bio-suit sensors, engaging in periodic health checks and telemedicine sessions.
+*   **Doctor (Command Center)**: Remote specialist providing live consultations, AR diagnostics, and emergency triage.
+*   **Medical Staff**: Registers soldiers, selects patient profiles, runs sensor/camera setup, and connects soldiers to doctors. Soldiers do not access the portal directly.
+*   **Soldier (Patient)**: The wearer of the bio-suit sensors; all portal actions are performed by medical staff on their behalf.
 
 ### 3. Design System: Tactical Medical Interface
 The platform utilizes the **Tactical Medical Interface** design system, defined by:

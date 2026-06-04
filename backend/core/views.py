@@ -1,8 +1,10 @@
 import random
 
+from django.db import IntegrityError
 from django.utils import timezone
 from rest_framework import status
 from rest_framework.authtoken.models import Token
+from django.db.models import Max
 from rest_framework.permissions import AllowAny, IsAuthenticated
 from rest_framework.response import Response
 from rest_framework.views import APIView
@@ -13,6 +15,7 @@ from .models import (
     AIRecommendation,
     ConsultationQueue,
     Doctor,
+    MedicalStaff,
     EmergencyAlert,
     MedicalReport,
     OrganDiagnostic,
@@ -26,6 +29,7 @@ from .serializers import (
     AIRecommendationSerializer,
     ConsultationQueueSerializer,
     DoctorSerializer,
+    MedicalStaffSerializer,
     EmergencyAlertSerializer,
     MedicalReportSerializer,
     PatientDetailSerializer,
@@ -33,6 +37,8 @@ from .serializers import (
     SensorStepSerializer,
     SystemConfigSerializer,
 )
+from .patient_utils import apply_patient_fields, bootstrap_patient_session, build_patient_create_data
+from .permissions import IsMedicalStaff
 from .utils import authenticate_login, keys_to_camel
 
 
@@ -53,6 +59,28 @@ class LoginView(APIView):
             )
         token, _ = Token.objects.get_or_create(user=user)
         return Response({"token": token.key, "doctor": DoctorSerializer(doctor).data})
+
+
+class StaffLoginView(APIView):
+    permission_classes = [AllowAny]
+
+    def post(self, request):
+        identifier = request.data.get("username", "")
+        password = request.data.get("password", "")
+        user = authenticate_login(identifier, password)
+        if user is None:
+            return Response({"detail": "Invalid credentials"}, status=status.HTTP_401_UNAUTHORIZED)
+        staff = MedicalStaff.objects.filter(user=user).first()
+        if not staff:
+            return Response(
+                {
+                    "detail": "This account is not registered as medical staff. "
+                    "Create a medical staff profile in Super Admin."
+                },
+                status=status.HTTP_403_FORBIDDEN,
+            )
+        token, _ = Token.objects.get_or_create(user=user)
+        return Response({"token": token.key, "staff": MedicalStaffSerializer(staff).data})
 
 
 class SuperAdminLoginView(APIView):
@@ -100,15 +128,35 @@ class ConfigView(APIView):
 
 
 class PatientListView(APIView):
-    permission_classes = [AllowAny]
+    def get_permissions(self):
+        if self.request.method == "POST":
+            return [IsMedicalStaff()]
+        return [AllowAny()]
 
     def get(self, request):
         patients = Patient.objects.all()
         return Response(PatientSerializer(patients, many=True).data)
 
+    def post(self, request):
+        """Medical staff registration of a new soldier (patient) profile."""
+        soldier_id, pdata = build_patient_create_data(request.data)
+        if not soldier_id:
+            return Response({"detail": "soldierId is required"}, status=status.HTTP_400_BAD_REQUEST)
+        if not pdata["name"]:
+            return Response({"detail": "name is required"}, status=status.HTTP_400_BAD_REQUEST)
+        try:
+            patient = Patient.objects.create(**pdata)
+            bootstrap_patient_session(patient)
+        except IntegrityError:
+            return Response({"detail": "soldierId already exists"}, status=status.HTTP_409_CONFLICT)
+        return Response(PatientSerializer(patient).data, status=status.HTTP_201_CREATED)
+
 
 class PatientDetailView(APIView):
-    permission_classes = [AllowAny]
+    def get_permissions(self):
+        if self.request.method == "GET":
+            return [AllowAny()]
+        return [IsMedicalStaff()]
 
     def get(self, request, soldier_id):
         try:
@@ -116,6 +164,26 @@ class PatientDetailView(APIView):
         except Patient.DoesNotExist:
             return Response({"detail": "Not found"}, status=status.HTTP_404_NOT_FOUND)
         return Response(PatientDetailSerializer(patient).data)
+
+    def patch(self, request, soldier_id):
+        try:
+            patient = Patient.objects.get(soldier_id=soldier_id)
+        except Patient.DoesNotExist:
+            return Response({"detail": "Not found"}, status=status.HTTP_404_NOT_FOUND)
+        apply_patient_fields(patient, request.data)
+        patient.save()
+        return Response(PatientDetailSerializer(patient).data)
+
+    def delete(self, request, soldier_id):
+        try:
+            patient = Patient.objects.select_related("user").get(soldier_id=soldier_id)
+        except Patient.DoesNotExist:
+            return Response({"detail": "Not found"}, status=status.HTTP_404_NOT_FOUND)
+        if patient.user:
+            patient.user.delete()
+        else:
+            patient.delete()
+        return Response(status=status.HTTP_204_NO_CONTENT)
 
 
 class PatientOrgansView(APIView):
@@ -238,3 +306,28 @@ class QueueView(APIView):
         except ConsultationQueue.DoesNotExist:
             return Response({"queuePosition": 2, "waitTime": 4})
         return Response(ConsultationQueueSerializer(entry).data)
+
+
+class QueueEnqueueView(APIView):
+    permission_classes = [IsMedicalStaff]
+
+    def post(self, request, soldier_id):
+        try:
+            patient = Patient.objects.get(soldier_id=soldier_id)
+        except Patient.DoesNotExist:
+            return Response({"detail": "Not found"}, status=status.HTTP_404_NOT_FOUND)
+
+        max_pos = ConsultationQueue.objects.aggregate(m=Max("queue_position"))["m"] or 0
+        wait = int(request.data.get("waitTime", request.data.get("wait_time", 5)) or 5)
+        position = int(request.data.get("queuePosition", request.data.get("queue_position", max_pos + 1)) or max_pos + 1)
+
+        entry, _ = ConsultationQueue.objects.update_or_create(
+            patient=patient,
+            defaults={
+                "queue_position": position,
+                "estimated_wait_minutes": wait,
+            },
+        )
+        patient.status = "consultation"
+        patient.save(update_fields=["status"])
+        return Response(ConsultationQueueSerializer(entry).data, status=status.HTTP_200_OK)

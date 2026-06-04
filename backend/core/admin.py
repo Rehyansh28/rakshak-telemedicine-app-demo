@@ -8,6 +8,7 @@ from .models import (
     Doctor,
     EmergencyAlert,
     MedicalReport,
+    MedicalStaff,
     OrganDiagnostic,
     Patient,
     ReportOrgan,
@@ -18,6 +19,7 @@ from .models import (
 
 admin.site.register(SystemConfig)
 admin.site.register(Doctor)
+admin.site.register(MedicalStaff)
 admin.site.register(Patient)
 admin.site.register(EmergencyAlert)
 admin.site.register(AIRecommendation)

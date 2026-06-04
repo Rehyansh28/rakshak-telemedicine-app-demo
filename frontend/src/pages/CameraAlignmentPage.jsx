@@ -2,7 +2,6 @@ import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import {
-  Camera,
   Scan,
   CheckCircle,
   ArrowRight,
@@ -13,6 +12,7 @@ import {
 } from 'lucide-react';
 import GlassCard from '../components/ui/GlassCard';
 import Button from '../components/ui/Button';
+import LiveCameraPreview from '../components/camera/LiveCameraPreview';
 import PatientPageHeader from '../components/layout/PatientPageHeader';
 import StatusBadge from '../components/ui/StatusBadge';
 import { PATHS } from '../routes/paths';
@@ -36,9 +36,9 @@ export default function CameraAlignmentPage() {
   return (
     <div>
       <PatientPageHeader
-        eyebrow="Identity Verification · Step 2 of 3"
+        eyebrow="Connect to Doctor · Camera"
         title="Camera Alignment"
-        description="Position your face within the tactical HUD frame for secure telemedicine uplink."
+        description="Align the soldier's face within the tactical HUD frame for secure telemedicine uplink."
         actions={
           <StatusBadge status={aligned ? 'connected' : scanning ? 'syncing' : 'pending'} label={aligned ? 'LOCKED' : scanning ? 'SCANNING' : 'READY'} />
         }
@@ -47,36 +47,40 @@ export default function CameraAlignmentPage() {
       <div className="grid lg:grid-cols-3 gap-6">
         <div className="lg:col-span-2 space-y-6">
           <GlassCard className="bg-white p-4">
-            <div className="relative w-full max-w-lg mx-auto aspect-[4/5] rounded-2xl overflow-hidden border-2 border-secondary-container/60 bg-primary-container/5">
-              <div className="absolute inset-0 flex items-center justify-center">
-                <Camera className={`w-20 h-20 ${aligned ? 'text-[#16a34a]/40' : 'text-secondary/30'}`} />
-              </div>
+            <LiveCameraPreview
+              active
+              className="w-full max-w-lg mx-auto aspect-[4/5] rounded-2xl border-2 border-secondary-container/60"
+            >
               {['top-left', 'top-right', 'bottom-left', 'bottom-right'].map((pos) => (
                 <div
                   key={pos}
-                  className={`absolute w-10 h-10 border-secondary border-2 ${
+                  className={`absolute z-10 w-10 h-10 border-secondary border-2 ${
                     pos.includes('top') ? 'top-5 border-b-0' : 'bottom-5 border-t-0'
                   } ${pos.includes('left') ? 'left-5 border-r-0' : 'right-5 border-l-0'}`}
                 />
               ))}
-              <div className="absolute inset-x-8 top-1/2 h-px bg-secondary/20" />
-              <div className="absolute inset-y-8 left-1/2 w-px bg-secondary/20" />
-              {scanning && <div className="absolute inset-0 scan-line pointer-events-none" />}
+              <div className="absolute inset-x-8 top-1/2 h-px bg-secondary/30 z-10 pointer-events-none" />
+              <div className="absolute inset-y-8 left-1/2 w-px bg-secondary/30 z-10 pointer-events-none" />
+              <div className="absolute top-3 left-3 z-10 flex items-center gap-1.5 glass-panel px-2 py-1 rounded-md">
+                <span className="w-2 h-2 bg-error rounded-full animate-pulse" />
+                <span className="label-caps text-[9px] text-on-surface">LIVE</span>
+              </div>
+              {scanning && <div className="absolute inset-0 scan-line pointer-events-none z-10" />}
               {aligned && (
                 <motion.div
                   initial={{ opacity: 0 }}
                   animate={{ opacity: 1 }}
-                  className="absolute inset-0 bg-[#16a34a]/10 flex flex-col items-center justify-center gap-2"
+                  className="absolute inset-0 bg-[#16a34a]/15 flex flex-col items-center justify-center gap-2 z-10"
                 >
                   <CheckCircle className="w-16 h-16 text-[#16a34a]" />
                   <span className="label-caps text-[10px] text-[#16a34a]">Alignment Locked</span>
                 </motion.div>
               )}
-            </div>
+            </LiveCameraPreview>
           </GlassCard>
 
           <div className="flex flex-col sm:flex-row gap-3">
-            <Button variant="ghost" icon={ArrowLeft} onClick={() => navigate(PATHS.patient.sensors)} className="sm:flex-1">
+            <Button variant="ghost" icon={ArrowLeft} onClick={() => navigate(PATHS.staff.sensors)} className="sm:flex-1">
               Back to Sensors
             </Button>
             {!aligned ? (
@@ -84,7 +88,7 @@ export default function CameraAlignmentPage() {
                 {scanning ? 'Scanning...' : 'Initiate Face Scan'}
               </Button>
             ) : (
-              <Button icon={ArrowRight} onClick={() => navigate(PATHS.patient.waitingRoom)} className="sm:flex-[2]">
+              <Button icon={ArrowRight} onClick={() => navigate(PATHS.staff.waitingRoom)} className="sm:flex-[2]">
                 Enter Waiting Room
               </Button>
             )}
@@ -97,7 +101,7 @@ export default function CameraAlignmentPage() {
             <div className="space-y-3">
               {[
                 { icon: Sun, label: 'Lighting', value: 'Optimal', ok: true },
-                { icon: ScanFace, label: 'Face Detection', value: aligned ? 'Locked' : scanning ? 'Scanning' : 'Ready', ok: aligned },
+                { icon: ScanFace, label: 'Face Detection', value: aligned ? 'Locked' : scanning ? 'Scanning' : 'Live', ok: aligned || !scanning },
                 { icon: Shield, label: 'Encryption', value: 'AES-256', ok: true },
               ].map((row) => (
                 <div key={row.label} className="flex items-center justify-between text-sm py-2 border-b border-outline-variant/10 last:border-0">

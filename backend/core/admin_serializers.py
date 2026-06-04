@@ -10,6 +10,7 @@ from .models import (
     Doctor,
     EmergencyAlert,
     MedicalReport,
+    MedicalStaff,
     OrganDiagnostic,
     Patient,
     SensorStep,
@@ -37,6 +38,15 @@ class AdminDoctorSerializer(CamelCaseSerializerMixin, serializers.ModelSerialize
     class Meta:
         model = Doctor
         fields = ["id", "userId", "user", "name", "rank", "unit", "avatarUrl"]
+
+
+class AdminMedicalStaffSerializer(CamelCaseSerializerMixin, serializers.ModelSerializer):
+    user = AdminUserSummarySerializer(read_only=True)
+    userId = serializers.IntegerField(source="user_id", read_only=True)
+
+    class Meta:
+        model = MedicalStaff
+        fields = ["id", "userId", "user", "name", "rank", "post"]
 
 
 class AdminPatientSerializer(CamelCaseSerializerMixin, serializers.ModelSerializer):

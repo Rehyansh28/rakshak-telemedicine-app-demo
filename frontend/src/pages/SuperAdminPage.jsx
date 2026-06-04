@@ -1,20 +1,12 @@
 import { useCallback, useEffect, useState } from 'react';
 import {
   Shield,
-  Users,
-  Stethoscope,
   RefreshCw,
   Plus,
   Pencil,
   LogOut,
-  LayoutDashboard,
-  Bell,
-  Activity,
-  FileText,
-  Brain,
-  Clock,
-  Settings,
 } from 'lucide-react';
+import AdminSidebar from '../components/admin/AdminSidebar';
 import Button from '../components/ui/Button';
 import Modal from '../components/ui/Modal';
 import GlassCard from '../components/ui/GlassCard';
@@ -26,18 +18,6 @@ import {
   getAdminToken,
   setAdminToken,
 } from '../api/client';
-
-const TABS = [
-  { id: 'overview', label: 'Overview', icon: LayoutDashboard },
-  { id: 'doctors', label: 'Doctors', icon: Stethoscope },
-  { id: 'patients', label: 'Patients', icon: Users },
-  { id: 'alerts', label: 'Alerts', icon: Bell },
-  { id: 'activity', label: 'Activity', icon: Activity },
-  { id: 'reports', label: 'Reports', icon: FileText },
-  { id: 'recommendations', label: 'AI Tips', icon: Brain },
-  { id: 'queue', label: 'Queue', icon: Clock },
-  { id: 'system', label: 'System', icon: Settings },
-];
 
 function Field({ label, value, onChange, type = 'text', placeholder, disabled = false, rows }) {
   const cls =
@@ -126,6 +106,7 @@ export default function SuperAdminPage() {
 
   const [overview, setOverview] = useState(null);
   const [doctors, setDoctors] = useState([]);
+  const [medicalStaff, setMedicalStaff] = useState([]);
   const [patients, setPatients] = useState([]);
   const [alerts, setAlerts] = useState([]);
   const [activity, setActivity] = useState([]);
@@ -150,6 +131,9 @@ export default function SuperAdminPage() {
         }
         case 'doctors':
           setDoctors(await adminApiGet('/admin/doctors/'));
+          break;
+        case 'medicalStaff':
+          setMedicalStaff(await adminApiGet('/admin/medical-staff/'));
           break;
         case 'patients':
           setPatients(await adminApiGet('/admin/patients/'));
@@ -226,6 +210,7 @@ export default function SuperAdminPage() {
     try {
       const paths = {
         doctor: `/admin/doctors/${id}/`,
+        staff: `/admin/medical-staff/${id}/`,
         patient: `/admin/patients/${soldierId || id}/`,
         alert: `/admin/alerts/${id}/`,
         activity: `/admin/activity/${id}/`,
@@ -262,50 +247,40 @@ export default function SuperAdminPage() {
               Sign In
             </Button>
           </form>
-          <p className="text-xs text-on-surface-variant mt-4">Demo: superadmin / rakshak2026 (after seed_demo)</p>
+          <p className="text-xs text-on-surface-variant mt-4">
+            Demo: superadmin / rakshak2026 · fieldmedic / rakshak2026 (after seed_demo)
+          </p>
         </div>
       </div>
     );
   }
 
   return (
-    <div className="min-h-screen bg-surface text-on-surface">
-      <header className="border-b border-surface-container bg-surface-container-low/50 sticky top-0 z-50 backdrop-blur-md">
-        <div className="max-w-[1600px] mx-auto px-4 py-4 flex flex-wrap items-center justify-between gap-4">
-          <div className="flex items-center gap-3">
-            <Shield className="w-7 h-7 text-secondary-container" />
-            <div>
-              <p className="label-caps text-secondary text-[10px]">Rakshak Telemedicine</p>
-              <h1 className="font-sora text-lg font-bold text-primary">Super Admin — Full Control</h1>
+    <div className="min-h-screen bg-surface text-on-surface flex">
+      <AdminSidebar activeTab={tab} onSelect={setTab} />
+
+      <div className="flex-1 flex flex-col min-w-0">
+        <header className="border-b border-surface-container bg-surface-container-low/50 sticky top-0 z-50 backdrop-blur-md shrink-0">
+          <div className="px-4 md:px-6 py-4 flex flex-wrap items-center justify-between gap-4">
+            <div className="flex items-center gap-3">
+              <Shield className="w-7 h-7 text-secondary-container" />
+              <div>
+                <p className="label-caps text-secondary text-[10px]">Rakshak Telemedicine</p>
+                <h1 className="font-sora text-lg font-bold text-primary">Super Admin Console</h1>
+              </div>
+            </div>
+            <div className="flex gap-2">
+              <Button variant="secondary" size="sm" icon={RefreshCw} onClick={loadTab} disabled={loading}>
+                Refresh
+              </Button>
+              <Button variant="ghost" size="sm" icon={LogOut} onClick={logout}>
+                Logout
+              </Button>
             </div>
           </div>
-          <div className="flex gap-2">
-            <Button variant="secondary" size="sm" icon={RefreshCw} onClick={loadTab} disabled={loading}>
-              Refresh
-            </Button>
-            <Button variant="ghost" size="sm" icon={LogOut} onClick={logout}>
-              Logout
-            </Button>
-          </div>
-        </div>
-        <nav className="max-w-[1600px] mx-auto px-4 pb-3 flex gap-2 overflow-x-auto">
-          {TABS.map((t) => (
-            <button
-              key={t.id}
-              type="button"
-              onClick={() => setTab(t.id)}
-              className={`label-caps inline-flex items-center gap-2 rounded-lg px-3 py-2 text-[10px] whitespace-nowrap transition-all ${
-                tab === t.id ? 'bg-primary text-on-primary' : 'text-on-surface-variant hover:bg-surface-container'
-              }`}
-            >
-              <t.icon className="w-3.5 h-3.5" />
-              {t.label}
-            </button>
-          ))}
-        </nav>
-      </header>
+        </header>
 
-      <main className="max-w-[1600px] mx-auto p-4 md:p-6">
+        <main className="flex-1 overflow-y-auto p-4 md:p-6">
         {error && (
           <div className="rounded-xl border border-error/30 bg-error/10 text-error px-4 py-3 text-sm mb-4">{error}</div>
         )}
@@ -351,6 +326,7 @@ export default function SuperAdminPage() {
         {tab === 'doctors' && (
           <Section
             title="All Doctors"
+            subtitle="Portal login credentials for doctor command center"
             onCreate={() => setEditor({ entity: 'doctor', mode: 'create' })}
           >
             <DataTable
@@ -367,9 +343,30 @@ export default function SuperAdminPage() {
           </Section>
         )}
 
+        {tab === 'medicalStaff' && (
+          <Section
+            title="Medical Staff"
+            subtitle="Portal login credentials for field medical staff console"
+            onCreate={() => setEditor({ entity: 'staff', mode: 'create' })}
+          >
+            <DataTable
+              columns={[
+                { key: 'name', label: 'Name' },
+                { key: 'rank', label: 'Rank' },
+                { key: 'post', label: 'Post' },
+                { key: 'user', label: 'Username', render: (r) => r.user?.username || '—' },
+              ]}
+              rows={medicalStaff.map((s) => ({ ...s, _key: s.id }))}
+              onEdit={(r) => setEditor({ entity: 'staff', mode: 'edit', data: r })}
+              onDelete={(r) => handleDelete('staff', r.id)}
+            />
+          </Section>
+        )}
+
         {tab === 'patients' && (
           <Section
-            title="All Patients (full vitals & credentials)"
+            title="All Soldiers"
+            subtitle="Patient profiles and vitals only — no portal login (managed by medical staff)"
             onCreate={() => setEditor({ entity: 'patient', mode: 'create' })}
           >
             <DataTable
@@ -381,7 +378,6 @@ export default function SuperAdminPage() {
                 { key: 'spo2', label: 'SpO2' },
                 { key: 'altitude', label: 'Alt (ft)' },
                 { key: 'location', label: 'Location' },
-                { key: 'user', label: 'Login', render: (r) => r.user?.username || '—' },
               ]}
               rows={patients.map((p) => ({ ...p, _key: p.id }))}
               onView={(r) => openPatientFull(r)}
@@ -509,17 +505,21 @@ export default function SuperAdminPage() {
           setLoading={setLoading}
         />
       )}
+      </div>
     </div>
   );
 }
 
-function Section({ title, children, onCreate }) {
+function Section({ title, subtitle, children, onCreate }) {
   return (
     <div>
-      <div className="flex items-center justify-between mb-4">
-        <h2 className="font-sora text-lg font-semibold text-primary">{title}</h2>
+      <div className="flex items-start justify-between gap-4 mb-4">
+        <div>
+          <h2 className="font-sora text-lg font-semibold text-primary">{title}</h2>
+          {subtitle && <p className="text-sm text-on-surface-variant mt-1">{subtitle}</p>}
+        </div>
         {onCreate && (
-          <Button size="sm" icon={Plus} onClick={onCreate}>
+          <Button size="sm" icon={Plus} onClick={onCreate} className="shrink-0">
             Add New
           </Button>
         )}
@@ -570,6 +570,7 @@ function EntityEditor({ editor, patients, onClose, onSaved, setError, setLoading
       name: d.name || '',
       rank: d.rank || '',
       unit: d.unit || '',
+      post: d.post || '',
       regiment: d.regiment || '',
       avatarUrl: d.avatarUrl || '',
       id: d.id || '',
@@ -604,18 +605,35 @@ function EntityEditor({ editor, patients, onClose, onSaved, setError, setLoading
   };
 
   const [form, setForm] = useState(initForm);
+  const [saveError, setSaveError] = useState('');
+  const [saving, setSaving] = useState(false);
   const set = (k, v) => setForm((f) => ({ ...f, [k]: v }));
 
   const save = async () => {
+    setSaving(true);
     setLoading(true);
+    setSaveError('');
     setError('');
-    try {
-      const body = { ...form };
-      if (!form.password) delete body.password;
 
+    if (isCreate && (entity === 'doctor' || entity === 'staff')) {
+      if (!form.username?.trim() || !form.password?.trim() || !form.name?.trim()) {
+        setSaveError('Username, password, and name are required.');
+        setSaving(false);
+        setLoading(false);
+        return;
+      }
+    }
+    if (isCreate && entity === 'patient' && (!form.id?.trim() || !form.name?.trim())) {
+      setSaveError('Soldier ID and name are required.');
+      setSaving(false);
+      setLoading(false);
+      return;
+    }
+
+    try {
       if (entity === 'doctor') {
         const payload = {
-          username: form.username,
+          username: form.username.trim(),
           email: form.email,
           password: form.password,
           name: form.name,
@@ -625,30 +643,46 @@ function EntityEditor({ editor, patients, onClose, onSaved, setError, setLoading
         };
         if (isCreate) await adminApiPost('/admin/doctors/', payload);
         else await adminApiPatch(`/admin/doctors/${data.id}/`, { ...payload, password: form.password || undefined });
-      } else if (entity === 'patient') {
+      } else if (entity === 'staff') {
         const payload = {
-          soldierId: form.id,
-          username: form.username,
+          username: form.username.trim(),
           email: form.email,
           password: form.password,
           name: form.name,
           rank: form.rank,
-          regiment: form.regiment,
-          status: form.status,
-          altitude: Number(form.altitude),
-          heartRate: Number(form.heartRate),
-          spo2: Number(form.spo2),
-          temp: Number(form.temp),
-          fatigue: Number(form.fatigue),
-          stress: Number(form.stress),
-          location: form.location,
-          lastUpdate: form.lastUpdate,
-          respiration: Number(form.respiration),
-          bpSystolic: Number(form.bpSystolic),
-          bpDiastolic: Number(form.bpDiastolic),
+          post: form.post,
         };
+        if (isCreate) await adminApiPost('/admin/medical-staff/', payload);
+        else await adminApiPatch(`/admin/medical-staff/${data.id}/`, { ...payload, password: form.password || undefined });
+      } else if (entity === 'patient') {
+        const payload = isCreate
+          ? {
+              soldierId: form.id,
+              name: form.name,
+              rank: form.rank,
+              regiment: form.regiment,
+              status: form.status,
+              location: form.location,
+            }
+          : {
+              name: form.name,
+              rank: form.rank,
+              regiment: form.regiment,
+              status: form.status,
+              altitude: Number(form.altitude),
+              heartRate: Number(form.heartRate),
+              spo2: Number(form.spo2),
+              temp: Number(form.temp),
+              fatigue: Number(form.fatigue),
+              stress: Number(form.stress),
+              location: form.location,
+              lastUpdate: form.lastUpdate,
+              respiration: Number(form.respiration),
+              bpSystolic: Number(form.bpSystolic),
+              bpDiastolic: Number(form.bpDiastolic),
+            };
         if (isCreate) await adminApiPost('/admin/patients/', payload);
-        else await adminApiPatch(`/admin/patients/${data.id}/`, { ...payload, password: form.password || undefined });
+        else await adminApiPatch(`/admin/patients/${data.id}/`, payload);
       } else if (entity === 'alert') {
         const payload = {
           patientId: form.patientId,
@@ -682,15 +716,19 @@ function EntityEditor({ editor, patients, onClose, onSaved, setError, setLoading
       }
       await onSaved();
     } catch (e) {
-      setError(e.message);
+      const message = e.message || 'Save failed';
+      setSaveError(message);
+      setError(message);
     } finally {
+      setSaving(false);
       setLoading(false);
     }
   };
 
   const titles = {
     doctor: 'Doctor',
-    patient: 'Patient',
+    staff: 'Medical Staff',
+    patient: 'Soldier',
     alert: 'Emergency Alert',
     activity: 'Activity Log',
     report: 'Medical Report',
@@ -701,7 +739,12 @@ function EntityEditor({ editor, patients, onClose, onSaved, setError, setLoading
   return (
     <Modal open onClose={onClose} title={`${titles[entity]} — ${isCreate ? 'Create' : 'Edit'}`} size="full">
       <div className="max-h-[70vh] overflow-y-auto space-y-4 pr-2">
-        {(entity === 'doctor' || entity === 'patient') && (
+        {saveError && (
+          <div className="rounded-xl border border-error/30 bg-error/10 text-error px-4 py-3 text-sm">
+            {saveError}
+          </div>
+        )}
+        {(entity === 'doctor' || entity === 'staff' || entity === 'patient') && (
           <>
             <p className="label-caps text-secondary">Profile</p>
             <div className="grid sm:grid-cols-2 gap-4">
@@ -710,12 +753,16 @@ function EntityEditor({ editor, patients, onClose, onSaved, setError, setLoading
               )}
               <Field label="Name" value={form.name} onChange={(v) => set('name', v)} />
               <Field label="Rank" value={form.rank} onChange={(v) => set('rank', v)} />
-              {entity === 'doctor' ? (
+              {entity === 'doctor' && (
                 <>
                   <Field label="Unit" value={form.unit} onChange={(v) => set('unit', v)} />
                   <Field label="Avatar URL" value={form.avatarUrl} onChange={(v) => set('avatarUrl', v)} />
                 </>
-              ) : (
+              )}
+              {entity === 'staff' && (
+                <Field label="Field Post / Unit" value={form.post} onChange={(v) => set('post', v)} />
+              )}
+              {entity === 'patient' && (
                 <>
                   <Field label="Regiment" value={form.regiment} onChange={(v) => set('regiment', v)} />
                   <label className="block">
@@ -733,33 +780,49 @@ function EntityEditor({ editor, patients, onClose, onSaved, setError, setLoading
                     </select>
                   </label>
                   <Field label="Location" value={form.location} onChange={(v) => set('location', v)} />
-                  <Field label="Last Update Label" value={form.lastUpdate} onChange={(v) => set('lastUpdate', v)} />
-                  <Field label="Altitude (ft)" value={form.altitude} onChange={(v) => set('altitude', v)} type="number" />
-                  <Field label="Heart Rate" value={form.heartRate} onChange={(v) => set('heartRate', v)} type="number" />
-                  <Field label="SpO2 %" value={form.spo2} onChange={(v) => set('spo2', v)} type="number" />
-                  <Field label="Temp °C" value={form.temp} onChange={(v) => set('temp', v)} type="number" />
-                  <Field label="Fatigue" value={form.fatigue} onChange={(v) => set('fatigue', v)} type="number" />
-                  <Field label="Stress" value={form.stress} onChange={(v) => set('stress', v)} type="number" />
-                  <Field label="Respiration" value={form.respiration} onChange={(v) => set('respiration', v)} type="number" />
-                  <Field label="BP Systolic" value={form.bpSystolic} onChange={(v) => set('bpSystolic', v)} type="number" />
-                  <Field label="BP Diastolic" value={form.bpDiastolic} onChange={(v) => set('bpDiastolic', v)} type="number" />
+                  {!isCreate && (
+                    <>
+                      <Field label="Last Update Label" value={form.lastUpdate} onChange={(v) => set('lastUpdate', v)} />
+                      <Field label="Altitude (ft)" value={form.altitude} onChange={(v) => set('altitude', v)} type="number" />
+                      <Field label="Heart Rate" value={form.heartRate} onChange={(v) => set('heartRate', v)} type="number" />
+                      <Field label="SpO2 %" value={form.spo2} onChange={(v) => set('spo2', v)} type="number" />
+                      <Field label="Temp °C" value={form.temp} onChange={(v) => set('temp', v)} type="number" />
+                      <Field label="Fatigue" value={form.fatigue} onChange={(v) => set('fatigue', v)} type="number" />
+                      <Field label="Stress" value={form.stress} onChange={(v) => set('stress', v)} type="number" />
+                      <Field label="Respiration" value={form.respiration} onChange={(v) => set('respiration', v)} type="number" />
+                      <Field label="BP Systolic" value={form.bpSystolic} onChange={(v) => set('bpSystolic', v)} type="number" />
+                      <Field label="BP Diastolic" value={form.bpDiastolic} onChange={(v) => set('bpDiastolic', v)} type="number" />
+                    </>
+                  )}
                 </>
               )}
             </div>
-            <p className="label-caps text-secondary mt-4">Credentials</p>
-            <div className="grid sm:grid-cols-2 gap-4">
-              <Field label="Username" value={form.username} onChange={(v) => set('username', v)} />
-              <Field label="Email" value={form.email} onChange={(v) => set('email', v)} />
-              <Field
-                label={isCreate ? 'Password' : 'New password (optional)'}
-                value={form.password}
-                onChange={(v) => set('password', v)}
-                type="password"
-              />
-            </div>
-            <p className="text-xs text-on-surface-variant">
-              Doctor login uses <strong>Username</strong> or <strong>Email</strong> plus password. Create under the Doctors tab (not Patients).
-            </p>
+            {(entity === 'doctor' || entity === 'staff') && (
+              <>
+                <p className="label-caps text-secondary mt-4">Credentials</p>
+                <div className="grid sm:grid-cols-2 gap-4">
+                  <Field label="Username" value={form.username} onChange={(v) => set('username', v)} />
+                  <Field label="Email" value={form.email} onChange={(v) => set('email', v)} />
+                  <Field
+                    label={isCreate ? 'Password' : 'New password (optional)'}
+                    value={form.password}
+                    onChange={(v) => set('password', v)}
+                    type="password"
+                  />
+                </div>
+                <p className="text-xs text-on-surface-variant">
+                  {entity === 'doctor'
+                    ? 'Used at /doctor/login. Username or email plus password. Demo account "doctor" already exists after seed — use a new username (e.g. dr.sharma).'
+                    : 'Used at /staff/login. Demo account "fieldmedic" already exists after seed — use a new username.'}
+                </p>
+              </>
+            )}
+            {entity === 'patient' && (
+              <p className="text-xs text-on-surface-variant mt-4">
+                Soldiers do not log in to this portal. Vitals are populated from the bio-suit after registration
+                {isCreate ? ' — only profile fields are required when creating a soldier.' : '.'}
+              </p>
+            )}
           </>
         )}
 
@@ -815,7 +878,7 @@ function EntityEditor({ editor, patients, onClose, onSaved, setError, setLoading
         <Button variant="ghost" onClick={onClose}>
           Cancel
         </Button>
-        <Button onClick={save}>{isCreate ? 'Create' : 'Save changes'}</Button>
+        <Button onClick={save} loading={saving}>{isCreate ? 'Create' : 'Save changes'}</Button>
       </div>
     </Modal>
   );
@@ -824,16 +887,13 @@ function EntityEditor({ editor, patients, onClose, onSaved, setError, setLoading
 function PatientFullModal({ full, onClose, onRefresh, setError, setLoading }) {
   const p = full.patient;
   const [editingPatient, setEditingPatient] = useState(false);
-  const [form, setForm] = useState({ ...p, password: '' });
+  const [form, setForm] = useState({ ...p });
   const set = (k, v) => setForm((f) => ({ ...f, [k]: v }));
 
   const savePatient = async () => {
     setLoading(true);
     try {
       await adminApiPatch(`/admin/patients/${p.id}/`, {
-        username: form.user?.username,
-        email: form.user?.email,
-        password: form.password || undefined,
         name: form.name,
         rank: form.rank,
         regiment: form.regiment,
@@ -890,8 +950,6 @@ function PatientFullModal({ full, onClose, onRefresh, setError, setLoading }) {
             ].map(([k, label]) => (
               <Field key={k} label={label} value={String(form[k] ?? '')} onChange={(v) => set(k, v)} />
             ))}
-            <Field label="Login username" value={form.user?.username || ''} onChange={(v) => set('user', { ...form.user, username: v })} />
-            <Field label="New password" value={form.password} onChange={(v) => set('password', v)} type="password" />
             <div className="sm:col-span-3">
               <Button onClick={savePatient}>Save patient</Button>
             </div>
@@ -905,12 +963,6 @@ function PatientFullModal({ full, onClose, onRefresh, setError, setLoading }) {
                   <p className="font-mono text-xs truncate">{String(v)}</p>
                 </div>
               )
-            )}
-            {p.user && (
-              <div className="col-span-2 bg-surface-container-low rounded-lg p-2">
-                <p className="label-caps text-[9px] text-secondary">credentials</p>
-                <p className="text-xs">{p.user.username} · {p.user.email}</p>
-              </div>
             )}
           </div>
         )}

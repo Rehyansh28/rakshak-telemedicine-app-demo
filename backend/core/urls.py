@@ -4,6 +4,7 @@ from . import admin_views, views
 
 urlpatterns = [
     path("auth/login/", views.LoginView.as_view(), name="auth-login"),
+    path("auth/staff/login/", views.StaffLoginView.as_view(), name="auth-staff-login"),
     path("auth/superadmin/login/", views.SuperAdminLoginView.as_view(), name="auth-superadmin-login"),
 
     # Super admin — full data management
@@ -11,6 +12,16 @@ urlpatterns = [
     path("admin/system-config/", admin_views.AdminSystemConfigView.as_view(), name="admin-system-config"),
     path("admin/doctors/", admin_views.AdminDoctorListCreateView.as_view(), name="admin-doctor-list-create"),
     path("admin/doctors/<int:doctor_id>/", admin_views.AdminDoctorDetailView.as_view(), name="admin-doctor-detail"),
+    path(
+        "admin/medical-staff/",
+        admin_views.AdminMedicalStaffListCreateView.as_view(),
+        name="admin-medical-staff-list-create",
+    ),
+    path(
+        "admin/medical-staff/<int:staff_id>/",
+        admin_views.AdminMedicalStaffDetailView.as_view(),
+        name="admin-medical-staff-detail",
+    ),
     path("admin/patients/", admin_views.AdminPatientListCreateView.as_view(), name="admin-patient-list-create"),
     path("admin/patients/<str:soldier_id>/", admin_views.AdminPatientDetailView.as_view(), name="admin-patient-detail"),
     path("admin/activity/", admin_views.AdminActivityListCreateView.as_view(), name="admin-activity-list"),
@@ -60,5 +71,6 @@ urlpatterns = [
     path("ai-recommendations/", views.AIRecommendationsView.as_view(), name="ai-recommendations"),
     path("activity/", views.ActivityView.as_view(), name="activity"),
     path("dashboard/stats/", views.DashboardStatsView.as_view(), name="dashboard-stats"),
+    path("queue/<str:soldier_id>/enqueue/", views.QueueEnqueueView.as_view(), name="queue-enqueue"),
     path("queue/<str:soldier_id>/", views.QueueView.as_view(), name="queue"),
 ]

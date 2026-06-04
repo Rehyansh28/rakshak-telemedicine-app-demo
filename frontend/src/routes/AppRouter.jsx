@@ -1,6 +1,10 @@
 import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
 import DoctorLayout from '../components/layout/DoctorLayout';
-import PatientLayout from '../components/layout/PatientLayout';
+import MedicalStaffLayout from '../components/layout/MedicalStaffLayout';
+import StaffRouteGuard from '../components/layout/StaffRouteGuard';
+import StaffLoginPage from '../pages/StaffLoginPage';
+import StaffDashboardPage from '../pages/StaffDashboardPage';
+import StaffPatientsPage from '../pages/StaffPatientsPage';
 import SplashPage from '../pages/SplashPage';
 import RoleSelectionPage from '../pages/RoleSelectionPage';
 import DoctorLoginPage from '../pages/DoctorLoginPage';
@@ -24,6 +28,7 @@ export default function AppRouter() {
         <Route path={PATHS.home} element={<SplashPage />} />
         <Route path={PATHS.roleSelection} element={<RoleSelectionPage />} />
         <Route path={PATHS.doctor.login} element={<DoctorLoginPage />} />
+        <Route path={PATHS.staff.login} element={<StaffLoginPage />} />
         <Route path={PATHS.superadminuser} element={<SuperAdminPage />} />
 
         <Route path="/doctor" element={<DoctorLayout />}>
@@ -37,12 +42,24 @@ export default function AppRouter() {
           <Route path="report" element={<MedicalReportPage />} />
         </Route>
 
-        <Route path="/patient" element={<PatientLayout />}>
-          <Route index element={<Navigate to="sensors" replace />} />
+        <Route
+          path="/staff"
+          element={
+            <StaffRouteGuard>
+              <MedicalStaffLayout />
+            </StaffRouteGuard>
+          }
+        >
+          <Route index element={<Navigate to="dashboard" replace />} />
+          <Route path="dashboard" element={<StaffDashboardPage />} />
+          <Route path="patients" element={<StaffPatientsPage />} />
           <Route path="sensors" element={<SensorConnectionPage />} />
           <Route path="camera" element={<CameraAlignmentPage />} />
           <Route path="waiting-room" element={<WaitingRoomPage />} />
         </Route>
+
+        <Route path="/patient" element={<Navigate to={PATHS.staff.patients} replace />} />
+        <Route path="/patient/*" element={<Navigate to={PATHS.staff.patients} replace />} />
 
         <Route path="*" element={<Navigate to={PATHS.home} replace />} />
       </Routes>

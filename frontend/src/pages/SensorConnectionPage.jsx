@@ -79,9 +79,9 @@ export default function SensorConnectionPage() {
   return (
     <div>
       <PatientPageHeader
-        eyebrow="Bio-Suit Initialization · Step 1 of 3"
+        eyebrow="Connect to Doctor · Sensors"
         title="Sensor Connection Hub"
-        description="Pair ECG, SpO2, temperature probes and verify STRAT-LINK encryption before camera alignment."
+        description="On behalf of the selected soldier: pair ECG, SpO2, temperature probes and verify STRAT-LINK encryption before camera alignment."
         actions={
           syncing ? (
             <StatusBadge status="syncing" label="SYNCING" />
@@ -106,7 +106,7 @@ export default function SensorConnectionPage() {
                   Retry Sync
                 </Button>
                 {progress >= 100 && (
-                  <Button size="sm" icon={ArrowRight} onClick={() => navigate(PATHS.patient.camera)}>
+                  <Button size="sm" icon={ArrowRight} onClick={() => navigate(PATHS.staff.camera)}>
                     Continue
                   </Button>
                 )}
@@ -188,7 +188,7 @@ export default function SensorConnectionPage() {
           </div>
 
           {progress >= 100 && (
-            <Button onClick={() => navigate(PATHS.patient.camera)} className="w-full" icon={ArrowRight}>
+            <Button onClick={() => navigate(PATHS.staff.camera)} className="w-full" icon={ArrowRight}>
               Continue to Camera Alignment
             </Button>
           )}
@@ -265,8 +265,8 @@ export default function SensorConnectionPage() {
               <div>
                 <p className="font-semibold text-sm text-primary">Troubleshooting</p>
                 <p className="text-xs text-on-surface-variant mt-1 leading-relaxed">
-                  Ensure bio-suit sensors are clean and firmly attached. Stay within SAT-NODE range. Contact field
-                  medic if sync fails after retry.
+                  Ensure bio-suit sensors are clean and firmly attached on the soldier. Stay within SAT-NODE range.
+                  Retry sync or contact command support if pairing fails.
                 </p>
               </div>
             </div>

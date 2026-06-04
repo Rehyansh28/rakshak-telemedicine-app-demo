@@ -293,17 +293,19 @@ VITE_API_BASE_URL=http://localhost:9000/api
 | Role | Where to log in | Username | Password |
 |------|-----------------|----------|----------|
 | **Doctor** | `/doctor/login` | `doctor` | `rakshak2026` |
+| **Medical Staff** | `/staff/login` | `fieldmedic` | `rakshak2026` |
 | **Super Admin** | `/superadminuser` | `superadmin` | `rakshak2026` |
 
 Login accepts **username or email** plus password.
 
-### Patient flow
+### Medical staff flow
 
-Patients do not use a separate login screen in the current UI. From the home screen, choose **Patient Side** → sensor connection → camera → waiting room. Demo patient data comes from the API (`/api/patients/`).
+Soldiers do not log in. From the home screen, choose **Medical Staff View** → sign in at `/staff/login` → register or select a soldier → sensor → camera → waiting room.
 
 ### Doctor login notes
 
-- Accounts must be created under **Doctors** in Super Admin (not only under Patients).
+- Doctor accounts are created under **Doctors** in Super Admin.
+- Medical staff accounts are created under **Medical Staff** in Super Admin.
 - Use the **Username** field from Super Admin, or the **email** if it was saved on the user.
 - If login returns “not registered as a doctor”, the user exists but has no `Doctor` profile — create/fix it in Super Admin → Doctors.
 
@@ -315,13 +317,14 @@ URL: **http://127.0.0.1:5555/superadminuser**
 
 Sign in with a staff/superuser account (`superadmin` after `seed_demo`, or any user with `is_staff` / `is_superuser`).
 
-### Tabs
+### Sidebar sections
 
-| Tab | Manage |
-|-----|--------|
+| Section | Manage |
+|---------|--------|
 | **Overview** | Stats, recent activity, recent alerts |
 | **Doctors** | Create/edit/delete doctors + login credentials |
-| **Patients** | Full vitals, credentials, view nested data |
+| **Medical Staff** | Create/edit/delete medical staff + login credentials |
+| **Soldiers** | Full vitals (no portal login), view nested data |
 | **Alerts** | Emergency alerts |
 | **Activity** | Activity log entries |
 | **Reports** | Medical reports |
@@ -355,6 +358,7 @@ Base path: `http://127.0.0.1:8555/api/`
 | Method | Path | Description |
 |--------|------|-------------|
 | POST | `/auth/login/` | Doctor login → `{ token, doctor }` |
+| POST | `/auth/staff/login/` | Medical staff login → `{ token, staff }` |
 | GET | `/config/` | System config |
 | GET | `/patients/` | Patient list |
 | GET | `/patients/<soldier_id>/` | Patient detail |
@@ -372,7 +376,9 @@ Header: `Authorization: Token <admin_token>`
 | GET | `/admin/overview/` | Dashboard summary |
 | GET/POST | `/admin/doctors/` | List / create doctors |
 | GET/PATCH/DELETE | `/admin/doctors/<id>/` | Doctor detail |
-| GET/POST | `/admin/patients/` | List / create patients |
+| GET/POST | `/admin/medical-staff/` | List / create medical staff |
+| GET/PATCH/DELETE | `/admin/medical-staff/<id>/` | Medical staff detail |
+| GET/POST | `/admin/patients/` | List / create soldiers (no login credentials) |
 | GET/PATCH/DELETE | `/admin/patients/<soldier_id>/` | Patient + nested data |
 | GET/POST | `/admin/alerts/` | Emergency alerts |
 | GET/POST | `/admin/activity/` | Activity logs |
