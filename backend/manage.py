@@ -9,7 +9,7 @@ def _default_runserver_port():
         for arg in sys.argv[2:]:
             if not arg.startswith('-'):
                 return
-        sys.argv.append('8555')
+        sys.argv.append('0.0.0.0:8555')
 
 
 def main():

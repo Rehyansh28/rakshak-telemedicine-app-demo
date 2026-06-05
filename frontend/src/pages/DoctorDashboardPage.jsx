@@ -84,13 +84,15 @@ export default function DoctorDashboardPage() {
     else showToast('Patient record loaded', 'info');
   };
 
-  if (loading || !selectedPatient) {
+  if (loading) {
     return (
       <PageContainer>
         <p className="text-on-surface-variant text-sm">Loading command center...</p>
       </PageContainer>
     );
   }
+
+  const priorityPatient = selectedPatient ?? patientList[0] ?? null;
 
   return (
     <PageContainer>
@@ -133,15 +135,16 @@ export default function DoctorDashboardPage() {
           <GlassCard>
             <div className="flex justify-between items-center mb-4">
               <h2 className="font-sora font-semibold text-lg text-primary">Priority Patient Vitals</h2>
-              <StatusBadge status="critical" label="LIVE MONITOR" />
+              {priorityPatient && <StatusBadge status="critical" label="LIVE MONITOR" />}
             </div>
+            {priorityPatient ? (
             <div className="grid md:grid-cols-2 gap-6">
               <div>
-                <p className="font-mono text-xs text-secondary mb-1">{selectedPatient.id}</p>
-                <h3 className="font-sora text-xl font-bold">{selectedPatient.name}</h3>
+                <p className="font-mono text-xs text-secondary mb-1">{priorityPatient.id}</p>
+                <h3 className="font-sora text-xl font-bold">{priorityPatient.name}</h3>
                 <p className="text-sm text-on-surface-variant flex items-center gap-1 mt-1">
                   <Mountain className="w-4 h-4" />
-                  {selectedPatient.altitude.toLocaleString()} ft · High Altitude Warning
+                  {priorityPatient.altitude.toLocaleString()} ft · High Altitude Warning
                 </p>
                 <div className="grid grid-cols-3 gap-4 mt-4">
                   <div>
@@ -167,8 +170,14 @@ export default function DoctorDashboardPage() {
                   View AR Vitals
                 </Button>
               </div>
-              <MiniECG height={100} patientId={selectedPatient.id} />
+              <MiniECG height={100} patientId={priorityPatient.id} />
             </div>
+            ) : (
+              <p className="text-sm text-on-surface-variant">
+                No soldiers registered yet. Add patients via Super Admin or run{' '}
+                <code className="text-xs bg-surface-container-high px-1 rounded">python manage.py seed_demo</code>.
+              </p>
+            )}
           </GlassCard>
 
           <div>
@@ -178,7 +187,7 @@ export default function DoctorDashboardPage() {
                 <PatientCard
                   key={p.id}
                   patient={p}
-                  selected={selectedPatient.id === p.id}
+                  selected={priorityPatient?.id === p.id}
                   onClick={() => openConsultation(p)}
                 />
               ))}

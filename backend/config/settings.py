@@ -25,7 +25,8 @@ SECRET_KEY = 'django-insecure-u&1bm^*fse&-yowa=p!_pvblzm@6a-adbw27ur#0vbw%pa%mfy
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = True
 
-ALLOWED_HOSTS = ['localhost', '127.0.0.1']
+# Allow LAN access in dev (e.g. http://10.6.0.121:8555)
+ALLOWED_HOSTS = ['localhost', '127.0.0.1', '10.6.0.121', '*'] if DEBUG else []
 
 
 # Application definition
@@ -121,10 +122,12 @@ USE_TZ = True
 
 STATIC_URL = 'static/'
 
-# CORS
+# CORS — allow any origin in dev so the frontend works over LAN IP
+CORS_ALLOW_ALL_ORIGINS = DEBUG
 CORS_ALLOWED_ORIGINS = [
     'http://localhost:5555',
     'http://127.0.0.1:5555',
+    'http://10.6.0.121:5555',
 ]
 
 # Django REST Framework

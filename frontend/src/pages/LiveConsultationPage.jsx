@@ -1,3 +1,4 @@
+import { useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Video, VideoOff, Mic, MicOff, PhoneOff, Maximize2, MessageSquare, Scan, FileText, Brain } from 'lucide-react';
 import GlassCard from '../components/ui/GlassCard';
@@ -14,13 +15,53 @@ export default function LiveConsultationPage() {
   const navigate = useNavigate();
   const {
     selectedPatient,
+    setSelectedPatient,
+    patientList,
+    loading,
     vitals,
     consultationControls,
     updateConsultationControl,
     showToast,
   } = useApp();
 
+  useEffect(() => {
+    if (selectedPatient || patientList.length === 0) return;
+    const inConsultation = patientList.find((p) => p.status === 'consultation');
+    const critical = patientList.find((p) => p.status === 'critical');
+    setSelectedPatient(inConsultation || critical || patientList[0]);
+  }, [selectedPatient, patientList, setSelectedPatient]);
+
   const { micMuted, videoOn, chatOpen } = consultationControls;
+
+  if (loading) {
+    return (
+      <PageContainer>
+        <p className="text-on-surface-variant text-sm">Loading live consultation...</p>
+      </PageContainer>
+    );
+  }
+
+  if (!selectedPatient) {
+    return (
+      <PageContainer>
+        <PageHeader
+          title="Live Consultation"
+          description="No active patient selected"
+          breadcrumbs={[
+            { label: 'Command Center', to: PATHS.doctor.dashboard },
+            { label: 'Live Consultation' },
+          ]}
+        />
+        <p className="text-sm text-on-surface-variant">
+          Select a soldier from{' '}
+          <Button to={PATHS.doctor.patients} variant="secondary" size="sm" className="inline-flex">
+            Active Patients
+          </Button>{' '}
+          to start a consultation.
+        </p>
+      </PageContainer>
+    );
+  }
 
   const handleEndCall = () => {
     showToast('Consultation ended — returning to command center', 'success');
