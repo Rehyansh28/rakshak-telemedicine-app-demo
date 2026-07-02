@@ -210,3 +210,28 @@ class ConsultationQueue(models.Model):
 
     def __str__(self):
         return f"Queue #{self.queue_position} — {self.patient_id}"
+
+
+class Consultation(models.Model):
+    STATUS_CHOICES = [
+        ("waiting", "Waiting"),
+        ("accepted", "Accepted"),
+        ("rejected", "Rejected"),
+        ("ended", "Ended"),
+    ]
+
+    patient = models.ForeignKey(Patient, on_delete=models.CASCADE, related_name="consultations")
+    doctor = models.ForeignKey(Doctor, on_delete=models.SET_NULL, null=True, blank=True, related_name="consultations")
+    room_id = models.CharField(max_length=255, unique=True, null=True, blank=True)
+    status = models.CharField(max_length=20, choices=STATUS_CHOICES, default="waiting")
+    requested_at = models.DateTimeField(auto_now_add=True)
+    accepted_at = models.DateTimeField(null=True, blank=True)
+    ended_at = models.DateTimeField(null=True, blank=True)
+    duration = models.IntegerField(null=True, blank=True)
+
+    class Meta:
+        ordering = ["-requested_at"]
+
+    def __str__(self):
+        return f"Consultation {self.id} ({self.status}) - Patient: {self.patient.name}"
+

@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { apiGet, staffApiPost } from '../api/client';
+import { apiGet } from '../api/client';
 import { motion } from 'framer-motion';
 import {
   Clock,
@@ -11,6 +11,7 @@ import {
   MessageSquare,
   ArrowLeft,
   Bell,
+  PhoneOff,
 } from 'lucide-react';
 import GlassCard from '../components/ui/GlassCard';
 import MiniECG from '../components/charts/MiniECG';
@@ -19,10 +20,26 @@ import PatientPageHeader from '../components/layout/PatientPageHeader';
 import StatusBadge from '../components/ui/StatusBadge';
 import { PATHS } from '../routes/paths';
 import { useApp } from '../context/useApp';
+import VideoCall from '../components/VideoCall/VideoCall';
 
 export default function WaitingRoomPage() {
   const navigate = useNavigate();
-  const { vitals, showToast, selectedPatient } = useApp();
+  const {
+    vitals,
+    showToast,
+    selectedPatient,
+    activeCall,
+    callStatus,
+    connectionStatus,
+    localStream,
+    remoteStream,
+    initiateCall,
+    endCall,
+    toggleMic,
+    toggleVideo,
+    consultationControls,
+  } = useApp();
+
   const [queuePosition, setQueuePosition] = useState(2);
   const [waitTime, setWaitTime] = useState(4);
 
@@ -36,55 +53,102 @@ export default function WaitingRoomPage() {
       .catch(() => {});
   }, [selectedPatient?.id]);
 
-  const notifyDoctor = async () => {
+  const handleRequestCall = async () => {
     if (!selectedPatient?.id) return;
     try {
-      const data = await staffApiPost(`/queue/${selectedPatient.id}/enqueue/`, {});
-      setQueuePosition(data.queuePosition);
-      setWaitTime(data.waitTime);
-      showToast(
-        `${selectedPatient.name} is in queue (#${data.queuePosition}) — doctor notified`,
-        'success'
-      );
+      await initiateCall(selectedPatient.id);
     } catch (e) {
-      showToast(e.message || 'Could not add to queue', 'info');
+      console.error(e);
     }
   };
+
+  const handleCancelCall = async () => {
+    try {
+      await endCall();
+      showToast('Consultation request cancelled', 'info');
+    } catch (e) {
+      console.error(e);
+    }
+  };
+
+  const isWaiting = callStatus === 'waiting';
+  const isActive = callStatus === 'active';
 
   return (
     <div>
       <PatientPageHeader
         eyebrow="Connect to Doctor · Handoff"
-        title="Doctor Handoff — Waiting Room"
-        description="Keep the soldier connected while they wait for a medical officer. You may assist with positioning, vitals checks, and relaying messages during the consultation."
-        actions={<StatusBadge status="consultation" label="IN QUEUE" />}
+        title={isActive ? `Consultation — ${selectedPatient?.name}` : "Doctor Handoff — Waiting Room"}
+        description={isActive ? "Live WebRTC link active with command center. Vitals and video streams running." : "Keep the soldier connected while they wait for a medical officer. You may assist with positioning, vitals checks, and relaying messages."}
+        actions={
+          isActive ? (
+            <StatusBadge status="consultation" label="SECURE LIVE LINK" />
+          ) : isWaiting ? (
+            <StatusBadge status="warning" label="AWAITING ACCEPTANCE" />
+          ) : (
+            <StatusBadge status="monitoring" label="READY" />
+          )
+        }
       />
 
       <div className="grid lg:grid-cols-3 gap-6">
         <div className="lg:col-span-2 space-y-6">
-          <GlassCard className="bg-white text-center py-10">
-            <motion.div
-              animate={{ scale: [1, 1.04, 1] }}
-              transition={{ repeat: Infinity, duration: 2 }}
-              className="w-24 h-24 rounded-full bg-secondary-container/15 border-2 border-secondary-container flex items-center justify-center mx-auto mb-6"
-            >
-              <Users className="w-12 h-12 text-secondary" />
-            </motion.div>
-            <p className="label-caps text-secondary mb-2">Awaiting Doctor</p>
-            <p className="font-sora text-2xl font-bold text-primary">Position #{queuePosition} in queue</p>
-            <p className="text-on-surface-variant text-sm mt-2">
-              Estimated wait: ~{waitTime} minutes · Keep bio-suit sensors attached on the soldier
-            </p>
-            <motion.div
-              animate={{ opacity: [0.4, 1, 0.4] }}
-              transition={{ repeat: Infinity, duration: 2 }}
-              className="mt-6 flex justify-center gap-1"
-            >
-              {[0, 1, 2].map((i) => (
-                <span key={i} className="w-2 h-2 rounded-full bg-secondary-container" />
-              ))}
-            </motion.div>
-          </GlassCard>
+          {isActive ? (
+            <div className="min-h-[350px]">
+              <VideoCall
+                localStream={localStream}
+                remoteStream={remoteStream}
+                call={activeCall}
+                connectionStatus={connectionStatus}
+                micMuted={consultationControls.micMuted}
+                videoOn={consultationControls.videoOn}
+                onToggleMic={toggleMic}
+                onToggleVideo={toggleVideo}
+                onEndCall={endCall}
+                label={activeCall?.doctor?.name || 'Medical Officer'}
+              />
+            </div>
+          ) : (
+            <GlassCard className="bg-white text-center py-10">
+              <motion.div
+                animate={isWaiting ? { scale: [1, 1.05, 1], opacity: [0.7, 1, 0.7] } : { scale: [1, 1.04, 1] }}
+                transition={{ repeat: Infinity, duration: 2 }}
+                className={`w-24 h-24 rounded-full border-2 flex items-center justify-center mx-auto mb-6 ${
+                  isWaiting 
+                    ? 'bg-error-container/15 border-error animate-pulse' 
+                    : 'bg-secondary-container/15 border-secondary-container'
+                }`}
+              >
+                <Users className={`w-12 h-12 ${isWaiting ? 'text-error' : 'text-secondary'}`} />
+              </motion.div>
+              
+              <p className="label-caps text-secondary mb-2">
+                {isWaiting ? 'Requesting Live Uplink...' : 'Awaiting Doctor'}
+              </p>
+              
+              <h2 className="font-sora text-2xl font-bold text-primary">
+                {isWaiting ? 'Doctor has been paged' : `Position #${queuePosition} in queue`}
+              </h2>
+              
+              <p className="text-on-surface-variant text-sm mt-2">
+                {isWaiting 
+                  ? 'Establishing secure link with command center. Please keep the helmet camera aligned.'
+                  : `Estimated wait: ~${waitTime} minutes · Keep bio-suit sensors attached on the soldier`}
+              </p>
+              
+              {isWaiting && (
+                <motion.div
+                  animate={{ opacity: [0.4, 1, 0.4] }}
+                  transition={{ repeat: Infinity, duration: 1.5 }}
+                  className="mt-6 flex justify-center gap-1"
+                >
+                  {[0, 1, 2].map((i) => (
+                    <span key={i} className="w-2.5 h-2.5 rounded-full bg-error" />
+                  ))}
+                </motion.div>
+              )}
+            </GlassCard>
+          )}
 
           <GlassCard className="bg-white">
             <div className="flex items-center gap-2 mb-4">
@@ -108,14 +172,37 @@ export default function WaitingRoomPage() {
             <MiniECG height={56} />
           </GlassCard>
 
-          <div className="flex flex-col sm:flex-row gap-3">
-            <Button variant="ghost" icon={ArrowLeft} onClick={() => navigate(PATHS.staff.camera)} className="flex-1">
-              Back
-            </Button>
-            <Button onClick={notifyDoctor} icon={Bell} className="flex-[2]">
-              Notify Doctor — Patient Ready
-            </Button>
-          </div>
+          {!isActive && (
+            <div className="flex flex-col sm:flex-row gap-3">
+              <Button
+                variant="ghost"
+                icon={ArrowLeft}
+                onClick={() => navigate(PATHS.staff.camera)}
+                className="flex-1"
+                disabled={isWaiting}
+              >
+                Back
+              </Button>
+              {isWaiting ? (
+                <Button
+                  onClick={handleCancelCall}
+                  icon={PhoneOff}
+                  variant="danger"
+                  className="flex-[2] bg-error hover:bg-error/95 text-white"
+                >
+                  Cancel Call Request
+                </Button>
+              ) : (
+                <Button
+                  onClick={handleRequestCall}
+                  icon={Bell}
+                  className="flex-[2] bg-secondary text-primary hover:bg-secondary/90"
+                >
+                  Request Consultation — Patient Ready
+                </Button>
+              )}
+            </div>
+          )}
         </div>
 
         <div className="space-y-4">
@@ -185,3 +272,4 @@ export default function WaitingRoomPage() {
     </div>
   );
 }
+

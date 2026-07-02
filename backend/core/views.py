@@ -13,6 +13,7 @@ from .models import (
     ActivityLog,
     AIInsight,
     AIRecommendation,
+    Consultation,
     ConsultationQueue,
     Doctor,
     MedicalStaff,
@@ -28,6 +29,7 @@ from .serializers import (
     AIInsightSerializer,
     AIRecommendationSerializer,
     ConsultationQueueSerializer,
+    ConsultationSerializer,
     DoctorSerializer,
     MedicalStaffSerializer,
     EmergencyAlertSerializer,
@@ -38,7 +40,7 @@ from .serializers import (
     SystemConfigSerializer,
 )
 from .patient_utils import apply_patient_fields, bootstrap_patient_session, build_patient_create_data
-from .permissions import IsMedicalStaff
+from .permissions import IsMedicalStaff, IsDoctor
 from .utils import authenticate_login, keys_to_camel
 
 
@@ -331,3 +333,155 @@ class QueueEnqueueView(APIView):
         patient.status = "consultation"
         patient.save(update_fields=["status"])
         return Response(ConsultationQueueSerializer(entry).data, status=status.HTTP_200_OK)
+
+
+class CallRequestView(APIView):
+    permission_classes = [IsMedicalStaff]
+
+    def post(self, request):
+        import uuid
+        soldier_id = request.data.get("soldierId") or request.data.get("patient_id")
+        if not soldier_id:
+            return Response({"detail": "soldierId is required"}, status=status.HTTP_400_BAD_REQUEST)
+        
+        try:
+            patient = Patient.objects.get(soldier_id=soldier_id)
+        except Patient.DoesNotExist:
+            return Response({"detail": "Patient not found"}, status=status.HTTP_404_NOT_FOUND)
+            
+        # Cancel any prior active calls
+        Consultation.objects.filter(patient=patient, status__in=['waiting', 'accepted']).update(
+            status='ended', ended_at=timezone.now()
+        )
+
+        room_id = f"room_{uuid.uuid4().hex}"
+        consultation = Consultation.objects.create(
+            patient=patient,
+            room_id=room_id,
+            status="waiting",
+            requested_at=timezone.now()
+        )
+        
+        # Ensure patient status
+        patient.status = "consultation"
+        patient.save(update_fields=["status"])
+        
+        # Enqueue if not in queue
+        max_pos = ConsultationQueue.objects.aggregate(m=Max("queue_position"))["m"] or 0
+        ConsultationQueue.objects.get_or_create(
+            patient=patient,
+            defaults={
+                "queue_position": max_pos + 1,
+                "estimated_wait_minutes": 5,
+            }
+        )
+
+        return Response(ConsultationSerializer(consultation).data, status=status.HTTP_201_CREATED)
+
+
+class CallAcceptView(APIView):
+    permission_classes = [IsDoctor]
+
+    def post(self, request):
+        doctor = Doctor.objects.get(user=request.user)
+        consultation_id = request.data.get("consultationId") or request.data.get("id")
+        if not consultation_id:
+            return Response({"detail": "consultationId is required"}, status=status.HTTP_400_BAD_REQUEST)
+            
+        try:
+            consultation = Consultation.objects.get(id=consultation_id)
+        except Consultation.DoesNotExist:
+            return Response({"detail": "Consultation not found"}, status=status.HTTP_404_NOT_FOUND)
+            
+        if consultation.status != "waiting":
+            return Response({"detail": f"Consultation cannot be accepted in '{consultation.status}' state"}, status=status.HTTP_400_BAD_REQUEST)
+            
+        consultation.status = "accepted"
+        consultation.doctor = doctor
+        consultation.accepted_at = timezone.now()
+        consultation.save()
+        
+        return Response(ConsultationSerializer(consultation).data, status=status.HTTP_200_OK)
+
+
+class CallRejectView(APIView):
+    permission_classes = [IsDoctor]
+
+    def post(self, request):
+        doctor = Doctor.objects.get(user=request.user)
+        consultation_id = request.data.get("consultationId") or request.data.get("id")
+        if not consultation_id:
+            return Response({"detail": "consultationId is required"}, status=status.HTTP_400_BAD_REQUEST)
+            
+        try:
+            consultation = Consultation.objects.get(id=consultation_id)
+        except Consultation.DoesNotExist:
+            return Response({"detail": "Consultation not found"}, status=status.HTTP_404_NOT_FOUND)
+            
+        consultation.status = "rejected"
+        consultation.doctor = doctor
+        consultation.save()
+        
+        # Dequeue
+        ConsultationQueue.objects.filter(patient=consultation.patient).delete()
+        if consultation.patient.status == "consultation":
+            consultation.patient.status = "stable"
+            consultation.patient.save(update_fields=["status"])
+            
+        return Response(ConsultationSerializer(consultation).data, status=status.HTTP_200_OK)
+
+
+class CallEndView(APIView):
+    permission_classes = [IsAuthenticated]
+
+    def post(self, request):
+        room_id = request.data.get("roomId")
+        consultation_id = request.data.get("consultationId") or request.data.get("id")
+        
+        consultation = None
+        if consultation_id:
+            consultation = Consultation.objects.filter(id=consultation_id).first()
+        elif room_id:
+            consultation = Consultation.objects.filter(room_id=room_id).first()
+            
+        if not consultation:
+            return Response({"detail": "Consultation not found"}, status=status.HTTP_404_NOT_FOUND)
+            
+        if consultation.status == "ended":
+            return Response(ConsultationSerializer(consultation).data, status=status.HTTP_200_OK)
+            
+        consultation.status = "ended"
+        consultation.ended_at = timezone.now()
+        if consultation.accepted_at:
+            delta = consultation.ended_at - consultation.accepted_at
+            consultation.duration = int(delta.total_seconds())
+        consultation.save()
+        
+        # Dequeue
+        ConsultationQueue.objects.filter(patient=consultation.patient).delete()
+        if consultation.patient.status == "consultation":
+            consultation.patient.status = "stable"
+            consultation.patient.save(update_fields=["status"])
+            
+        return Response(ConsultationSerializer(consultation).data, status=status.HTTP_200_OK)
+
+
+class CallStatusView(APIView):
+    permission_classes = [IsAuthenticated]
+
+    def get(self, request, room_id):
+        try:
+            consultation = Consultation.objects.get(room_id=room_id)
+        except Consultation.DoesNotExist:
+            return Response({"detail": "Consultation not found"}, status=status.HTTP_404_NOT_FOUND)
+            
+        return Response(ConsultationSerializer(consultation).data)
+
+
+class CallRequestsView(APIView):
+    permission_classes = [IsAuthenticated]
+
+    def get(self, request):
+        waiting = Consultation.objects.filter(status="waiting")
+        return Response(ConsultationSerializer(waiting, many=True).data)
+

@@ -32,6 +32,8 @@ ALLOWED_HOSTS = ['localhost', '127.0.0.1', '10.6.0.121', '172.31.40.29', '*'] if
 # Application definition
 
 INSTALLED_APPS = [
+    'daphne',
+    'channels',
     'django.contrib.admin',
     'django.contrib.auth',
     'django.contrib.contenttypes',
@@ -73,6 +75,7 @@ TEMPLATES = [
 ]
 
 WSGI_APPLICATION = 'config.wsgi.application'
+ASGI_APPLICATION = 'config.asgi.application'
 
 
 # Database
@@ -149,3 +152,24 @@ REST_FRAMEWORK = {
         'rest_framework.permissions.AllowAny',
     ],
 }
+
+# Channels Configuration
+import os
+REDIS_URL = os.environ.get('REDIS_URL', 'redis://127.0.0.1:6379')
+
+if os.environ.get('USE_REDIS_CHANNEL_LAYER', 'False').lower() in ('true', '1'):
+    CHANNEL_LAYERS = {
+        'default': {
+            'BACKEND': 'channels_redis.core.RedisChannelLayer',
+            'CONFIG': {
+                "hosts": [REDIS_URL],
+            },
+        },
+    }
+else:
+    CHANNEL_LAYERS = {
+        'default': {
+            'BACKEND': 'channels.layers.InMemoryChannelLayer',
+        },
+    }
+
