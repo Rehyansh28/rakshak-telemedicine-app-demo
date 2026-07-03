@@ -36,6 +36,7 @@ def validate_consultation_access(consultation, user):
 
 class CallConsumer(AsyncWebsocketConsumer):
     async def connect(self):
+        print(f"[CallConsumer] Connect request received for room: {self.scope['url_route']['kwargs'].get('room_id')}")
         self.room_id = self.scope['url_route']['kwargs']['room_id']
         self.room_group_name = f'call_{self.room_id}'
 
@@ -44,24 +45,32 @@ class CallConsumer(AsyncWebsocketConsumer):
         query_params = parse_qs(query_string)
         token_list = query_params.get('token', [])
         
+        print(f"[CallConsumer] Token list parsed: {token_list}")
         if not token_list:
+            print("[CallConsumer] Rejecting connection: Token is missing")
             await self.close(code=4003)  # Forbidden
             return
             
         token_key = token_list[0]
         user = await get_user_from_token(token_key)
         
+        print(f"[CallConsumer] Authenticated user: {user}")
         if not user:
+            print("[CallConsumer] Rejecting connection: User not found from token")
             await self.close(code=4003)  # Forbidden
             return
 
         consultation = await get_consultation_by_room(self.room_id)
+        print(f"[CallConsumer] Consultation found: {consultation}")
         if not consultation:
+            print("[CallConsumer] Rejecting connection: Consultation not found in DB")
             await self.close(code=4004)  # Not Found
             return
 
         is_allowed = await validate_consultation_access(consultation, user)
+        print(f"[CallConsumer] Access validation result: {is_allowed}")
         if not is_allowed:
+            print("[CallConsumer] Rejecting connection: User is not allowed to access this consultation")
             await self.close(code=4003)  # Forbidden
             return
 
@@ -74,6 +83,7 @@ class CallConsumer(AsyncWebsocketConsumer):
             self.channel_name
         )
         await self.accept()
+        print("[CallConsumer] Connection accepted and socket opened")
 
         # Check if user is doctor or staff to determine role
         from .models import Doctor
@@ -110,6 +120,14 @@ class CallConsumer(AsyncWebsocketConsumer):
         try:
             data = json.loads(text_data)
         except json.JSONDecodeError:
+            return
+
+        # Handle keepalive heartbeat ping message to prevent timeout (e.g. from Cloudflare)
+        if data.get('type') == 'ping':
+            try:
+                await self.send(text_data=json.dumps({'type': 'pong'}))
+            except Exception:
+                pass
             return
 
         # Broadcast signal to other channel members in the room group

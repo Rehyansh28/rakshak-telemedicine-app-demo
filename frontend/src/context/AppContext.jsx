@@ -18,6 +18,27 @@ import { SignalingService } from '../services/websocket';
 import { WebRTCConnection } from '../services/webrtc';
 
 
+const ICE_SERVERS = [
+  { urls: 'stun:stun.l.google.com:19302' },
+  { urls: 'stun:openrelay.metered.ca:80' },
+  {
+    urls: 'turn:openrelay.metered.ca:80',
+    username: 'openrelayproject',
+    credential: 'openrelayproject',
+  },
+  {
+    urls: 'turn:openrelay.metered.ca:443',
+    username: 'openrelayproject',
+    credential: 'openrelayproject',
+  },
+  {
+    urls: 'turns:openrelay.metered.ca:443?transport=tcp',
+    username: 'openrelayproject',
+    credential: 'openrelayproject',
+  },
+];
+
+
 export function AppProvider({ children }) {
   const [selectedPatient, setSelectedPatientState] = useState(null);
   const [patientList, setPatientList] = useState([]);
@@ -68,7 +89,7 @@ export function AppProvider({ children }) {
   const [localStream, setLocalStream] = useState(null);
   const [remoteStream, setRemoteStream] = useState(null);
   const [callStatus, setCallStatus] = useState('idle'); // idle, waiting, active
-  const [connectionStatus, setConnectionStatus] = useState('disconnected');
+  const [connectionStatus, setConnectionStatus] = useState('new');
 
   const signalingServiceRef = useRef(null);
   const webrtcRef = useRef(null);
@@ -152,7 +173,7 @@ export function AppProvider({ children }) {
 
   const connectSignaling = useCallback((roomId, token, stream) => {
     const webrtc = new WebRTCConnection(
-      null,
+      ICE_SERVERS,
       (signal) => {
         if (signalingServiceRef.current) {
           signalingServiceRef.current.send(signal);
@@ -192,6 +213,16 @@ export function AppProvider({ children }) {
           const isDoc = !!getStoredDoctor();
           if (isDoc) {
             console.log('We are the Doctor. Initiating WebRTC offer...');
+            await webrtcRef.current?.createOffer();
+          } else {
+            // We are the Medic. Send a "ready" signal to prompt the Doctor to start negotiation
+            console.log('Doctor joined. Sending ready signal to peer...');
+            signalingServiceRef.current?.send({ type: 'ready' });
+          }
+        } else if (data.type === 'ready') {
+          const isDoc = !!getStoredDoctor();
+          if (isDoc) {
+            console.log('Received ready signal from Medic. Initiating WebRTC offer as Doctor...');
             await webrtcRef.current?.createOffer();
           }
         } else if (data.type === 'peer-left') {
