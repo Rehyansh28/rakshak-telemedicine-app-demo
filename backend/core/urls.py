@@ -73,4 +73,10 @@ urlpatterns = [
     path("dashboard/stats/", views.DashboardStatsView.as_view(), name="dashboard-stats"),
     path("queue/<str:soldier_id>/enqueue/", views.QueueEnqueueView.as_view(), name="queue-enqueue"),
     path("queue/<str:soldier_id>/", views.QueueView.as_view(), name="queue"),
+    path("call/request/", views.CallRequestView.as_view(), name="call-request"),
+    path("call/accept/", views.CallAcceptView.as_view(), name="call-accept"),
+    path("call/reject/", views.CallRejectView.as_view(), name="call-reject"),
+    path("call/end/", views.CallEndView.as_view(), name="call-end"),
+    path("call/status/<str:room_id>/", views.CallStatusView.as_view(), name="call-status"),
+    path("call/requests/", views.CallRequestsView.as_view(), name="call-requests"),
 ]

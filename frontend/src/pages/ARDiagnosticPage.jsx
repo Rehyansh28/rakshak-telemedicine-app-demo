@@ -1,5 +1,5 @@
 import { useNavigate } from 'react-router-dom';
-import HumanBodyMap from '../components/ar/HumanBodyMap';
+import LiveARCanvas from '../components/ar/LiveARCanvas';
 import OrganInfoPanel from '../components/ar/OrganInfoPanel';
 import MetricWidget from '../components/ui/MetricWidget';
 import MiniECG from '../components/charts/MiniECG';
@@ -13,7 +13,7 @@ const ORGANS = ['heart', 'lungs', 'brain', 'chest', 'arms', 'legs', 'nose'];
 
 export default function ARDiagnosticPage() {
   const navigate = useNavigate();
-  const { vitals, selectedOrgan, setSelectedOrgan } = useApp();
+  const { vitals, selectedOrgan, setSelectedOrgan, remoteStream } = useApp();
 
   const handleOrganClick = (organId) => {
     setSelectedOrgan(organId);
@@ -54,10 +54,11 @@ export default function ARDiagnosticPage() {
         </div>
 
         <div className="flex-1 relative min-h-[280px]">
-          <HumanBodyMap onOrganClick={handleOrganClick} activeOrgan={selectedOrgan} />
-          <p className="absolute bottom-4 left-1/2 -translate-x-1/2 label-caps text-[10px] text-on-surface-variant bg-white/90 px-4 py-2 rounded-full shadow-sm z-20">
-            Tap body regions · Open full diagnostic from panel
-          </p>
+          <LiveARCanvas
+            remoteStream={remoteStream}
+            onOrganClick={handleOrganClick}
+            activeOrgan={selectedOrgan}
+          />
         </div>
 
         <div className="hidden lg:flex flex-col w-56 gap-2 overflow-y-auto shrink-0">

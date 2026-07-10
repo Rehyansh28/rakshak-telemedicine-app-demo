@@ -11,6 +11,7 @@ import { useApp } from '../../context/useApp';
 import { PATHS } from '../../routes/paths';
 import { BRAND } from '../../data/brand';
 import IITJodhpurBadge from '../brand/IITJodhpurBadge';
+import IncomingCallModal from '../VideoCall/IncomingCallModal';
 
 export default function DoctorLayout() {
   const navigate = useNavigate();
@@ -22,6 +23,9 @@ export default function DoctorLayout() {
     secureNode,
     sidebarCollapsed,
     patientList,
+    incomingCall,
+    acceptCall,
+    rejectCall,
   } = useApp();
 
   const [placeholderModal, setPlaceholderModal] = useState(null);
@@ -42,6 +46,17 @@ export default function DoctorLayout() {
     setMobileNavOpen(false);
     showToast(`Emergency SOS — connecting to ${critical.name}`, 'info');
     navigate(PATHS.doctor.consultation);
+  };
+
+  const handleAcceptIncoming = async () => {
+    if (!incomingCall) return;
+    try {
+      setSelectedPatient(incomingCall.patient);
+      await acceptCall(incomingCall.id);
+      navigate(PATHS.doctor.consultation);
+    } catch (err) {
+      console.error("Accept call error:", err);
+    }
   };
 
   return (
@@ -156,6 +171,12 @@ export default function DoctorLayout() {
             Dismiss
           </Button>
         </Modal>
+
+        <IncomingCallModal
+          call={incomingCall}
+          onAccept={handleAcceptIncoming}
+          onReject={() => rejectCall(incomingCall.id)}
+        />
       </div>
     </DoctorRouteGuard>
   );

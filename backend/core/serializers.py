@@ -4,6 +4,7 @@ from .models import (
     ActivityLog,
     AIInsight,
     AIRecommendation,
+    Consultation,
     ConsultationQueue,
     Doctor,
     EmergencyAlert,
@@ -175,3 +176,36 @@ class SystemConfigSerializer(CamelCaseSerializerMixin, serializers.ModelSerializ
     class Meta:
         model = SystemConfig
         fields = ["secureNode", "uplinkData"]
+
+
+class ConsultationSerializer(CamelCaseSerializerMixin, serializers.ModelSerializer):
+    patient = PatientSerializer(read_only=True)
+    doctor = DoctorSerializer(read_only=True)
+    roomId = serializers.CharField(source="room_id")
+    requestedAt = serializers.DateTimeField(source="requested_at")
+    acceptedAt = serializers.DateTimeField(source="accepted_at", read_only=True)
+    endedAt = serializers.DateTimeField(source="ended_at", read_only=True)
+    queuePosition = serializers.SerializerMethodField()
+
+    class Meta:
+        model = Consultation
+        fields = [
+            "id",
+            "patient",
+            "doctor",
+            "roomId",
+            "status",
+            "requestedAt",
+            "acceptedAt",
+            "endedAt",
+            "duration",
+            "queuePosition",
+        ]
+
+    def get_queuePosition(self, obj):
+        try:
+            queue_entry = ConsultationQueue.objects.get(patient=obj.patient)
+            return queue_entry.queue_position
+        except ConsultationQueue.DoesNotExist:
+            return 1
+

@@ -1,15 +1,14 @@
 import { useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Video, VideoOff, Mic, MicOff, PhoneOff, Maximize2, MessageSquare, Scan, FileText, Brain } from 'lucide-react';
+import { Scan, FileText, Brain } from 'lucide-react';
 import GlassCard from '../components/ui/GlassCard';
-import LiveCameraPreview from '../components/camera/LiveCameraPreview';
-import StatusBadge from '../components/ui/StatusBadge';
 import MiniECG from '../components/charts/MiniECG';
 import PageContainer from '../components/layout/PageContainer';
 import PageHeader from '../components/layout/PageHeader';
 import Button from '../components/ui/Button';
 import { PATHS } from '../routes/paths';
 import { useApp } from '../context/useApp';
+import VideoCall from '../components/VideoCall/VideoCall';
 
 export default function LiveConsultationPage() {
   const navigate = useNavigate();
@@ -20,8 +19,13 @@ export default function LiveConsultationPage() {
     loading,
     vitals,
     consultationControls,
-    updateConsultationControl,
-    showToast,
+    localStream,
+    remoteStream,
+    activeCall,
+    connectionStatus,
+    endCall,
+    toggleMic,
+    toggleVideo,
   } = useApp();
 
   useEffect(() => {
@@ -31,7 +35,7 @@ export default function LiveConsultationPage() {
     setSelectedPatient(inConsultation || critical || patientList[0]);
   }, [selectedPatient, patientList, setSelectedPatient]);
 
-  const { micMuted, videoOn, chatOpen } = consultationControls;
+  const { videoOn, micMuted, chatOpen } = consultationControls;
 
   if (loading) {
     return (
@@ -63,46 +67,10 @@ export default function LiveConsultationPage() {
     );
   }
 
-  const handleEndCall = () => {
-    showToast('Consultation ended — returning to command center', 'success');
+  const handleEndCall = async () => {
+    await endCall();
     navigate(PATHS.doctor.dashboard);
   };
-
-  const toolbar = [
-    {
-      icon: micMuted ? MicOff : Mic,
-      label: 'Mic',
-      onClick: () => {
-        updateConsultationControl('micMuted', !micMuted);
-        showToast(micMuted ? 'Microphone enabled' : 'Microphone muted', 'info');
-      },
-      active: !micMuted,
-    },
-    {
-      icon: videoOn ? Video : VideoOff,
-      label: 'Video',
-      onClick: () => {
-        updateConsultationControl('videoOn', !videoOn);
-        showToast(videoOn ? 'Camera off' : 'Camera on', 'info');
-      },
-      active: videoOn,
-    },
-    { icon: PhoneOff, label: 'End', onClick: handleEndCall, danger: true },
-    {
-      icon: Maximize2,
-      label: 'Fullscreen',
-      onClick: () => showToast('Fullscreen mode (demo)', 'info'),
-    },
-    {
-      icon: MessageSquare,
-      label: 'Chat',
-      onClick: () => {
-        updateConsultationControl('chatOpen', !chatOpen);
-        showToast(chatOpen ? 'Chat closed' : 'Tactical chat opened', 'info');
-      },
-      active: chatOpen,
-    },
-  ];
 
   return (
     <PageContainer fullHeight>
@@ -122,48 +90,20 @@ export default function LiveConsultationPage() {
         className="mb-4 shrink-0"
       />
 
-      <div className="flex items-center gap-2 mb-4 shrink-0">
-        <StatusBadge status="consultation" label="LIVE UPLINK" />
-        {!videoOn && <StatusBadge status="warning" label="VIDEO PAUSED" />}
-        {micMuted && <StatusBadge status="monitoring" label="MIC MUTED" />}
-      </div>
-
       <div className="flex-1 grid lg:grid-cols-3 gap-4 min-h-0">
-        <div className="lg:col-span-2 relative rounded-xl overflow-hidden bg-primary-container/10 border border-outline-variant/30 min-h-[280px]">
-          <LiveCameraPreview active={videoOn} className="absolute inset-0 min-h-[280px]">
-            {videoOn && (
-              <div className="absolute bottom-20 left-4 z-10 glass-panel px-3 py-2 rounded-lg max-w-[200px]">
-                <p className="label-caps text-[10px] text-secondary">Patient uplink</p>
-                <p className="text-xs text-on-surface-variant truncate">{selectedPatient.name}</p>
-                <p className="text-[10px] text-on-surface-variant/80">{selectedPatient.location}</p>
-              </div>
-            )}
-          </LiveCameraPreview>
-          <div className="absolute top-4 left-4 glass-panel px-3 py-2 rounded-lg z-20">
-            <span className="label-caps text-[10px] text-error flex items-center gap-1">
-              <span className="w-2 h-2 bg-error rounded-full animate-pulse" />
-              REC · LIVE
-            </span>
-          </div>
-          <div className="absolute bottom-4 left-1/2 -translate-x-1/2 flex gap-3 z-20">
-            {toolbar.map((item) => (
-              <button
-                key={item.label}
-                type="button"
-                onClick={item.onClick}
-                title={item.label}
-                className={`w-12 h-12 rounded-full flex items-center justify-center transition-colors ${
-                  item.danger
-                    ? 'bg-error text-white'
-                    : item.active
-                      ? 'glass-panel text-primary ring-2 ring-secondary/40'
-                      : 'glass-panel text-on-surface-variant hover:text-primary'
-                }`}
-              >
-                <item.icon className="w-5 h-5" />
-              </button>
-            ))}
-          </div>
+        <div className="lg:col-span-2 min-h-[350px]">
+          <VideoCall
+            localStream={localStream}
+            remoteStream={remoteStream}
+            call={activeCall}
+            connectionStatus={connectionStatus}
+            micMuted={micMuted}
+            videoOn={videoOn}
+            onToggleMic={toggleMic}
+            onToggleVideo={toggleVideo}
+            onEndCall={handleEndCall}
+            label={selectedPatient.name}
+          />
         </div>
 
         <div className="space-y-4 overflow-y-auto scrollbar-hide">
