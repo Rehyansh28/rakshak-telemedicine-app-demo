@@ -19,9 +19,9 @@ backend/staticfiles/
 backend/media/
 
 # Environment / secrets
-.env
-.env.*
-!.env.example
+# .env
+# .env.*
+# !.env.example
 cloudflared/credentials.json
 
 # Node / frontend
