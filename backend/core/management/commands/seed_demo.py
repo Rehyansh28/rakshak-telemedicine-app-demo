@@ -202,6 +202,17 @@ class Command(BaseCommand):
             admin_user.set_password("rakshak2026")
             admin_user.save()
 
+        primary_admin, primary_admin_created = User.objects.get_or_create(
+            username="admin",
+            defaults={"email": "admin@example.com", "is_staff": True, "is_superuser": True},
+        )
+        primary_admin.email = "admin@example.com"
+        primary_admin.is_staff = True
+        primary_admin.is_superuser = True
+        if primary_admin_created:
+            primary_admin.set_password("admin")
+            primary_admin.save()
+
         staff_user, staff_created = User.objects.get_or_create(
             username="fieldmedic",
             defaults={"email": "fieldmedic@rakshak.mil"},
