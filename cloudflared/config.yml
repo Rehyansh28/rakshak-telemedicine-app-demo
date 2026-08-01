@@ -1,0 +1,11 @@
+# Optional local ingress config (use with credentials.json instead of TUNNEL_TOKEN).
+# Replace <TUNNEL_ID> with your tunnel UUID from the Cloudflare dashboard.
+tunnel: <TUNNEL_ID>
+credentials-file: /etc/cloudflared/credentials.json
+
+ingress:
+  - hostname: sachin.software
+    service: http://frontend:5555
+  - hostname: www.sachin.software
+    service: http://frontend:5555
+  - service: http_status:404

@@ -22,6 +22,7 @@ backend/media/
 .env
 .env.*
 !.env.example
+cloudflared/credentials.json
 
 # Node / frontend
 node_modules/

@@ -10,10 +10,13 @@ For the full list of settings and their values, see
 https://docs.djangoproject.com/en/6.0/ref/settings/
 """
 
+import os
 from pathlib import Path
 
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
+
+PUBLIC_DOMAIN = os.environ.get('PUBLIC_DOMAIN', 'sachin.software')
 
 
 # Quick-start development settings - unsuitable for production
@@ -25,8 +28,23 @@ SECRET_KEY = 'django-insecure-u&1bm^*fse&-yowa=p!_pvblzm@6a-adbw27ur#0vbw%pa%mfy
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = True
 
-# Allow LAN access in dev (e.g. http://10.6.0.121:8555)
-ALLOWED_HOSTS = ['localhost', '127.0.0.1', '10.6.0.121', '172.31.40.29', '*'] if DEBUG else []
+# Allow LAN access in dev (e.g. http://10.6.0.121:8555) and Cloudflare tunnel domain
+ALLOWED_HOSTS = [
+    'localhost',
+    '127.0.0.1',
+    '10.6.0.121',
+    '172.31.40.29',
+    PUBLIC_DOMAIN,
+    f'www.{PUBLIC_DOMAIN}',
+    '*',
+] if DEBUG else [PUBLIC_DOMAIN, f'www.{PUBLIC_DOMAIN}']
+
+CSRF_TRUSTED_ORIGINS = [
+    f'https://{PUBLIC_DOMAIN}',
+    f'https://www.{PUBLIC_DOMAIN}',
+    'http://localhost:5555',
+    'http://127.0.0.1:5555',
+]
 
 
 # Application definition
@@ -136,10 +154,8 @@ CORS_ALLOWED_ORIGINS = [
     'http://172.31.40.29:8555',
     'http://localhost:8555',
     'http://127.0.0.1:8555',
-    'http://10.6.0.121:8555',
-    'http://172.31.40.29:8555',
-    'http://localhost:8555',
-    'http://127.0.0.1:8555',
+    f'https://{PUBLIC_DOMAIN}',
+    f'https://www.{PUBLIC_DOMAIN}',
 ]
 
 # Django REST Framework
@@ -154,7 +170,6 @@ REST_FRAMEWORK = {
 }
 
 # Channels Configuration
-import os
 REDIS_URL = os.environ.get('REDIS_URL', 'redis://127.0.0.1:6379')
 
 if os.environ.get('USE_REDIS_CHANNEL_LAYER', 'False').lower() in ('true', '1'):
