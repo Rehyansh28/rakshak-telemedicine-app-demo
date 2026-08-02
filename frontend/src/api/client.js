@@ -6,6 +6,20 @@ const STAFF_TOKEN_KEY = 'staff_auth_token';
 const STAFF_PROFILE_KEY = 'staff_auth_profile';
 const ADMIN_TOKEN_KEY = 'admin_auth_token';
 
+const PUBLIC_AUTH_PATHS = new Set([
+  '/auth/login/',
+  '/auth/staff/login/',
+  '/auth/superadmin/login/',
+]);
+
+function isInvalidTokenResponse(status, detail) {
+  return status === 401 && typeof detail === 'string' && detail.toLowerCase().includes('invalid token');
+}
+
+function notifyAuthCleared(kind) {
+  window.dispatchEvent(new CustomEvent('auth:cleared', { detail: { kind } }));
+}
+
 export function getToken() {
   return localStorage.getItem(TOKEN_KEY);
 }
@@ -65,7 +79,8 @@ export function setAdminToken(token) {
 
 async function request(path, options = {}) {
   const headers = { 'Content-Type': 'application/json', ...options.headers };
-  const token = getToken();
+  const skipAuth = PUBLIC_AUTH_PATHS.has(path);
+  const token = skipAuth ? null : getToken();
   if (token) headers.Authorization = `Token ${token}`;
 
   const res = await fetch(`${API_BASE}${path}`, { ...options, headers });
@@ -76,6 +91,10 @@ async function request(path, options = {}) {
       detail = body.detail || JSON.stringify(body);
     } catch {
       /* ignore */
+    }
+    if (token && isInvalidTokenResponse(res.status, detail)) {
+      clearAuth();
+      notifyAuthCleared('doctor');
     }
     throw new Error(detail);
   }
@@ -93,7 +112,8 @@ export function apiPost(path, body) {
 
 async function staffRequest(path, options = {}) {
   const headers = { 'Content-Type': 'application/json', ...options.headers };
-  const token = getStaffToken();
+  const skipAuth = PUBLIC_AUTH_PATHS.has(path);
+  const token = skipAuth ? null : getStaffToken();
   if (token) headers.Authorization = `Token ${token}`;
 
   const res = await fetch(`${API_BASE}${path}`, { ...options, headers });
@@ -104,6 +124,10 @@ async function staffRequest(path, options = {}) {
       detail = body.detail || JSON.stringify(body);
     } catch {
       /* ignore */
+    }
+    if (token && isInvalidTokenResponse(res.status, detail)) {
+      clearStaffAuth();
+      notifyAuthCleared('staff');
     }
     throw new Error(detail);
   }
@@ -129,7 +153,8 @@ export function staffApiDelete(path) {
 
 async function adminRequest(path, options = {}) {
   const headers = { 'Content-Type': 'application/json', ...options.headers };
-  const token = getAdminToken();
+  const skipAuth = PUBLIC_AUTH_PATHS.has(path);
+  const token = skipAuth ? null : getAdminToken();
   if (token) headers.Authorization = `Token ${token}`;
 
   const res = await fetch(`${API_BASE}${path}`, { ...options, headers });
@@ -140,6 +165,10 @@ async function adminRequest(path, options = {}) {
       detail = body.detail || JSON.stringify(body);
     } catch {
       /* ignore */
+    }
+    if (token && isInvalidTokenResponse(res.status, detail)) {
+      setAdminToken(null);
+      notifyAuthCleared('admin');
     }
     throw new Error(detail);
   }

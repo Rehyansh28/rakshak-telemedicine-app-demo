@@ -11,19 +11,25 @@ export class SignalingService {
     this.reconnectDelay = 3000;
     this.isClosedIntentional = false;
     this.pingInterval = null;
+    this.messageQueue = [];
+  }
+
+  flushQueue() {
+    while (this.messageQueue.length > 0 && this.ws?.readyState === WebSocket.OPEN) {
+      const message = this.messageQueue.shift();
+      this.ws.send(JSON.stringify(message));
+    }
   }
 
   connect() {
     this.isClosedIntentional = false;
-    
+
     if (this.pingInterval) {
       clearInterval(this.pingInterval);
       this.pingInterval = null;
     }
-    
-    // Close existing socket and clear handlers before creating a new one to prevent duplication
+
     if (this.ws) {
-      console.log('Closing existing WebSocket before reconnecting...');
       this.ws.onopen = null;
       this.ws.onmessage = null;
       this.ws.onclose = null;
@@ -37,33 +43,31 @@ export class SignalingService {
     }
 
     const protocol = window.location.protocol === 'https:' ? 'wss:' : 'ws:';
-    
-    // In local development or tunneling, connect via the same host (Vite proxy or reverse proxy).
-    // Let's resolve the host: if VITE_WS_HOST is set, use it. Otherwise, default to the current page host.
     let host = import.meta.env.VITE_WS_HOST;
     if (!host) {
       host = window.location.host;
     }
 
     const url = `${protocol}//${host}/ws/call/${this.roomId}/?token=${this.token}`;
-    
     console.warn(`[WebSocket] Connecting to signaling url: ${url}`);
+
     try {
       this.ws = new WebSocket(url);
 
       this.ws.onopen = () => {
         console.warn('[WebSocket] Connected successfully');
         this.reconnectAttempts = 0;
-        
-        // Start keepalive ping to prevent idle connection termination (e.g. 45s Cloudflare timeout)
+        this.flushQueue();
+
         this.pingInterval = setInterval(() => {
           this.send({ type: 'ping' });
-        }, 15000); // 15 seconds is very safe (well below Cloudflare's 45s threshold)
+        }, 15000);
       };
 
       this.ws.onmessage = (event) => {
         try {
           const data = JSON.parse(event.data);
+          if (data.type === 'ping' || data.type === 'pong') return;
           console.log('[WebSocket] Message received:', data);
           if (this.onMessage) this.onMessage(data);
         } catch (e) {
@@ -73,17 +77,16 @@ export class SignalingService {
 
       this.ws.onclose = (event) => {
         console.log(`[WebSocket] Disconnected. Code: ${event.code}, Reason: ${event.reason || 'None'}`);
-        
+
         if (this.pingInterval) {
           clearInterval(this.pingInterval);
           this.pingInterval = null;
         }
-        
+
         if (this.onClose) this.onClose(event);
-        
-        // Reconnect if connection was lost unintentionally
+
         if (!this.isClosedIntentional && this.reconnectAttempts < this.maxReconnectAttempts) {
-          this.reconnectAttempts++;
+          this.reconnectAttempts += 1;
           console.log(`[WebSocket] Reconnecting in ${this.reconnectDelay}ms (attempt ${this.reconnectAttempts})...`);
           setTimeout(() => this.connect(), this.reconnectDelay);
         }
@@ -101,15 +104,18 @@ export class SignalingService {
 
   send(message) {
     if (this.ws && this.ws.readyState === WebSocket.OPEN) {
-      console.log('[WebSocket] Message sent:', message);
+      console.log('[WebSocket] Message sent:', message.type || message);
       this.ws.send(JSON.stringify(message));
-    } else {
-      console.warn('[WebSocket] Cannot send message. WebSocket is not in OPEN state.', message);
+      return;
     }
+
+    console.warn('[WebSocket] Queueing message until socket is open:', message.type || message);
+    this.messageQueue.push(message);
   }
 
   close() {
     this.isClosedIntentional = true;
+    this.messageQueue = [];
     if (this.pingInterval) {
       clearInterval(this.pingInterval);
       this.pingInterval = null;
@@ -121,4 +127,3 @@ export class SignalingService {
     }
   }
 }
-

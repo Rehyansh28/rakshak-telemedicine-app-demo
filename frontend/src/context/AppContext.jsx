@@ -16,27 +16,9 @@ import {
 import { AppContext } from './app-context';
 import { SignalingService } from '../services/websocket';
 import { WebRTCConnection } from '../services/webrtc';
+import { RTC_PEER_CONFIG } from '../config/iceServers';
 
-
-const ICE_SERVERS = [
-  { urls: 'stun:stun.l.google.com:19302' },
-  { urls: 'stun:openrelay.metered.ca:80' },
-  {
-    urls: 'turn:openrelay.metered.ca:80',
-    username: 'openrelayproject',
-    credential: 'openrelayproject',
-  },
-  {
-    urls: 'turn:openrelay.metered.ca:443',
-    username: 'openrelayproject',
-    credential: 'openrelayproject',
-  },
-  {
-    urls: 'turns:openrelay.metered.ca:443?transport=tcp',
-    username: 'openrelayproject',
-    credential: 'openrelayproject',
-  },
-];
+const SIGNALING_KEEPALIVE_TYPES = new Set(['ping', 'pong']);
 
 
 export function AppProvider({ children }) {
@@ -171,9 +153,26 @@ export function AppProvider({ children }) {
     });
   }, [localStream]);
 
-  const connectSignaling = useCallback((roomId, token, stream) => {
+  const connectSignaling = useCallback((roomId, token, stream, isDoctor) => {
+    let offerSent = false;
+    let readySent = false;
+    const localStreamRef = stream;
+
+    const sendOffer = async () => {
+      if (!isDoctor || offerSent) return;
+      offerSent = true;
+      setConnectionStatus('connecting');
+      await webrtcRef.current?.createOffer();
+    };
+
+    const sendReady = () => {
+      if (isDoctor || readySent) return;
+      readySent = true;
+      signalingServiceRef.current?.send({ type: 'ready' });
+    };
+
     const webrtc = new WebRTCConnection(
-      ICE_SERVERS,
+      RTC_PEER_CONFIG,
       (signal) => {
         if (signalingServiceRef.current) {
           signalingServiceRef.current.send(signal);
@@ -181,14 +180,14 @@ export function AppProvider({ children }) {
       },
       (rStream) => {
         console.log('Setting remote feed from stream');
-        setRemoteStream(rStream);
+        setRemoteStream(new MediaStream(rStream.getTracks()));
       },
       (state) => {
         setConnectionStatus(state);
         if (state === 'connected') {
           setCallStatus('active');
         } else if (state === 'failed') {
-          showToast('WebRTC Uplink establishment failed. Try restarting call.', 'error');
+          showToast('WebRTC uplink establishment failed. Try restarting call.', 'error');
         }
       },
       (iceState) => {
@@ -197,7 +196,17 @@ export function AppProvider({ children }) {
           setConnectionStatus('disconnected');
           showToast('Tactical connection interrupted. Trying to reconnect...', 'warning');
         }
-      }
+      },
+      async (reason) => {
+        if (!isDoctor || reason !== 'ice-failed') return;
+        const activePeer = webrtcRef.current;
+        if (!activePeer || activePeer.relayRetryAttempted) return;
+        showToast('Direct link failed. Retrying via secure relay...', 'warning');
+        activePeer.reinitializeWithRelayOnly(localStreamRef);
+        offerSent = false;
+        webrtcRef.current = activePeer;
+        await sendOffer();
+      },
     );
 
     webrtc.initialize(stream);
@@ -207,28 +216,22 @@ export function AppProvider({ children }) {
       roomId,
       token,
       async (data) => {
+        if (SIGNALING_KEEPALIVE_TYPES.has(data.type)) return;
+
         if (data.type === 'peer-joined') {
-          showToast(`Tactical Uplink established. Peer connected as ${data.role}.`, 'success');
-          // If we are Doctor, initiate the offer
-          const isDoc = !!getStoredDoctor();
-          if (isDoc) {
-            console.log('We are the Doctor. Initiating WebRTC offer...');
-            await webrtcRef.current?.createOffer();
+          showToast(`Tactical uplink established. Peer connected as ${data.role}.`, 'success');
+          if (isDoctor) {
+            await sendOffer();
           } else {
-            // We are the Medic. Send a "ready" signal to prompt the Doctor to start negotiation
-            console.log('Doctor joined. Sending ready signal to peer...');
-            signalingServiceRef.current?.send({ type: 'ready' });
+            sendReady();
           }
         } else if (data.type === 'ready') {
-          const isDoc = !!getStoredDoctor();
-          if (isDoc) {
-            console.log('Received ready signal from Medic. Initiating WebRTC offer as Doctor...');
-            await webrtcRef.current?.createOffer();
-          }
+          await sendOffer();
         } else if (data.type === 'peer-left') {
           showToast('Peer disconnected from consultation room', 'warning');
           setConnectionStatus('disconnected');
         } else {
+          setConnectionStatus('connecting');
           await webrtcRef.current?.handleSignal(data);
         }
       },
@@ -240,8 +243,8 @@ export function AppProvider({ children }) {
       }
     );
 
-    signaling.connect();
     signalingServiceRef.current = signaling;
+    signaling.connect();
   }, [showToast]);
 
   const initiateCall = useCallback(async (soldierId) => {
@@ -251,7 +254,7 @@ export function AppProvider({ children }) {
       setActiveCall(data);
       
       const stream = await startLocalStream();
-      connectSignaling(data.roomId, getStaffToken(), stream);
+      connectSignaling(data.roomId, getStaffToken(), stream, false);
       showToast('Consultation requested. Awaiting Medical Officer...', 'success');
       return data;
     } catch (err) {
@@ -269,7 +272,7 @@ export function AppProvider({ children }) {
       setCallStatus('active');
       
       const stream = await startLocalStream();
-      connectSignaling(data.roomId, getToken(), stream);
+      connectSignaling(data.roomId, getToken(), stream, true);
       showToast('Uplink accepted. Initializing secure WebRTC feed...', 'success');
       return data;
     } catch (err) {
@@ -406,6 +409,21 @@ export function AppProvider({ children }) {
   useEffect(() => {
     const ts = setInterval(() => setLiveTimestamp(new Date()), 1000);
     return () => clearInterval(ts);
+  }, []);
+
+  useEffect(() => {
+    const onAuthCleared = (event) => {
+      if (event.detail?.kind === 'doctor') {
+        setIsAuthenticated(false);
+        setDoctor(null);
+      }
+      if (event.detail?.kind === 'staff') {
+        setIsStaffAuthenticated(false);
+        setStaffState(null);
+      }
+    };
+    window.addEventListener('auth:cleared', onAuthCleared);
+    return () => window.removeEventListener('auth:cleared', onAuthCleared);
   }, []);
 
   useEffect(() => {
