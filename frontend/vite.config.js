@@ -1,11 +1,8 @@
-import path from 'node:path'
-import { fileURLToPath } from 'node:url'
 import { defineConfig } from 'vite'
 import react from '@vitejs/plugin-react'
 import tailwindcss from '@tailwindcss/vite'
 import basicSsl from '@vitejs/plugin-basic-ssl'
 
-const __dirname = path.dirname(fileURLToPath(import.meta.url))
 const proxyTarget = process.env.VITE_PROXY_TARGET || 'http://127.0.0.1:8555'
 const tunnelDomain = process.env.VITE_TUNNEL_DOMAIN
 const useHttps = process.env.VITE_USE_HTTPS === 'true'
@@ -17,10 +14,8 @@ export default defineConfig({
     ...(useHttps ? [basicSsl()] : []),
   ],
   resolve: {
-    alias: {
-      react: path.resolve(__dirname, 'node_modules/react'),
-      'react-dom': path.resolve(__dirname, 'node_modules/react-dom'),
-    },
+    // Keep a single React instance without absolute aliases — those can make
+    // Vite serve both optimized and raw copies, which triggers invalid hook calls.
     dedupe: ['react', 'react-dom'],
   },
   optimizeDeps: {
@@ -37,6 +32,10 @@ export default defineConfig({
     host: true, // listen on 0.0.0.0 so LAN devices can reach http://<ip>:5555
     port: 5555,
     allowedHosts: true, // allow Cloudflare tunnel and custom domains
+    // Prevent Cloudflare/browser from mixing stale Vite dep hashes across reloads.
+    headers: {
+      'Cache-Control': 'no-store',
+    },
     hmr: tunnelDomain
       ? { host: tunnelDomain, protocol: 'wss', clientPort: 443 }
       : undefined,
