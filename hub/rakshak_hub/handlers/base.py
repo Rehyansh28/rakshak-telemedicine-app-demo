@@ -100,6 +100,10 @@ class SensorHandler:
     def on_message(self, msg, now):
         raise NotImplementedError
 
+    def live_event(self, msg):
+        """Data to stream to the browser right away for this message (or None)."""
+        return None
+
     def tick(self, now):
         """Called about 10 times per second: raise or clear this sensor's alerts."""
         if not self.stream or self.last_msg_at is None:

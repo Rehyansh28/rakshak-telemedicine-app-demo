@@ -100,6 +100,7 @@ class EcgHandler(SensorHandler):
         ):
             self.bpm, self.bpm_at = bpm, now
 
+        self.last_values = values
         low, high = min(values), max(values)
         self.raw_min = low if self.raw_min is None else min(self.raw_min, low)
         self.raw_max = high if self.raw_max is None else max(self.raw_max, high)
@@ -134,6 +135,18 @@ class EcgHandler(SensorHandler):
                 self.signal_bad_since = now
             self.bpm = None  # never show an old heart rate after the signal went bad
         return message_ok
+
+    def live_event(self, msg):
+        """The raw ECG chunk for the live graph (only streamed, never stored)."""
+        return {
+            "type": "ecg",
+            "dev": self.device.dev_id,
+            "soldierId": self.device.soldier_id,
+            "seq": msg.get("seq"),
+            "fs": self.fs,
+            "leadsOff": self.leads_off,
+            "samples": [int(v) for v in self.last_values],
+        }
 
     def heart_rate(self, now):
         """Latest trustworthy heart rate, or None (unknown / too old / electrodes off / bad signal)."""

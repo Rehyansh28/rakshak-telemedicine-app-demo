@@ -13,6 +13,7 @@ from .backend import BackendSink, load_env_file
 from .config import ConfigError, load_config
 from .console import ConsoleSink
 from .core import Hub
+from .live import LiveServer
 from .sources import (
     HUB_COMMAND_PREFIX,
     KNOWN_USB_VIDS,
@@ -60,8 +61,18 @@ def cmd_ports(args, cfg):
 
 
 def make_sinks(args, cfg):
-    """Console always; Django backend when enabled and a login is set in hub/.env."""
+    """Console always; live stream and Django backend when enabled."""
     sinks = [ConsoleSink(quiet=args.quiet, verbose=args.verbose)]
+    if cfg.live.enabled:
+        try:
+            live = LiveServer(cfg.live.host, cfg.live.port)
+            sinks.append(live)
+            print(f"Live data for the web app: {live.address}/events")
+        except OSError as exc:
+            print(
+                f"Live view OFF: port {cfg.live.port} is in use ({exc}). Is another hub already running? "
+                "Stop it, or change [live] port in config.ini."
+            )
     if args.no_backend or not cfg.backend.enabled:
         print("Backend: off (summaries and alerts are not sent to Django).")
         return sinks

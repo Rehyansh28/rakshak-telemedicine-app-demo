@@ -107,6 +107,10 @@ class Device:
         except (BadMessage, TypeError, ValueError, KeyError, IndexError) as exc:
             self.bad_messages += 1
             self.last_error = f'{msg["type"]}: {exc}'
+            return
+        event = handler.live_event(msg)
+        if event:
+            self.hub.emit_live(event)
 
     def tick(self, now):
         timeout = self.config.timeouts.disconnect_after_s
@@ -196,6 +200,12 @@ class Hub:
     def emit_alert(self, alert):
         for sink in self.sinks:
             sink.on_alert(alert)
+
+    def emit_live(self, event):
+        """Streamed data (e.g. ECG samples) for sinks that want it (the live server)."""
+        for sink in self.sinks:
+            if hasattr(sink, "on_live"):
+                sink.on_live(event)
 
     def advance(self, now, step=0.1):
         """Tick through the time since the last tick (for replays that do not wait),
