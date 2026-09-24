@@ -38,7 +38,9 @@ class AlertTracker:
         """Problem is present now. Sends an alert only when it starts."""
         if key in self.active:
             return
-        alert = Alert(self.device.dev_id, self.device.soldier_id, key, level, title, message)
+        alert = Alert(
+            self.device.dev_id, self.device.soldier_id, key, level, title, message, time=self.device.hub.wall_now()
+        )
         self.active[key] = alert
         self.device.hub.emit_alert(alert)
 
@@ -47,12 +49,17 @@ class AlertTracker:
         alert = self.active.pop(key, None)
         if alert:
             self.device.hub.emit_alert(
-                Alert(alert.dev, alert.soldier_id, key, "info", alert.title, "Resolved.", resolved=True)
+                Alert(
+                    alert.dev, alert.soldier_id, key, "info", alert.title, "Resolved.",
+                    resolved=True, time=self.device.hub.wall_now(),
+                )
             )
 
     def fire(self, key, level, title, message):
         """One-off event (like a fall): always sends an alert."""
-        self.device.hub.emit_alert(Alert(self.device.dev_id, self.device.soldier_id, key, level, title, message))
+        self.device.hub.emit_alert(
+            Alert(self.device.dev_id, self.device.soldier_id, key, level, title, message, time=self.device.hub.wall_now())
+        )
 
 
 class Device:
@@ -170,6 +177,11 @@ class Hub:
                 self.log(f'Sensor "{dev_id}" -> soldier {soldier_id}')
             device = self.devices[dev_id] = Device(self, dev_id, soldier_id)
         device.on_message(msg, now)
+
+    @staticmethod
+    def wall_now():
+        """Real date/time stamped on summaries and alerts: when the hub made them (also in replay)."""
+        return datetime.now().astimezone()
 
     def calibrate(self):
         """Command: next few still seconds become the "upright" reference (all sensors)."""

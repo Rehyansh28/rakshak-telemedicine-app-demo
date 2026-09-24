@@ -50,6 +50,23 @@ straight and still for about 3 seconds**. That direction is saved as "upright". 
 then posture shows `CALIBRATING`. If the sensor is moved or re-taped, calibrate again
 with `c` + Enter.
 
+## Sending data to Django
+
+Once per second the hub sends a small summary (heart rate, ECG signal state, electrodes
+on/off, posture, activity, connected) to Django, plus every alert (fall, no movement,
+electrodes off, ECG signal poor, sensor disconnected...). The raw ECG waveform is
+**never** stored in the database.
+
+One-time setup:
+
+1. In Super Admin -> **Medical Staff** -> **Add New**, make an account for the hub, e.g.
+   username `hub-node`, name `Sensor hub`, with a password.
+2. In the `hub` folder: `cp .env.example .env`, then open `.env` (`open -e .env`) and put
+   in that username and password. `.env` stays on your computer (it is not put in git).
+
+Then just start Django and the hub. Use `--no-backend` to run the hub without Django,
+e.g. `python hub.py --no-backend replay recordings/simulated_demo.txt`.
+
 ## Settings: `config.ini`
 
 All thresholds (fall, no movement, posture angles, timeouts...) are in `config.ini`,
@@ -70,8 +87,10 @@ http://127.0.0.1:8555/api/patients/ while the backend runs (the `"id"` values).
 | `signal NEAR_RAIL` / `CLIPPING` | Signal stuck near 0 / 4095 or slamming between them: bad electrode contact (use fresh pads) or movement. |
 | `new IMU read errors - loose IMU wires?` | The ESP32 could not read the IMU. Push the jumper wires into the Grove socket firmly. |
 | `CHECK WARNING: ...` | The data looks wrong (wrong rate, IMU not ~1 g, ...). Tell the team / check wiring. |
-| `CHECK: N ignored line(s): ...` | Lines that were not valid messages, with a label and an example. A few are normal. |
-| `ignored line` counts | A few are normal (e.g. right after the ESP32 resets). |
+| `CHECK: N ignored line(s): ...` | Lines that were not valid messages, with a label and an example. A few are normal (e.g. right after the ESP32 resets). |
+| `Backend not reachable` | Django is not running: start it (`python manage.py runserver` in `backend/`). The hub keeps the data (about 15 minutes) and sends it when Django is back. |
+| `hub login ... failed` | Check `HUB_USERNAME` / `HUB_PASSWORD` in `hub/.env`, and that the account is under Super Admin -> Medical Staff. |
+| `Backend does not know soldier ...` | The soldier ID in `[devices]` of `config.ini` does not exist in the app. |
 
 ## Recordings
 

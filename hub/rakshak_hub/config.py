@@ -54,6 +54,11 @@ DEFAULTS = {
     "hub": {
         "summary_interval_s": 1.0,
     },
+    "backend": {
+        "enabled": True,
+        "url": "http://127.0.0.1:8555/api",
+        "send_interval_s": 1.0,
+    },
 }
 
 

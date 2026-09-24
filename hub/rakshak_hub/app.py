@@ -9,6 +9,7 @@ import threading
 import time
 from datetime import datetime
 
+from .backend import BackendSink, load_env_file
 from .config import ConfigError, load_config
 from .console import ConsoleSink
 from .core import Hub
@@ -58,10 +59,42 @@ def cmd_ports(args, cfg):
     print("\nWith port = auto in config.ini the hub picks the first marked port by itself.")
 
 
+def make_sinks(args, cfg):
+    """Console always; Django backend when enabled and a login is set in hub/.env."""
+    sinks = [ConsoleSink(quiet=args.quiet, verbose=args.verbose)]
+    if args.no_backend or not cfg.backend.enabled:
+        print("Backend: off (summaries and alerts are not sent to Django).")
+        return sinks
+    env = load_env_file(os.path.join(HUB_DIR, ".env"))
+    if not env.get("HUB_USERNAME") or not env.get("HUB_PASSWORD"):
+        print(
+            "Backend: off - no hub login. Copy .env.example to .env and fill in HUB_USERNAME and "
+            "HUB_PASSWORD (a Medical Staff account), or use --no-backend."
+        )
+        return sinks
+    sinks.append(
+        BackendSink(
+            cfg.backend.url,
+            env["HUB_USERNAME"],
+            env["HUB_PASSWORD"],
+            soldier_ids=cfg.devices.values(),
+            send_interval_s=cfg.backend.send_interval_s,
+        )
+    )
+    return sinks
+
+
+def close_sinks(sinks):
+    for sink in sinks:
+        if hasattr(sink, "close"):
+            sink.close()
+
+
 def run_live(args, cfg, seconds=None, record_path=None):
     port = args.port or cfg.serial.port
     source = SerialSource(port, cfg.serial.baud, cfg.serial.reconnect_interval_s)
-    hub = Hub(cfg, [ConsoleSink(quiet=args.quiet, verbose=args.verbose)])
+    sinks = make_sinks(args, cfg)
+    hub = Hub(cfg, sinks)
     recorder = None
     if record_path:
         recorder = Recorder(record_path, note=f"port: {port}  baud: {cfg.serial.baud}")
@@ -95,6 +128,7 @@ def run_live(args, cfg, seconds=None, record_path=None):
         if recorder:
             recorder.close()
             print(f"Saved {recorder.lines} lines to {recorder.path}")
+        close_sinks(sinks)
     final_report(hub, time.monotonic() - start)
 
 
@@ -111,7 +145,8 @@ def cmd_record(args, cfg):
 
 
 def cmd_replay(args, cfg):
-    hub = Hub(cfg, [ConsoleSink(quiet=args.quiet, verbose=args.verbose)])
+    sinks = make_sinks(args, cfg)
+    hub = Hub(cfg, sinks)
     hub.source_status = f"replay {os.path.basename(args.file)}"
     speed = max(args.speed, 0.01)
     print(f"Replaying {args.file}" + (" as fast as possible" if args.fast else f" at {speed:g}x speed"))
@@ -152,6 +187,7 @@ def cmd_replay(args, cfg):
             hub.tick(now)
     except KeyboardInterrupt:
         print("\nStopping...")
+    close_sinks(sinks)
     final_report(hub, now)
 
 
@@ -179,6 +215,9 @@ def final_report(hub, duration_s):
         imu = device.handlers.get("imu")
         if imu:
             print(f"  calibrated: {'yes' if imu.analyzer.calibrated else 'NO'}")
+    for sink in hub.sinks:
+        if hasattr(sink, "sent_summaries"):
+            print(f"Sent to Django: {sink.sent_summaries} summaries, {sink.sent_alerts} alerts")
     print("EXPERIMENTAL: values and alerts are not medically validated.")
 
 
@@ -187,6 +226,7 @@ def build_parser():
     parser.add_argument("--config", default=os.path.join(HUB_DIR, "config.ini"), help="settings file")
     parser.add_argument("--quiet", action="store_true", help="only print alerts and checks")
     parser.add_argument("--verbose", action="store_true", help="also print ignored (broken) lines")
+    parser.add_argument("--no-backend", action="store_true", help="do not send anything to Django")
     sub = parser.add_subparsers(dest="command", required=True)
 
     sub.add_parser("ports", help="list serial ports (find the ESP32)").set_defaults(func=cmd_ports)
