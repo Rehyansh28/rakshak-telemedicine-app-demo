@@ -38,10 +38,13 @@ jobs:
         run: npm ci
 
       - name: Build frontend
-        working-directory: frontend
-        env:
-            VITE_API_BASE_URL: https://rakshak-backend-gqmn.onrender.com/api
-        run: npm run build
+       working-directory: frontend
+       env:
+           VITE_API_BASE_URL: https://rakshak-backend-gqmn.onrender.com/api
+       run: npm run build
+
+      - name: Create SPA fallback
+        run: cp frontend/dist/index.html frontend/dist/404.html
 
       - name: Setup Pages
         uses: actions/configure-pages@v6
