@@ -11,6 +11,7 @@ https://docs.djangoproject.com/en/6.0/ref/settings/
 """
 
 from pathlib import Path
+import os
 
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
@@ -20,13 +21,17 @@ BASE_DIR = Path(__file__).resolve().parent.parent
 # See https://docs.djangoproject.com/en/6.0/howto/deployment/checklist/
 
 # SECURITY WARNING: keep the secret key used in production secret!
-SECRET_KEY = 'django-insecure-u&1bm^*fse&-yowa=p!_pvblzm@6a-adbw27ur#0vbw%pa%mfy'
+SECRET_KEY = os.environ.get("SECRET_KEY", "dev-only-secret-key")
 
 # SECURITY WARNING: don't run with debug turned on in production!
-DEBUG = True
+DEBUG = os.environ.get("DEBUG", "False").lower() == "true"
 
 # Allow LAN access in dev (e.g. http://10.6.0.121:8555)
-ALLOWED_HOSTS = ['localhost', '127.0.0.1', '10.6.0.121', '172.31.40.29', '*'] if DEBUG else []
+ALLOWED_HOSTS = [
+    h.strip()
+    for h in os.environ.get("ALLOWED_HOSTS", "localhost,127.0.0.1").split(",")
+    if h.strip()
+]
 
 
 # Application definition
@@ -126,22 +131,17 @@ USE_TZ = True
 STATIC_URL = 'static/'
 
 # CORS — allow any origin in dev so the frontend works over LAN IP
-CORS_ALLOW_ALL_ORIGINS = DEBUG
 CORS_ALLOWED_ORIGINS = [
-    'http://localhost:5555',
-    'http://127.0.0.1:5555',
-    'http://10.6.0.121:5555',
-    'http://172.31.40.29:5555',
-    'http://10.6.0.121:8555',
-    'http://172.31.40.29:8555',
-    'http://localhost:8555',
-    'http://127.0.0.1:8555',
-    'http://10.6.0.121:8555',
-    'http://172.31.40.29:8555',
-    'http://localhost:8555',
-    'http://127.0.0.1:8555',
+    origin.strip()
+    for origin in os.environ.get("CORS_ALLOWED_ORIGINS", "").split(",")
+    if origin.strip()
 ]
 
+CSRF_TRUSTED_ORIGINS = [
+    origin.strip()
+    for origin in os.environ.get("CSRF_TRUSTED_ORIGINS", "").split(",")
+    if origin.strip()
+]
 # Django REST Framework
 REST_FRAMEWORK = {
     'DEFAULT_AUTHENTICATION_CLASSES': [
@@ -154,7 +154,7 @@ REST_FRAMEWORK = {
 }
 
 # Channels Configuration
-import os
+
 REDIS_URL = os.environ.get('REDIS_URL', 'redis://127.0.0.1:6379')
 
 if os.environ.get('USE_REDIS_CHANNEL_LAYER', 'False').lower() in ('true', '1'):
