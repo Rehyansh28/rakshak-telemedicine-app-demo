@@ -3,6 +3,10 @@ from __future__ import annotations
 
 import json
 import math
+import re
+
+ESP_IDF_LOG = re.compile(r"^[EWIDV] \(\d+\) ")
+BOOT_TEXT = ("ets ", "rst:", "boot:", "load:", "entry ", "configsip", "clk_drv", "mode:", "ho ", "SPIWP")
 
 
 def parse_line(line):
@@ -21,6 +25,20 @@ def parse_line(line):
     if not isinstance(msg, dict) or not isinstance(msg.get("type"), str):
         return None
     return msg
+
+
+def describe_ignored(line):
+    """Short label for a line that is not a valid message (shown to the user)."""
+    text = line.strip()
+    if not text:
+        return "empty line"
+    if ESP_IDF_LOG.match(text):
+        return "ESP-IDF log message"
+    if text.startswith(BOOT_TEXT):
+        return "ESP32 boot text"
+    if text.startswith("{") or text.endswith("}") or '"type"' in text:
+        return "cut / broken message"
+    return "other text"
 
 
 class BadMessage(Exception):

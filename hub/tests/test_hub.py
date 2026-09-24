@@ -14,7 +14,7 @@ from rakshak_hub.config import load_config  # noqa: E402
 from rakshak_hub.core import Hub  # noqa: E402
 from rakshak_hub.fake_esp32 import generate, write_recording  # noqa: E402
 from rakshak_hub.handlers.base import SeqTracker  # noqa: E402
-from rakshak_hub.protocol import parse_line  # noqa: E402
+from rakshak_hub.protocol import describe_ignored, parse_line  # noqa: E402
 from rakshak_hub.sources import read_recording  # noqa: E402
 
 CONFIG = os.path.join(HUB_DIR, "config.ini")
@@ -164,6 +164,56 @@ class DemoScenarioTests(unittest.TestCase):
         self.assertGreater(device.bad_messages, 0)
         self.assertEqual(device.unknown_types["spo2"], 1)
         self.assertEqual(device.handlers["ecg"].seq.lost, 43)  # 3 dropped + 4 s gap
+
+
+class BadEcgScenarioTests(unittest.TestCase):
+    """ECG faults seen on the real hardware while the ESP32 says "electrodes on"."""
+
+    @classmethod
+    def setUpClass(cls):
+        cls.hub, cls.sink = run_scenario("bad_ecg")
+
+    def ecg(self, start, end):
+        return [s["ecg"] for t, s in self.sink.summaries if start <= t < end and "ecg" in s]
+
+    def test_stale_bpm_is_never_shown(self):
+        # The fake ESP32 sends bpm 51.1 during every fault; it must never reach the screen.
+        self.assertNotIn(51, [e["hr"] for e in self.ecg(0, 70)])
+
+    def test_flat_signal_hides_hr_and_alerts(self):
+        self.assertTrue(all(e["signal"] == "flat" and e["hr"] is None for e in self.ecg(13, 20)))
+        alerts = [(t, a) for t, a in self.sink.alerts if a.key == "ecg_signal" and not a.resolved]
+        self.assertTrue(14 < alerts[0][0] < 16)
+        self.assertIn("flat", alerts[0][1].message)
+
+    def test_near_rail_and_clipping_are_bad(self):
+        self.assertTrue(all(e["signal"] == "near_rail" for e in self.ecg(31, 36)))
+        self.assertTrue(all(e["signal"] == "clipping" for e in self.ecg(38, 42)))
+        self.assertTrue(all(e["hr"] is None for e in self.ecg(30, 42)))
+
+    def test_hr_comes_back_after_good_signal(self):
+        self.assertTrue(all(e["signal"] == "ok" and e["hr"] is not None for e in self.ecg(24, 28)))
+        self.assertTrue(all(e["hr"] is not None for e in self.ecg(48, 50)))
+
+    def test_leads_off_gives_only_the_leads_off_alert(self):
+        leads_off = self.sink.raised("leads_off")
+        self.assertEqual(len(leads_off), 1)
+        signal_alerts = self.sink.raised("ecg_signal")
+        self.assertEqual(len(signal_alerts), 2)  # flat, then near-rail/clipping - none around leads-off
+        self.assertFalse(any(48 < t < 62 for t in signal_alerts))
+
+    def test_junk_lines_are_labelled(self):
+        self.assertEqual(set(self.hub.ignored_kinds), {"cut / broken message"})
+        self.assertTrue(self.hub.ignored_examples["cut / broken message"].endswith("]]}"))
+
+
+class IgnoredLineLabelTests(unittest.TestCase):
+    def test_labels(self):
+        self.assertEqual(describe_ignored("E (1234) i2c: i2c driver install error"), "ESP-IDF log message")
+        self.assertEqual(describe_ignored("rst:0x1 (POWERON_RESET),boot:0x13"), "ESP32 boot text")
+        self.assertEqual(describe_ignored('{"type":"ecg","dev":'), "cut / broken message")
+        self.assertEqual(describe_ignored("0.044,0.899,1.86,65.66]]}"), "cut / broken message")
+        self.assertEqual(describe_ignored("hello"), "other text")
 
 
 class RecordingFileTests(unittest.TestCase):

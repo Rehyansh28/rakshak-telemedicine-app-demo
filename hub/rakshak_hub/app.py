@@ -158,6 +158,8 @@ def cmd_replay(args, cfg):
 def final_report(hub, duration_s):
     print("\n==== Summary ====")
     print(f"Ran for {duration_s:.0f} s. Lines read: {hub.lines}, ignored (broken / not JSON): {hub.ignored_lines}")
+    for kind, n in hub.ignored_kinds.most_common():
+        print(f"  ignored: {n} x {kind}, e.g. {hub.ignored_examples[kind]!r}")
     if not hub.devices:
         print("No messages from any ESP32 were received.")
     for device in hub.devices.values():
@@ -170,6 +172,10 @@ def final_report(hub, duration_s):
             print(f"  ignored message types: {dict(device.unknown_types)}")
         if device.bad_messages:
             print(f"  messages with bad content: {device.bad_messages} (last: {device.last_error})")
+        status = device.handlers.get("status")
+        if status:
+            errors = "--" if status.imu_errors is None else f"{status.imu_errors:.0f}"
+            print(f"  firmware {status.fw}, IMU read errors reported by the ESP32: {errors}")
         imu = device.handlers.get("imu")
         if imu:
             print(f"  calibrated: {'yes' if imu.analyzer.calibrated else 'NO'}")

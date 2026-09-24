@@ -22,6 +22,13 @@ DEFAULTS = {
         "leads_off_alert_after_s": 3.0,
         "hr_min_valid": 25.0,
         "hr_max_valid": 250.0,
+        "signal_window_s": 2.0,
+        "flat_range_counts": 80.0,
+        "rail_margin_counts": 300.0,
+        "max_near_rail_fraction": 0.5,
+        "max_clipped_fraction": 0.1,
+        "poor_signal_alert_after_s": 3.0,
+        "hr_settle_s": 3.0,
     },
     "imu": {
         "calibrate_seconds": 3.0,

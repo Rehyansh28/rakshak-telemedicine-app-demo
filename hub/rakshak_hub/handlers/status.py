@@ -25,7 +25,10 @@ class StatusHandler(SensorHandler):
             self.restarts += 1
             self.device.log(f"ESP32 restarted (uptime went from {self.uptime_ms / 1000:.0f} s to {uptime / 1000:.0f} s)")
         self.uptime_ms = uptime
-        self.fw = msg.get("fw")
+        fw = msg.get("fw")
+        if fw != self.fw:
+            self.device.log(f"ESP32 firmware {fw}" + ("" if uptime is None else f", running for {uptime / 1000:.0f} s"))
+        self.fw = fw
 
         imu = msg.get("imu") if isinstance(msg.get("imu"), dict) else {}
         self.imu_ok = imu.get("ok") if isinstance(imu.get("ok"), bool) else None

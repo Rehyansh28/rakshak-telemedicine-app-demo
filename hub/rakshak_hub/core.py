@@ -11,7 +11,7 @@ from dataclasses import dataclass, field
 from datetime import datetime
 
 from .handlers import HANDLERS
-from .protocol import BadMessage, parse_line
+from .protocol import BadMessage, describe_ignored, parse_line
 
 
 @dataclass
@@ -137,6 +137,8 @@ class Hub:
         self.devices = {}
         self.lines = 0
         self.ignored_lines = 0
+        self.ignored_kinds = Counter()  # label -> count
+        self.ignored_examples = {}  # label -> first example line
         self.source_status = None
         self._next_summary = None
         self._last_tick = None
@@ -149,6 +151,9 @@ class Hub:
         msg = parse_line(line)
         if msg is None:
             self.ignored_lines += 1
+            kind = describe_ignored(line)
+            self.ignored_kinds[kind] += 1
+            self.ignored_examples.setdefault(kind, line.strip()[:90])
             for sink in self.sinks:
                 sink.on_ignored_line(line)
             return

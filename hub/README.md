@@ -66,14 +66,20 @@ http://127.0.0.1:8555/api/patients/ while the backend runs (the `"id"` values).
 | `The port ... is BUSY` | Close the Arduino IDE Serial Monitor / Serial Plotter (only one program can use the port). The hub retries by itself. |
 | `ESP32 not found` | Plug in the USB cable (some cables only charge - try another). Run `python hub.py ports`. |
 | `USB connection lost` | Normal when unplugged; the hub reconnects by itself when you plug it back in. |
-| `CHECK WARNING: ...` | The data looks wrong (wrong rate, flat ECG, IMU not ~1 g). Tell the team / check wiring. |
+| `ECG signal poor` / `signal FLAT` | The ECG has no heartbeat signal even though the ESP32 says "electrodes on". Usually a loose AD8232 power (3.3V) or ground wire; press them in firmly. Heart rate shows `--` until the signal is good again. |
+| `signal NEAR_RAIL` / `CLIPPING` | Signal stuck near 0 / 4095 or slamming between them: bad electrode contact (use fresh pads) or movement. |
+| `new IMU read errors - loose IMU wires?` | The ESP32 could not read the IMU. Push the jumper wires into the Grove socket firmly. |
+| `CHECK WARNING: ...` | The data looks wrong (wrong rate, IMU not ~1 g, ...). Tell the team / check wiring. |
+| `CHECK: N ignored line(s): ...` | Lines that were not valid messages, with a label and an example. A few are normal. |
 | `ignored line` counts | A few are normal (e.g. right after the ESP32 resets). |
 
 ## Recordings
 
 Files in `recordings/` are plain text: `<seconds><TAB><raw line from the ESP32>`.
 `simulated_demo.txt` is **SIMULATED** data (made by `tools/make_fake_recording.py`) that
-triggers every alert: fall, no movement, electrodes off, sensor disconnected.
+triggers every alert: fall, no movement, electrodes off, sensor disconnected. To see the
+ECG faults found on the real hardware (flat signal, stuck near 0, clipping):
+`python tools/make_fake_recording.py --scenario bad_ecg --out recordings/simulated_bad_ecg.txt`
 
 ## Adding a new sensor type (e.g. SpO2)
 

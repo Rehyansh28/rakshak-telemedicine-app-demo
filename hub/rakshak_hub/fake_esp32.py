@@ -41,7 +41,21 @@ SCENARIOS = {
         (5, "upright", "still", 80, {"usb_gap": True}),
         (6, "upright", "still", 76, {}),
     ],
+    # ECG faults seen on the real hardware (AD8232 losing power, bad contact) while the
+    # ESP32 still says "electrodes on" and repeats an old bpm, plus firmware 0.1.0 junk lines.
+    "bad_ecg": [
+        (10, "upright", "still", 72, {}),
+        (10, "upright", "still", 72, {"ecg_fault": "flat", "junk_tail": True}),
+        (8, "upright", "still", 75, {}),
+        (8, "upright", "still", 75, {"ecg_fault": "near_rail"}),
+        (6, "upright", "still", 75, {"ecg_fault": "clipping"}),
+        (8, "upright", "still", 74, {}),
+        (6, "upright", "still", 74, {"leads_off": (0, 6)}),
+        (8, "upright", "still", 73, {}),
+    ],
 }
+JUNK_TAIL = "0.044,0.899,0.507,11.76,-2.14,0.14,1.86,65.66]]}"
+STALE_BPM = 51.1
 
 
 def ecg_shape(phase):
@@ -109,13 +123,24 @@ def generate(scenario="phase1", seed=1):
             for i in range(ECG_FS // 10):
                 ts = t + i / ECG_FS
                 beat_phase = (beat_phase + hr / 60.0 / ECG_FS) % 1.0
+                fault = extra.get("ecg_fault")
                 if leads_off:
                     samples.append(4095)
                     continue
-                wander = 40 * math.sin(2 * math.pi * 0.25 * ts)
-                value = 2000 + 750 * ecg_shape(beat_phase) + wander + rng.gauss(0, 6)
+                if fault == "flat":  # AD8232 without power: ~448 with a little noise
+                    value = 448 + rng.gauss(0, 3)
+                elif fault == "near_rail":  # saturated low: noisy 60-300
+                    value = 180 + 60 * math.sin(2 * math.pi * 0.7 * ts) + rng.gauss(0, 25)
+                elif fault == "clipping":  # slamming between the ends
+                    value = 0 if math.sin(2 * math.pi * 1.3 * ts) < 0 else 4095
+                else:
+                    wander = 40 * math.sin(2 * math.pi * 0.25 * ts)
+                    value = 2000 + 750 * ecg_shape(beat_phase) + wander + rng.gauss(0, 6)
                 samples.append(int(min(4095, max(0, value))))
-            bpm = None if (t < 3 or leads_off) else round(hr + rng.uniform(-1.5, 1.5), 1)
+            if extra.get("ecg_fault"):
+                bpm = STALE_BPM  # the ESP32 keeps repeating an old value
+            else:
+                bpm = None if (t < 3 or leads_off) else round(hr + rng.uniform(-1.5, 1.5), 1)
             ecg_msg = {"type": "ecg", "dev": dev, "seq": ecg_seq, "t0": device_ms, "fs": ECG_FS,
                        "leads_off": leads_off, "bpm": bpm, "samples": samples}
             ecg_seq += 1
@@ -160,6 +185,8 @@ def generate(scenario="phase1", seed=1):
             jitter = rng.uniform(0, 0.004)
             yield t + 0.01 + jitter, json.dumps(ecg_msg, separators=(",", ":"))
             yield t + 0.012 + jitter, json.dumps(imu_msg, separators=(",", ":"))
+            if extra.get("junk_tail") and step % 2 == 0:
+                yield t + 0.013 + jitter, JUNK_TAIL
             if extra.get("unknown_type") and step == 5:
                 yield t + 0.02, '{"type":"spo2","dev":"node-01","seq":0,"spo2":97}'
             if step == 30 and scenario == "demo" and t < total:

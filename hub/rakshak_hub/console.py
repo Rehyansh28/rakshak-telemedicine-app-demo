@@ -1,7 +1,10 @@
 """Prints what the hub sees, in plain words, plus automatic "does the data look right" checks."""
 from __future__ import annotations
 
+from collections import Counter
 from datetime import datetime
+
+from .handlers.ecg import SIGNAL_TEXT
 
 CHECK_EVERY = 10  # summaries (about seconds)
 
@@ -19,11 +22,10 @@ def data_checks(s):
     else:
         if ecg["fs"] and abs(ecg["sampleRate"] - ecg["fs"]) > 0.1 * ecg["fs"]:
             problems.append(f"ECG gives {ecg['sampleRate']:.0f} samples/s, expected {ecg['fs']:.0f}")
-        if ecg["rawMin"] is not None and not ecg["leadsOff"]:
-            if ecg["rawMax"] - ecg["rawMin"] < 20:
-                problems.append("ECG signal is flat (check electrodes / wiring)")
-            if ecg["rawMin"] <= 0 or ecg["rawMax"] >= 4095:
-                problems.append("ECG signal hits 0 or 4095 (clipping: check electrodes / wiring)")
+        if ecg["leadsOff"]:
+            problems.append("ECG electrodes are off")
+        elif ecg["signal"] not in (None, "ok"):
+            problems.append(f"ECG signal is {SIGNAL_TEXT[ecg['signal']]}")
     if imu is None:
         problems.append("no IMU messages received")
     else:
@@ -47,6 +49,8 @@ class ConsoleSink:
         self.verbose = verbose
         self.log = log
         self.count = 0
+        self.imu_errors_seen = {}  # dev -> IMU error count at the last check
+        self.ignored_seen = Counter()  # ignored line counts at the last check
 
     def on_ignored_line(self, line):
         if self.verbose:
@@ -71,12 +75,30 @@ class ConsoleSink:
             if not self.quiet:
                 self.log(self.format(when, s, hub))
             if self.count % CHECK_EVERY == 0 and s["connected"]:
-                problems = data_checks(s)
+                problems = data_checks(s) + self.imu_error_check(s)
                 if problems:
                     for p in problems:
                         self.log(f"         CHECK WARNING: {p}")
                 else:
-                    self.log("         CHECK: data looks OK (rates, ECG range, IMU ~1 g at rest)")
+                    self.log("         CHECK: data looks OK (rates, ECG signal, IMU ~1 g at rest)")
+        if self.count % CHECK_EVERY == 0:
+            self.ignored_check(hub)
+
+    def imu_error_check(self, s):
+        errors = (s.get("status") or {}).get("imuErrors")
+        if errors is None:
+            return []
+        before = self.imu_errors_seen.get(s["dev"])
+        self.imu_errors_seen[s["dev"]] = errors
+        if before is None or errors <= before:
+            return []
+        return [f"ESP32 counted {errors - before:.0f} new IMU read errors (total {errors:.0f}) - loose IMU wires?"]
+
+    def ignored_check(self, hub):
+        new = hub.ignored_kinds - self.ignored_seen
+        self.ignored_seen = Counter(hub.ignored_kinds)
+        for kind, n in new.most_common():
+            self.log(f"         CHECK: {n} ignored line(s): {kind}, e.g. {hub.ignored_examples[kind]!r}")
 
     @staticmethod
     def format(when, s, hub):
@@ -88,10 +110,12 @@ class ConsoleSink:
         ecg = s.get("ecg")
         if ecg:
             electrodes = "OFF!" if ecg["leadsOff"] else "on"
+            signal = "--" if ecg["signal"] is None else "good" if ecg["signal"] == "ok" else ecg["signal"].upper()
             raw = "--" if ecg["rawMin"] is None else f"{ecg['rawMin']:.0f}-{ecg['rawMax']:.0f}"
             lines.append(
                 f"ECG {ecg['msgRate']:4.1f} msg/s {ecg['sampleRate']:5.0f} samples/s | "
-                f"HR {_fmt(ecg['hr'], '3d', ' --')} bpm | electrodes {electrodes:4} | raw {raw} | lost {ecg['lost']}"
+                f"HR {_fmt(ecg['hr'], '3d', ' --')} bpm | electrodes {electrodes:4} | "
+                f"signal {signal:9} | raw {raw} | lost {ecg['lost']}"
             )
         imu = s.get("imu")
         if imu:
