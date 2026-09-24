@@ -1,8 +1,11 @@
+/* global process */ // this file runs in Node (Vite), not in the browser
 import { defineConfig } from 'vite'
 import react from '@vitejs/plugin-react'
 import tailwindcss from '@tailwindcss/vite'
 
 const proxyTarget = process.env.VITE_PROXY_TARGET || 'http://127.0.0.1:8555'
+// Live sensor data from the hub (hub/ folder, EXPERIMENTAL): ECG, heart rate, posture, alerts.
+const hubTarget = process.env.VITE_HUB_TARGET || 'http://127.0.0.1:8765'
 
 export default defineConfig({
   base: '/',
@@ -19,6 +22,10 @@ export default defineConfig({
       '/ws': {
         target: proxyTarget,
         ws: true,
+        changeOrigin: true,
+      },
+      '/live': {
+        target: hubTarget,
         changeOrigin: true,
       },
     },

@@ -5,7 +5,12 @@ import { AlertTriangle, Users, Activity, Brain, FileText, ArrowRight, Mountain, 
 import PatientCard from '../components/patient/PatientCard';
 import GlassCard from '../components/ui/GlassCard';
 import StatusBadge from '../components/ui/StatusBadge';
-import MiniECG from '../components/charts/MiniECG';
+import PatientECG from '../components/sensor/PatientECG';
+import SensorStatusBadge from '../components/sensor/SensorStatusBadge';
+import DataTag from '../components/sensor/DataTag';
+import AlertTags from '../components/sensor/AlertTags';
+import { useSensorLive } from '../hooks/useSensorLive';
+import { postureText } from '../services/sensorStatus';
 import PageContainer from '../components/layout/PageContainer';
 import PageHeader from '../components/layout/PageHeader';
 import Button from '../components/ui/Button';
@@ -15,8 +20,7 @@ import { apiGet } from '../api/client';
 
 export default function DoctorDashboardPage() {
   const navigate = useNavigate();
-  const { selectedPatient, setSelectedPatient, vitals, patientList, showToast, loading } = useApp();
-  const [emergencyAlerts, setEmergencyAlerts] = useState([]);
+  const { selectedPatient, setSelectedPatient, vitals, patientList, showToast, loading, emergencyAlerts } = useApp();
   const [aiRecommendations, setAiRecommendations] = useState([]);
   const [recentActivity, setRecentActivity] = useState([]);
   const [stats, setStats] = useState({
@@ -28,13 +32,11 @@ export default function DoctorDashboardPage() {
 
   useEffect(() => {
     Promise.all([
-      apiGet('/emergency-alerts/'),
       apiGet('/ai-recommendations/'),
       apiGet('/activity/'),
       apiGet('/dashboard/stats/'),
     ])
-      .then(([alerts, recs, activity, dashboardStats]) => {
-        setEmergencyAlerts(alerts);
+      .then(([recs, activity, dashboardStats]) => {
         setAiRecommendations(recs);
         setRecentActivity(activity);
         setStats(dashboardStats);
@@ -84,6 +86,11 @@ export default function DoctorDashboardPage() {
     else showToast('Patient record loaded', 'info');
   };
 
+  const priorityPatient = selectedPatient ?? patientList[0] ?? null;
+  const sensor = useSensorLive(priorityPatient?.id);
+  const liveHr = sensor.hr != null ? Math.round(sensor.hr) : '--';
+  const posture = postureText(sensor);
+
   if (loading) {
     return (
       <PageContainer>
@@ -91,8 +98,6 @@ export default function DoctorDashboardPage() {
       </PageContainer>
     );
   }
-
-  const priorityPatient = selectedPatient ?? patientList[0] ?? null;
 
   return (
     <PageContainer>
@@ -135,7 +140,12 @@ export default function DoctorDashboardPage() {
           <GlassCard>
             <div className="flex justify-between items-center mb-4">
               <h2 className="font-sora font-semibold text-lg text-primary">Priority Patient Vitals</h2>
-              {priorityPatient && <StatusBadge status="critical" label="LIVE MONITOR" />}
+              {priorityPatient &&
+                (sensor.linked ? (
+                  <SensorStatusBadge info={sensor} />
+                ) : (
+                  <StatusBadge status="pending" label="Simulated data" />
+                ))}
             </div>
             {priorityPatient ? (
             <div className="grid md:grid-cols-2 gap-6">
@@ -149,17 +159,28 @@ export default function DoctorDashboardPage() {
                 <div className="grid grid-cols-3 gap-4 mt-4">
                   <div>
                     <p className="label-caps text-[10px] text-on-surface-variant">HR</p>
-                    <p className="font-mono text-2xl font-bold text-error">{vitals.heartRate}</p>
+                    <p className="font-mono text-2xl font-bold text-error">
+                      {sensor.linked ? liveHr : vitals.heartRate}
+                    </p>
+                    <DataTag kind={sensor.linked ? 'experimental' : 'simulated'} />
                   </div>
                   <div>
                     <p className="label-caps text-[10px] text-on-surface-variant">SpO2</p>
                     <p className="font-mono text-2xl font-bold text-secondary">{vitals.spo2}%</p>
+                    <DataTag kind="simulated" />
                   </div>
                   <div>
                     <p className="label-caps text-[10px] text-on-surface-variant">Temp</p>
                     <p className="font-mono text-2xl font-bold">{vitals.temp}°</p>
+                    <DataTag kind="simulated" />
                   </div>
                 </div>
+                {sensor.linked && (
+                  <p className="text-sm text-on-surface-variant mt-3">
+                    <span className="label-caps text-[10px] mr-2">Posture</span>
+                    <span className="font-medium text-on-surface">{posture || '--'}</span>
+                  </p>
+                )}
                 <Button
                   variant="secondary"
                   size="sm"
@@ -170,7 +191,7 @@ export default function DoctorDashboardPage() {
                   View AR Vitals
                 </Button>
               </div>
-              <MiniECG height={100} patientId={priorityPatient.id} />
+              <PatientECG soldierId={priorityPatient.id} sensor={sensor} height={140} />
             </div>
             ) : (
               <p className="text-sm text-on-surface-variant">
@@ -202,18 +223,19 @@ export default function DoctorDashboardPage() {
               Emergency Alerts
             </h2>
             <div className="space-y-3">
-              {emergencyAlerts.map((alert) => (
+              {emergencyAlerts.slice(0, 8).map((alert) => (
                 <button
                   key={alert.id}
                   type="button"
                   onClick={() => handleAlert(alert)}
-                  className="w-full text-left p-3 bg-error-container/30 rounded-lg hover:ring-2 hover:ring-error/20 transition-all"
+                  className={`w-full text-left p-3 bg-error-container/30 rounded-lg hover:ring-2 hover:ring-error/20 transition-all ${alert.resolvedAt ? 'opacity-60' : ''}`}
                 >
                   <div className="flex justify-between">
                     <p className="font-semibold text-sm">{alert.title}</p>
                     <span className="text-[10px] text-on-surface-variant">{alert.time}</span>
                   </div>
                   <p className="text-xs text-on-surface-variant mt-1">{alert.message}</p>
+                  <AlertTags alert={alert} />
                 </button>
               ))}
             </div>

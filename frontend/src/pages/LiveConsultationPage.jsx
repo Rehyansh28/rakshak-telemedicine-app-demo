@@ -2,7 +2,11 @@ import { useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Scan, FileText, Brain } from 'lucide-react';
 import GlassCard from '../components/ui/GlassCard';
-import MiniECG from '../components/charts/MiniECG';
+import PatientECG from '../components/sensor/PatientECG';
+import SensorStatusBadge from '../components/sensor/SensorStatusBadge';
+import DataTag from '../components/sensor/DataTag';
+import { useSensorLive } from '../hooks/useSensorLive';
+import { postureText } from '../services/sensorStatus';
 import PageContainer from '../components/layout/PageContainer';
 import PageHeader from '../components/layout/PageHeader';
 import Button from '../components/ui/Button';
@@ -36,6 +40,8 @@ export default function LiveConsultationPage() {
   }, [selectedPatient, patientList, setSelectedPatient]);
 
   const { videoOn, micMuted, chatOpen } = consultationControls;
+  const sensor = useSensorLive(selectedPatient?.id);
+  const posture = postureText(sensor);
 
   if (loading) {
     return (
@@ -114,23 +120,42 @@ export default function LiveConsultationPage() {
             </GlassCard>
           )}
           <GlassCard>
-            <p className="label-caps text-on-surface-variant mb-2">Live Vitals</p>
+            <div className="flex justify-between items-center gap-2 mb-2">
+              <p className="label-caps text-on-surface-variant">Live Vitals</p>
+              {sensor.linked ? <SensorStatusBadge info={sensor} /> : <DataTag kind="simulated" />}
+            </div>
             <div className="space-y-3 text-sm">
-              <div className="flex justify-between">
-                <span>Heart Rate</span>
-                <span className="font-mono font-bold text-error">{vitals.heartRate} BPM</span>
+              <div className="flex justify-between items-center gap-2">
+                <span>
+                  Heart Rate <DataTag kind={sensor.linked ? 'experimental' : 'simulated'} />
+                </span>
+                <span className="font-mono font-bold text-error">
+                  {sensor.linked ? (sensor.hr != null ? Math.round(sensor.hr) : '--') : vitals.heartRate} BPM
+                </span>
               </div>
-              <div className="flex justify-between">
-                <span>SpO2</span>
+              {sensor.linked && (
+                <div className="flex justify-between items-center gap-2">
+                  <span>
+                    Posture <DataTag kind="experimental" />
+                  </span>
+                  <span className="font-medium text-right">{posture || '--'}</span>
+                </div>
+              )}
+              <div className="flex justify-between items-center gap-2">
+                <span>
+                  SpO2 <DataTag kind="simulated" />
+                </span>
                 <span className="font-mono font-bold text-secondary">{vitals.spo2}%</span>
               </div>
-              <div className="flex justify-between">
-                <span>Temperature</span>
+              <div className="flex justify-between items-center gap-2">
+                <span>
+                  Temperature <DataTag kind="simulated" />
+                </span>
                 <span className="font-mono font-bold">{vitals.temp}°C</span>
               </div>
             </div>
             <div className="mt-4">
-              <MiniECG height={60} />
+              <PatientECG soldierId={selectedPatient.id} sensor={sensor} height={90} />
             </div>
           </GlassCard>
           <GlassCard>

@@ -1,12 +1,11 @@
-import { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import { Search, Bell, Shield, Menu } from 'lucide-react';
 import { useApp } from '../../context/useApp';
 import { formatLiveTime } from '../../utils/formatTime';
 import { PATHS } from '../../routes/paths';
-import { apiGet } from '../../api/client';
 import SlideOver from '../ui/SlideOver';
+import AlertTags from '../sensor/AlertTags';
 import ProfileMenu from './ProfileMenu';
 
 export default function TopNavbar({
@@ -23,15 +22,10 @@ export default function TopNavbar({
     setSelectedPatient,
     patientList,
     showToast,
+    emergencyAlerts,
   } = useApp();
   const navigate = useNavigate();
-  const [emergencyAlerts, setEmergencyAlerts] = useState([]);
-
-  useEffect(() => {
-    apiGet('/emergency-alerts/')
-      .then(setEmergencyAlerts)
-      .catch(() => {});
-  }, []);
+  const activeSensorAlerts = emergencyAlerts.filter((a) => a.source === 'hub' && !a.resolvedAt).length;
 
   const handleAlertClick = (alert) => {
     const patient = patientList.find((p) => p.id === alert.soldierId);
@@ -92,7 +86,13 @@ export default function TopNavbar({
             aria-label="Notifications"
           >
             <Bell className="w-5 h-5" />
-            <span className="absolute top-1.5 right-1.5 w-2 h-2 bg-error rounded-full" />
+            {activeSensorAlerts > 0 ? (
+              <span className="absolute -top-0.5 -right-0.5 min-w-4 h-4 px-1 bg-error text-white text-[10px] font-bold rounded-full flex items-center justify-center">
+                {activeSensorAlerts}
+              </span>
+            ) : (
+              <span className="absolute top-1.5 right-1.5 w-2 h-2 bg-error rounded-full" />
+            )}
           </button>
           <button
             type="button"
@@ -117,7 +117,7 @@ export default function TopNavbar({
               key={alert.id}
               type="button"
               onClick={() => handleAlertClick(alert)}
-              className="w-full text-left p-4 rounded-xl glass-card hover:ring-2 hover:ring-secondary/30 transition-all"
+              className={`w-full text-left p-4 rounded-xl glass-card hover:ring-2 hover:ring-secondary/30 transition-all ${alert.resolvedAt ? 'opacity-60' : ''}`}
             >
               <div className="flex justify-between gap-2 mb-1">
                 <span className={`label-caps text-[10px] ${alert.type === 'critical' ? 'text-error' : 'text-secondary'}`}>
@@ -128,6 +128,7 @@ export default function TopNavbar({
               <p className="font-semibold text-sm text-primary">{alert.title}</p>
               <p className="text-xs text-on-surface-variant mt-1">{alert.message}</p>
               <p className="font-mono text-xs text-secondary mt-2">{alert.soldierId}</p>
+              <AlertTags alert={alert} />
             </button>
           ))}
         </div>

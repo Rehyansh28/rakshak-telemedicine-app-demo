@@ -14,7 +14,11 @@ import {
   PhoneOff,
 } from 'lucide-react';
 import GlassCard from '../components/ui/GlassCard';
-import MiniECG from '../components/charts/MiniECG';
+import PatientECG from '../components/sensor/PatientECG';
+import SensorStatusBadge from '../components/sensor/SensorStatusBadge';
+import DataTag from '../components/sensor/DataTag';
+import { useSensorLive } from '../hooks/useSensorLive';
+import { postureText } from '../services/sensorStatus';
 import Button from '../components/ui/Button';
 import PatientPageHeader from '../components/layout/PatientPageHeader';
 import StatusBadge from '../components/ui/StatusBadge';
@@ -40,6 +44,7 @@ export default function WaitingRoomPage() {
     consultationControls,
   } = useApp();
 
+  const sensor = useSensorLive(selectedPatient?.id);
   const [queuePosition, setQueuePosition] = useState(2);
   const [waitTime, setWaitTime] = useState(4);
 
@@ -154,22 +159,37 @@ export default function WaitingRoomPage() {
             <div className="flex items-center gap-2 mb-4">
               <Heart className="w-5 h-5 text-error" />
               <span className="label-caps text-on-surface-variant text-[10px]">Live Bio-Suit Vitals</span>
+              <span className="ml-auto">
+                {sensor.linked ? <SensorStatusBadge info={sensor} /> : <DataTag kind="simulated" />}
+              </span>
             </div>
             <div className="grid grid-cols-3 gap-4 mb-4 text-center">
               <div className="p-3 rounded-lg bg-surface-container-low">
-                <p className="text-2xl font-bold font-mono text-error">{vitals.heartRate}</p>
+                <p className="text-2xl font-bold font-mono text-error">
+                  {sensor.linked ? (sensor.hr != null ? Math.round(sensor.hr) : '--') : vitals.heartRate}
+                </p>
                 <p className="text-[10px] text-on-surface-variant">BPM</p>
+                <DataTag kind={sensor.linked ? 'experimental' : 'simulated'} />
               </div>
               <div className="p-3 rounded-lg bg-surface-container-low">
                 <p className="text-2xl font-bold font-mono text-secondary">{vitals.spo2}%</p>
                 <p className="text-[10px] text-on-surface-variant">SpO2</p>
+                <DataTag kind="simulated" />
               </div>
               <div className="p-3 rounded-lg bg-surface-container-low">
                 <p className="text-2xl font-bold font-mono">{vitals.temp}°</p>
                 <p className="text-[10px] text-on-surface-variant">Temp</p>
+                <DataTag kind="simulated" />
               </div>
             </div>
-            <MiniECG height={56} />
+            {sensor.linked && (
+              <p className="text-sm text-on-surface-variant mb-3">
+                <span className="label-caps text-[10px] mr-2">Posture</span>
+                <span className="font-medium text-on-surface">{postureText(sensor) || '--'}</span>
+                <DataTag kind="experimental" className="ml-2" />
+              </p>
+            )}
+            <PatientECG soldierId={selectedPatient?.id} sensor={sensor} height={90} />
           </GlassCard>
 
           {!isActive && (
