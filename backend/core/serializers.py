@@ -16,6 +16,7 @@ from .models import (
     ReportTimelineEvent,
     SensorStep,
     SystemConfig,
+    VitalSummary,
 )
 from .utils import keys_to_camel
 
@@ -77,10 +78,28 @@ class EmergencyAlertSerializer(CamelCaseSerializerMixin, serializers.ModelSerial
     patient = serializers.CharField(source="patient.name")
     soldierId = serializers.CharField(source="patient_id")
     time = serializers.CharField(source="time_label")
+    createdAt = serializers.DateTimeField(source="created_at")
+    resolvedAt = serializers.DateTimeField(source="resolved_at")
 
     class Meta:
         model = EmergencyAlert
-        fields = ["id", "type", "title", "patient", "soldierId", "message", "time"]
+        fields = ["id", "type", "title", "patient", "soldierId", "message", "time", "source", "createdAt", "resolvedAt"]
+
+
+class VitalSummarySerializer(CamelCaseSerializerMixin, serializers.ModelSerializer):
+    class Meta:
+        model = VitalSummary
+        fields = [
+            "recorded_at",
+            "device_id",
+            "connected",
+            "heart_rate",
+            "ecg_signal",
+            "leads_off",
+            "posture",
+            "lying_side",
+            "activity",
+        ]
 
 
 class AIRecommendationSerializer(CamelCaseSerializerMixin, serializers.ModelSerializer):

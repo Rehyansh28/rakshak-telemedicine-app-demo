@@ -85,6 +85,12 @@ class EmergencyAlert(models.Model):
     title = models.CharField(max_length=128)
     message = models.TextField()
     time_label = models.CharField(max_length=32)
+    # Alerts made by the sensor hub have source="hub" (EXPERIMENTAL, not medically validated);
+    # older / manual alerts have no source.
+    source = models.CharField(max_length=16, null=True, blank=True)
+    hub_key = models.CharField(max_length=32, null=True, blank=True)  # e.g. "fall", "leads_off"
+    created_at = models.DateTimeField(null=True, blank=True)
+    resolved_at = models.DateTimeField(null=True, blank=True)
 
     class Meta:
         ordering = ["id"]
@@ -235,3 +241,27 @@ class Consultation(models.Model):
     def __str__(self):
         return f"Consultation {self.id} ({self.status}) - Patient: {self.patient.name}"
 
+
+class VitalSummary(models.Model):
+    """One summary per second from the sensor hub (EXPERIMENTAL, not medically validated).
+
+    Only summaries are stored - never the raw ECG waveform.
+    """
+
+    patient = models.ForeignKey(Patient, on_delete=models.CASCADE, related_name="vital_summaries")
+    device_id = models.CharField(max_length=64)
+    recorded_at = models.DateTimeField()
+    connected = models.BooleanField(default=True)
+    heart_rate = models.IntegerField(null=True, blank=True)
+    ecg_signal = models.CharField(max_length=16, blank=True)  # ok / flat / near_rail / clipping
+    leads_off = models.BooleanField(null=True, blank=True)
+    posture = models.CharField(max_length=16, blank=True)  # upright / leaning / lying / unknown
+    lying_side = models.CharField(max_length=8, blank=True)  # back / front / side
+    activity = models.CharField(max_length=8, blank=True)  # still / moving
+
+    class Meta:
+        ordering = ["-recorded_at"]
+        indexes = [models.Index(fields=["patient", "-recorded_at"])]
+
+    def __str__(self):
+        return f"{self.patient_id} @ {self.recorded_at:%H:%M:%S}"
