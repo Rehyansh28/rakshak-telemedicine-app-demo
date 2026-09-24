@@ -1,0 +1,83 @@
+# Rakshak hub
+
+> **EXPERIMENTAL student prototype - not a medical device.** Heart rate, posture,
+> activity and alerts are not medically validated.
+
+The hub is a small Python program that reads the ESP32 (ECG + IMU) over USB and
+works out heart rate, electrodes on/off, posture (upright / leaning / lying),
+activity (still / moving), falls and "no movement for a long time".
+
+```
+ESP32 --USB (921600 baud)--> hub (this folder) --> Django backend + React frontend
+```
+
+It is plain Python (only needs `pyserial`), so the same code runs on a laptop and later
+on a Raspberry Pi.
+
+## Setup (macOS, one time)
+
+Open **Terminal** (press `Cmd + Space`, type `Terminal`, press Enter), then:
+
+```bash
+cd ~/rakshak-sensor/hub          # the hub folder of your copy of the repo
+python3 --version                # needs 3.9 or newer
+python3 -m venv .venv            # make a private Python for the hub
+source .venv/bin/activate        # the prompt now starts with (.venv)
+pip install -r requirements.txt
+```
+
+Every new Terminal window: `cd ~/rakshak-sensor/hub && source .venv/bin/activate`.
+
+## Commands
+
+Run these from the `hub` folder with `(.venv)` active.
+
+| What | Command |
+|------|---------|
+| Find the ESP32 port | `python hub.py ports` |
+| Live data | `python hub.py run` |
+| Live data + save to a file | `python hub.py record --seconds 60` |
+| Play a saved file (no hardware needed) | `python hub.py replay recordings/simulated_demo.txt` |
+| Replay faster / looping | `python hub.py replay <file> --speed 3 --loop` |
+| Only alerts and checks | add `--quiet` right after `hub.py`, e.g. `python hub.py --quiet run` |
+| Run the tests | `python -m unittest discover -s tests -v` |
+
+While `run` or `record` is running: type `c` then Enter to **calibrate upright**, `q`
+then Enter (or `Ctrl + C`) to stop.
+
+**Calibration:** when the hub starts, the person wearing the sensor should **stand up
+straight and still for about 3 seconds**. That direction is saved as "upright". Until
+then posture shows `CALIBRATING`. If the sensor is moved or re-taped, calibrate again
+with `c` + Enter.
+
+## Settings: `config.ini`
+
+All thresholds (fall, no movement, posture angles, timeouts...) are in `config.ini`,
+with an explanation above each one. Stop and restart the hub after changing it.
+
+**Which soldier wears the sensor:** the `[devices]` section, e.g.
+`node-01 = IA-SLD-1923`. To see the soldier IDs, open Super Admin → Soldiers, or open
+http://127.0.0.1:8555/api/patients/ while the backend runs (the `"id"` values).
+
+## Common problems
+
+| Message | What to do |
+|---------|------------|
+| `The port ... is BUSY` | Close the Arduino IDE Serial Monitor / Serial Plotter (only one program can use the port). The hub retries by itself. |
+| `ESP32 not found` | Plug in the USB cable (some cables only charge - try another). Run `python hub.py ports`. |
+| `USB connection lost` | Normal when unplugged; the hub reconnects by itself when you plug it back in. |
+| `CHECK WARNING: ...` | The data looks wrong (wrong rate, flat ECG, IMU not ~1 g). Tell the team / check wiring. |
+| `ignored line` counts | A few are normal (e.g. right after the ESP32 resets). |
+
+## Recordings
+
+Files in `recordings/` are plain text: `<seconds><TAB><raw line from the ESP32>`.
+`simulated_demo.txt` is **SIMULATED** data (made by `tools/make_fake_recording.py`) that
+triggers every alert: fall, no movement, electrodes off, sensor disconnected.
+
+## Adding a new sensor type (e.g. SpO2)
+
+Each message `type` has its own small handler in `rakshak_hub/handlers/`. For a new
+sensor: copy `handlers/ecg.py` to `handlers/spo2.py`, set `msg_type = "spo2"`, write
+`on_message`, and add `spo2` to the import line in `handlers/__init__.py`. Messages with
+an unknown type are counted and ignored, never a crash.
