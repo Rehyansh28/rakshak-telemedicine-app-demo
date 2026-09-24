@@ -172,8 +172,9 @@ def cmd_replay(args, cfg):
                 now = offset + t
                 if not args.fast:
                     # Wait until it is time for this line, keeping the summaries ticking.
+                    # (hub time = real time since the start x speed; it already includes earlier loops)
                     while (time.monotonic() - real_start) * speed < now:
-                        hub.tick(offset + (time.monotonic() - real_start) * speed)
+                        hub.tick((time.monotonic() - real_start) * speed)
                         time.sleep(0.01)
                 if line.startswith(HUB_COMMAND_PREFIX):
                     if line[len(HUB_COMMAND_PREFIX):] == "calibrate":

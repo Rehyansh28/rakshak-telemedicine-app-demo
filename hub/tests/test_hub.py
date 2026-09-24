@@ -216,6 +216,30 @@ class IgnoredLineLabelTests(unittest.TestCase):
         self.assertEqual(describe_ignored("hello"), "other text")
 
 
+class LoopReplayTests(unittest.TestCase):
+    def test_looping_replay_does_not_flap_disconnected(self):
+        """Regression: with --loop, later loops once ticked ahead of the data (disconnect flapping)."""
+        import subprocess
+        with tempfile.TemporaryDirectory() as tmp:
+            path = os.path.join(tmp, "short.txt")
+            with open(path, "w") as f:
+                for t, line in generate("phase1"):
+                    if t < 6:
+                        f.write(f"{t:.3f}\t{line}\n")
+            proc = subprocess.Popen(
+                [sys.executable, "hub.py", "--no-backend", "--quiet", "replay", path, "--loop", "--speed", "4"],
+                cwd=HUB_DIR, stdout=subprocess.PIPE, stderr=subprocess.STDOUT, text=True,
+                env=dict(os.environ, PYTHONUNBUFFERED="1"),
+            )
+            try:
+                out, _ = proc.communicate(timeout=5)  # ~3 loops of 6 s at 4x speed
+            except subprocess.TimeoutExpired:
+                proc.kill()
+                out, _ = proc.communicate()
+        self.assertGreaterEqual(out.count("looping back"), 2, out[-500:])
+        self.assertNotIn("Sensor disconnected", out)
+
+
 class RecordingFileTests(unittest.TestCase):
     def test_write_and_read_back(self):
         with tempfile.TemporaryDirectory() as tmp:
