@@ -258,6 +258,8 @@ class VitalSummary(models.Model):
     posture = models.CharField(max_length=16, blank=True)  # upright / leaning / lying / unknown
     lying_side = models.CharField(max_length=8, blank=True)  # back / front / side
     activity = models.CharField(max_length=8, blank=True)  # still / moving
+    # True when the hub was replaying a recording (recorded data, not live).
+    replay = models.BooleanField(null=True, blank=True)
 
     class Meta:
         ordering = ["-recorded_at"]

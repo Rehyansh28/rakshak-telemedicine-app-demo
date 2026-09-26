@@ -99,6 +99,7 @@ class VitalSummarySerializer(CamelCaseSerializerMixin, serializers.ModelSerializ
             "posture",
             "lying_side",
             "activity",
+            "replay",
         ]
 
 

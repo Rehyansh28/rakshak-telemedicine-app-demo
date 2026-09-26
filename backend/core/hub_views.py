@@ -17,6 +17,8 @@ from .models import EmergencyAlert, Patient, VitalSummary
 from .permissions import IsMedicalStaff
 from .serializers import VitalSummarySerializer
 
+# Alert sources made by the hub: "hub" (live sensor) and "hub-replay" (a recording played back).
+SENSOR_SOURCES = ("hub", "hub-replay")
 # A patient counts as "live" when the latest summary is at most this old.
 LIVE_WINDOW = timedelta(seconds=10)
 MAX_HISTORY_MINUTES = 60
@@ -33,6 +35,7 @@ class SummaryIn(serializers.Serializer):
     posture = serializers.CharField(max_length=16, allow_null=True, allow_blank=True, required=False)
     lyingSide = serializers.CharField(max_length=8, allow_null=True, allow_blank=True, required=False)
     activity = serializers.CharField(max_length=8, allow_null=True, allow_blank=True, required=False)
+    replay = serializers.BooleanField(default=False)
 
 
 class AlertIn(serializers.Serializer):
@@ -44,6 +47,7 @@ class AlertIn(serializers.Serializer):
     message = serializers.CharField(allow_blank=True)
     time = serializers.DateTimeField()
     resolved = serializers.BooleanField(default=False)
+    replay = serializers.BooleanField(default=False)
 
 
 class IngestIn(serializers.Serializer):
@@ -77,7 +81,7 @@ class HubIngestView(APIView):
                 resolved += (
                     EmergencyAlert.objects.filter(
                         patient_id__in=[i for i in restart_ids if i in patients],
-                        source="hub",
+                        source__in=SENSOR_SOURCES,
                         resolved_at__isnull=True,
                     )
                     .exclude(hub_key="fall")  # a fall is a one-off event, it does not "end"
@@ -96,6 +100,7 @@ class HubIngestView(APIView):
                     posture=s.get("posture") or "",
                     lying_side=s.get("lyingSide") or "",
                     activity=s.get("activity") or "",
+                    replay=s["replay"],
                 )
                 for s in summaries
                 if s["soldierId"] in patients
@@ -112,7 +117,10 @@ class HubIngestView(APIView):
             for patient_id, row in latest.items():
                 patient = patients[patient_id]
                 fields = ["last_update_label"]
-                patient.last_update_label = "LIVE (sensor)" if row.connected else "Sensor offline"
+                if not row.connected:
+                    patient.last_update_label = "Sensor offline"
+                else:
+                    patient.last_update_label = "REPLAY (recorded)" if row.replay else "LIVE (sensor)"
                 if patient_id in latest_hr:
                     patient.heart_rate = latest_hr[patient_id]
                     fields.append("heart_rate")
@@ -124,7 +132,7 @@ class HubIngestView(APIView):
                     continue
                 if a["resolved"]:
                     resolved += EmergencyAlert.objects.filter(
-                        patient=patient, source="hub", hub_key=a["key"], resolved_at__isnull=True
+                        patient=patient, source__in=SENSOR_SOURCES, hub_key=a["key"], resolved_at__isnull=True
                     ).update(resolved_at=a["time"])
                     continue
                 EmergencyAlert.objects.create(
@@ -133,7 +141,7 @@ class HubIngestView(APIView):
                     title=a["title"],
                     message=a["message"],
                     time_label=timezone.localtime(a["time"]).strftime("%H:%M:%S"),
-                    source="hub",
+                    source="hub-replay" if a["replay"] else "hub",
                     hub_key=a["key"],
                     created_at=a["time"],
                 )
@@ -172,6 +180,7 @@ class PatientSensorView(APIView):
             {
                 "experimental": True,
                 "live": bool(latest and latest.connected and latest.recorded_at >= now - LIVE_WINDOW),
+                "replay": bool(latest and latest.replay),
                 "latest": VitalSummarySerializer(latest).data if latest else None,
                 "history": VitalSummarySerializer(history, many=True).data,
             }

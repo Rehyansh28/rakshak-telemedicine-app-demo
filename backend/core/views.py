@@ -232,6 +232,19 @@ class PatientSensorStepsView(APIView):
         return Response(SensorStepSerializer(steps, many=True).data)
 
 
+SIMULATED_SPO2_RANGE = (95, 99)
+
+
+def simulated_spo2_step(spo2):
+    """SIMULATED SpO2 (no sensor yet): wander between 95 and 99 %; outside that, step back in."""
+    low, high = SIMULATED_SPO2_RANGE
+    if spo2 < low:
+        return spo2 + 1
+    if spo2 > high:
+        return spo2 - 1
+    return max(low, min(high, spo2 + random.choice([-1, 0, 1])))
+
+
 class PatientVitalsJitterView(APIView):
     """Dev endpoint: nudge vitals slightly and persist to DB for polling demo."""
 
@@ -246,7 +259,7 @@ class PatientVitalsJitterView(APIView):
         if not has_live_sensor(patient):  # never overwrite a real heart rate from the sensor hub
             patient.heart_rate += random.choice([-1, 1])
             fields.append("heart_rate")
-        patient.spo2 = max(85, min(100, patient.spo2 + random.choice([-1, 0])))
+        patient.spo2 = simulated_spo2_step(patient.spo2)
         patient.save(update_fields=fields)
         return Response(PatientDetailSerializer(patient).data)
 

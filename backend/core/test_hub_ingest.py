@@ -192,3 +192,95 @@ class JitterGuardTests(TestCase):
         )
         for _ in range(5):
             self.assertEqual(self.client.post("/api/patients/SLD-001/vitals/jitter/").json()["heartRate"], 75)
+
+
+class ReplayTests(TestCase):
+    """Data from 'hub.py replay' is stored marked as replay, never as live."""
+
+    setUp = HubIngestTests.setUp
+    post = HubIngestTests.post
+
+    def test_replay_summary_is_marked(self):
+        self.post({"summaries": [summary(self.now, hr=70, replay=True)]})
+        self.patient.refresh_from_db()
+        self.assertEqual(self.patient.last_update_label, "REPLAY (recorded)")
+        self.assertTrue(VitalSummary.objects.get().replay)
+        data = self.client.get("/api/patients/SLD-001/sensor/").json()
+        self.assertTrue(data["replay"])
+        self.assertTrue(data["latest"]["replay"])
+
+    def test_live_summary_is_not_replay(self):
+        self.post({"summaries": [summary(self.now, hr=70)]})
+        self.assertFalse(VitalSummary.objects.get().replay)
+        self.assertFalse(self.client.get("/api/patients/SLD-001/sensor/").json()["replay"])
+
+    def test_replay_alerts_have_their_own_source_and_resolve(self):
+        self.post({"alerts": [dict(alert(self.now, key="leads_off", level="warning"), replay=True)]})
+        a = EmergencyAlert.objects.get()
+        self.assertEqual(a.source, "hub-replay")
+        self.assertEqual(self.client.get("/api/emergency-alerts/").json()[0]["source"], "hub-replay")
+        self.post({"alerts": [dict(alert(self.now, key="leads_off", resolved=True), replay=True)]})
+        a.refresh_from_db()
+        self.assertIsNotNone(a.resolved_at)
+
+    def test_hub_restart_also_closes_open_replay_alerts(self):
+        self.post({"alerts": [dict(alert(self.now, key="no_movement"), replay=True)]})
+        self.post({"resolveOpenAlerts": ["SLD-001"]})
+        self.assertIsNotNone(EmergencyAlert.objects.get().resolved_at)
+
+
+class ResolveSensorAlertsCommandTests(TestCase):
+    def setUp(self):
+        from django.core.management import call_command
+
+        self.call = call_command
+        self.patient = make_patient()
+        now = timezone.now()
+
+        def make(source, key, resolved=False):
+            return EmergencyAlert.objects.create(
+                patient=self.patient, alert_type="critical", title=key, message="m", time_label="t",
+                source=source, hub_key=key, created_at=now, resolved_at=now if resolved else None,
+            )
+
+        self.manual = make(None, "")
+        self.live_open = make("hub", "no_movement")
+        self.replay_open = make("hub-replay", "fall")
+        self.live_done = make("hub", "leads_off", resolved=True)
+
+    def run_command(self, *args, answer=None):
+        from io import StringIO
+        from unittest import mock
+
+        out = StringIO()
+        with mock.patch("builtins.input", return_value=answer or ""):
+            self.call("resolve_sensor_alerts", *args, stdout=out)
+        return out.getvalue()
+
+    def test_resolves_only_open_sensor_alerts(self):
+        out = self.run_command()
+        self.assertIn("Marked 2 open sensor alert(s) as resolved", out)
+        for a in (self.live_open, self.replay_open):
+            a.refresh_from_db()
+            self.assertIsNotNone(a.resolved_at)
+        self.manual.refresh_from_db()
+        self.assertIsNone(self.manual.resolved_at)  # manual / seeded alerts untouched
+        self.assertEqual(EmergencyAlert.objects.count(), 4)  # nothing deleted
+
+    def test_delete_asks_and_keeps_other_alerts(self):
+        self.assertIn("Nothing deleted", self.run_command("--delete", answer="no"))
+        self.assertEqual(EmergencyAlert.objects.count(), 4)
+        self.assertIn("Deleted 3 sensor alert(s)", self.run_command("--delete", answer="yes"))
+        self.assertEqual(list(EmergencyAlert.objects.all()), [self.manual])
+
+
+class SimulatedSpo2Tests(TestCase):
+    def test_stays_between_95_and_99_and_steps_back_in(self):
+        from .views import simulated_spo2_step
+
+        self.assertEqual(simulated_spo2_step(85), 86)  # drifts back up, no jump
+        self.assertEqual(simulated_spo2_step(100), 99)
+        value = 97
+        for _ in range(500):
+            value = simulated_spo2_step(value)
+            self.assertTrue(95 <= value <= 99)
