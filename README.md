@@ -4,11 +4,18 @@ Tactical telemedicine platform for high-altitude soldier health monitoring, doct
 
 Developed in collaboration with **IIT Jodhpur**, Department of Computer Science and Engineering.
 
+> **Real sensor data (EXPERIMENTAL):** an ESP32 with an ECG (AD8232) and a motion sensor
+> (MPU6886) feeds live heart rate, ECG, posture and alerts into the app through the
+> [`hub/`](hub/README.md). For demo day follow **[DEMO.md](DEMO.md)**. This is a student
+> prototype, not a medical device: real values are tagged EXPERIMENTAL, recorded ones
+> REPLAY, dummy ones SIMULATED.
+
 ---
 
 ## Table of contents
 
 - [Architecture](#architecture)
+- [Real sensor data (hub)](#real-sensor-data-hub)
 - [Prerequisites](#prerequisites)
 - [Project structure](#project-structure)
 - [Quick start](#quick-start)
@@ -40,8 +47,18 @@ Developed in collaboration with **IIT Jodhpur**, Department of Computer Science 
                                                      └─────────────────────┘
 ```
 
-- **Frontend**: React 19, React Router, Tailwind CSS 4, Three.js (AR body), Recharts (vitals).
-- **Backend**: Django 6, Django REST Framework, Token authentication, CORS for local dev.
+With the sensor hub (EXPERIMENTAL):
+
+```
+ESP32 (ECG + IMU) --USB--> hub/ (Python, :8765) --live ECG, HR, posture, alerts (/live)--> React
+                                                --1 summary/s + alerts (/api/hub/ingest/)--> Django
+```
+
+The browser only talks to Vite (:5555); Vite forwards `/api` to Django and `/live` to the hub.
+
+- **Frontend**: React 19, React Router, Tailwind CSS 4, Three.js (AR body), Recharts (charts), a canvas live ECG.
+- **Backend**: Django 6, Django REST Framework, Token authentication, Channels/Daphne (video-call signalling).
+- **Hub**: Python 3.9+ with `pyserial` - reads the ESP32, see [`hub/README.md`](hub/README.md).
 - **Database**: SQLite file at `backend/db.sqlite3` (no separate DB server required for development).
 
 ---
@@ -54,7 +71,7 @@ Install these on any machine before cloning:
 |------|---------|--------|
 | **Node.js** | 18+ (20+ recommended) | `node -v` |
 | **npm** | 9+ | `npm -v` |
-| **Python** | 3.10+ (3.12+ recommended) | `python3 --version` |
+| **Python** | **3.12+** for the backend (Django 6); 3.9+ is enough for the hub | `python3 --version` |
 | **pip** | latest | `pip3 --version` |
 | **Git** | any | `git --version` |
 
@@ -67,6 +84,8 @@ Optional: `curl` for quick API checks.
 ```
 rakshak-telemedicine-app/
 ├── README.md                 ← this file
+├── DEMO.md                   ← demo-day runbook (startup order, checklist, backup plan)
+├── hub/                      ← reads the ESP32 sensors (see hub/README.md)
 ├── backend/
 │   ├── config/               # Django settings, root URLs
 │   ├── core/                 # Models, API views, admin API, seed command
@@ -99,7 +118,7 @@ python3 -m venv venv
 source venv/bin/activate          # Windows: venv\Scripts\activate
 pip install -r requirements.txt
 python3 manage.py migrate
-python3 manage.py seed_demo         # optional: demo users + patients
+python3 manage.py seed_demo         # ONLY on a new, empty database: it WIPES existing data
 python3 manage.py runserver       # starts on http://127.0.0.1:8555
 ```
 
@@ -117,6 +136,11 @@ Open in browser:
 - **App home**: http://127.0.0.1:5555/
 - **Super Admin**: http://127.0.0.1:5555/superadminuser
 - **Doctor login**: http://127.0.0.1:5555/doctor/login
+
+### Terminal 3 - Sensor hub (optional)
+
+See [`hub/README.md`](hub/README.md) (one-time setup) and [DEMO.md](DEMO.md). Without the
+hardware, `python hub.py replay recordings/simulated_demo.txt --loop` plays SIMULATED data.
 
 ---
 
@@ -146,11 +170,8 @@ python -m venv venv
 pip install -r requirements.txt
 ```
 
-Packages installed:
-
-- `Django==6.0.5`
-- `djangorestframework==3.17.1`
-- `django-cors-headers==4.9.0`
+Packages installed (not pinned to exact versions): `Django` (6.x, needs Python 3.12+),
+`djangorestframework`, `django-cors-headers`, `daphne`, `channels`, `channels-redis`.
 
 ### 3. Apply database migrations
 
@@ -160,13 +181,15 @@ python3 manage.py migrate
 
 This creates `backend/db.sqlite3` with all tables (users, doctors, patients, alerts, reports, etc.).
 
-### 4. Load demo data (recommended for first run)
+### 4. Load demo data (only for a brand-new database)
 
 ```bash
 python3 manage.py seed_demo
 ```
 
-This **clears existing app data** and loads sample patients, vitals, alerts, and default accounts (see [User roles](#user-roles-and-login)).
+⚠️ This **deletes all existing app data** (patients, doctors, alerts, reports...) and loads
+sample data and default accounts (see [User roles](#user-roles-and-login)). Never run it on a
+database you want to keep - back up `db.sqlite3` first.
 
 ### 5. Start the API server
 
@@ -216,10 +239,11 @@ cp .env.example .env
 Default content:
 
 ```env
-VITE_API_BASE_URL=http://localhost:8555/api
+VITE_API_BASE_URL=/api
 ```
 
-Change the host/port if your backend runs elsewhere.
+`/api` goes through the Vite dev server, which forwards it to Django on port 8555 (and
+`/live` to the sensor hub on 8765). Keep it like this for local use - it avoids CORS problems.
 
 ### 3. Start development server
 
@@ -249,18 +273,23 @@ Vite is configured to:
 
 | Variable | Description | Default |
 |----------|-------------|---------|
-| `VITE_API_BASE_URL` | Base URL for all API calls | `http://localhost:8555/api` |
+| `VITE_API_BASE_URL` | Base URL for all API calls | `/api` |
+| `VITE_PROXY_TARGET` | (shell variable for `npm run dev`) where Vite forwards `/api` | `http://127.0.0.1:8555` |
+| `VITE_HUB_TARGET` | (shell variable for `npm run dev`) where Vite forwards `/live` | `http://127.0.0.1:8765` |
 
 Restart `npm run dev` after changing `.env`.
 
 ### Backend
 
-No `.env` file is required for local development. Key settings live in `backend/config/settings.py`:
+No `.env` file is required for local development. Settings in `backend/config/settings.py`
+can be changed with environment variables:
 
-- `DEBUG = True`
-- `ALLOWED_HOSTS = ['localhost', '127.0.0.1']`
-- `CORS_ALLOWED_ORIGINS` includes `http://localhost:5555` and `http://127.0.0.1:5555`
+- `DEBUG` - default `False` (set `DEBUG=True` to see error pages)
+- `ALLOWED_HOSTS` - default `localhost,127.0.0.1`
+- `CORS_ALLOWED_ORIGINS`, `CSRF_TRUSTED_ORIGINS` - empty by default (not needed with the Vite proxy)
 - Database: SQLite at `backend/db.sqlite3`
+
+The sensor hub has its own settings in `hub/config.ini` and its login in `hub/.env`.
 
 ---
 
@@ -271,6 +300,7 @@ No `.env` file is required for local development. Key settings live in `backend/
 | Frontend (Vite) | http://127.0.0.1:5555 | Use this URL in the browser |
 | Backend API | http://127.0.0.1:8555/api/ | REST JSON API |
 | Django admin | http://127.0.0.1:8555/admin/ | After `createsuperuser` |
+| Sensor hub live stream | http://127.0.0.1:8765/live/health | While `hub.py` runs |
 
 Custom backend port:
 
@@ -278,10 +308,10 @@ Custom backend port:
 python3 manage.py runserver 9000
 ```
 
-Update `frontend/.env`:
+Start the frontend with the new target:
 
-```env
-VITE_API_BASE_URL=http://localhost:9000/api
+```bash
+VITE_PROXY_TARGET=http://127.0.0.1:9000 npm run dev
 ```
 
 ---
@@ -343,7 +373,10 @@ Patient **View** opens full detail: alerts, sensor steps, AI insights, organs, r
 | Create tables | `python3 manage.py migrate` |
 | Load demo data | `python3 manage.py seed_demo` |
 | **Wipe all data** | Delete `backend/db.sqlite3`, then `python3 manage.py migrate` |
-| Reset + demo | `python3 manage.py seed_demo` (clears app data first) |
+| Reset + demo | `python3 manage.py seed_demo` (⚠️ deletes app data first) |
+| Back up the database | `cp db.sqlite3 ~/Desktop/db-backup-$(date +%Y%m%d-%H%M).sqlite3` |
+| Close all sensor alerts (safe) | `python3 manage.py resolve_sensor_alerts` |
+| Delete all sensor alerts (asks first) | `python3 manage.py resolve_sensor_alerts --delete` |
 
 `seed_demo` removes doctors, patients, alerts, reports, etc., then reloads demo content. It does not remove Django’s built-in tables.
 
@@ -365,6 +398,13 @@ Base path: `http://127.0.0.1:8555/api/`
 | GET | `/emergency-alerts/` | Alerts |
 | GET | `/activity/` | Activity log |
 | GET | `/dashboard/stats/` | Dashboard counts |
+| GET | `/patients/<soldier_id>/sensor/` | Latest sensor summary + recent history (EXPERIMENTAL) |
+
+### Sensor hub (medical staff login)
+
+| Method | Path | Description |
+|--------|------|-------------|
+| POST | `/hub/ingest/` | Hub sends 1 summary per second + alerts (never the raw ECG) |
 
 ### Super Admin (requires admin token)
 
@@ -399,6 +439,10 @@ npm run build
 ```
 
 Serve the `frontend/dist/` folder with any static host (Nginx, Vercel, etc.). Set `VITE_API_BASE_URL` at **build time** to your production API URL.
+
+Pushes to `main` are deployed to GitHub Pages by `.github/workflows/deploy.yml` (API:
+`https://api.rakshak.online/api`). The live sensor view needs the local hub and the Vite
+proxy, so **run the sensor demo locally** (`npm run dev`), not on the website.
 
 ### Backend
 
@@ -440,14 +484,17 @@ The user exists but has no `Doctor` record. Create the account under Super Admin
 
 ### CORS errors in browser
 
-- Frontend must be on `http://localhost:5555` or `http://127.0.0.1:5555`.
+- `frontend/.env` must say `VITE_API_BASE_URL=/api` (so calls go through the Vite proxy).
 - Backend must be running on port **8555**.
-- Check `CORS_ALLOWED_ORIGINS` in `backend/config/settings.py`.
+
+### Sensor data not showing
+
+See the troubleshooting tables in [DEMO.md](DEMO.md) and [`hub/README.md`](hub/README.md).
 
 ### API calls fail (network error)
 
 - Confirm backend: `curl http://127.0.0.1:8555/api/config/`
-- Confirm `frontend/.env` has `VITE_API_BASE_URL=http://localhost:8555/api`
+- Confirm `frontend/.env` has `VITE_API_BASE_URL=/api`
 - Restart frontend after editing `.env`.
 
 ### Port already in use
@@ -461,6 +508,20 @@ lsof -i :8555
 Stop the old process or pick another port and update `.env` / `runserver` accordingly.
 
 ---
+
+## Real sensor data (hub)
+
+Summary (details in [`hub/README.md`](hub/README.md), demo steps in [DEMO.md](DEMO.md)):
+
+- The hub reads the ESP32 over USB, computes heart rate checks, posture, activity, falls and
+  "no movement", streams the live ECG to the app and sends a summary per second + alerts to
+  Django. The raw ECG waveform is never stored.
+- Pages with live data: Command Center, Live Consultation (doctor), Waiting Room (staff).
+  Status badges show live / hub offline / sensor disconnected / electrodes off / ECG signal
+  poor / data old; `hub.py replay` shows **REPLAY** instead of live.
+- SpO2 and temperature have no sensor yet: they stay dummy values, labelled SIMULATED.
+- One-time: create a Medical Staff account for the hub in Super Admin and put its login in
+  `hub/.env` (copy `hub/.env.example`).
 
 ## License and credits
 
