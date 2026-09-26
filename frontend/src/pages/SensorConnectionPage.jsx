@@ -21,6 +21,10 @@ import GlassCard from '../components/ui/GlassCard';
 import Button from '../components/ui/Button';
 import PatientPageHeader from '../components/layout/PatientPageHeader';
 import StatusBadge from '../components/ui/StatusBadge';
+import SensorStatusBadge from '../components/sensor/SensorStatusBadge';
+import DataTag from '../components/sensor/DataTag';
+import { useSensorLive } from '../hooks/useSensorLive';
+import { valueTag } from '../services/sensorStatus';
 import { PATHS } from '../routes/paths';
 import { useApp } from '../context/useApp';
 
@@ -38,6 +42,8 @@ export default function SensorConnectionPage() {
   const { sensorProgress, setSensorProgress, showToast, selectedPatient, vitals } = useApp();
   const [syncing, setSyncing] = useState(true);
   const [sensorSteps, setSensorSteps] = useState([]);
+  // Real ECG/IMU status from the hub (EXPERIMENTAL); the pairing animation below is SIMULATED.
+  const sensor = useSensorLive(selectedPatient?.id);
 
   useEffect(() => {
     if (!selectedPatient?.id) return;
@@ -83,11 +89,15 @@ export default function SensorConnectionPage() {
         title="Sensor Connection Hub"
         description="On behalf of the selected soldier: pair ECG, SpO2, temperature probes and verify STRAT-LINK encryption before camera alignment."
         actions={
-          syncing ? (
-            <StatusBadge status="syncing" label="SYNCING" />
-          ) : (
-            <StatusBadge status="connected" label="READY" />
-          )
+          <span className="flex flex-wrap items-center gap-2">
+            {sensor.linked && <SensorStatusBadge info={sensor} />}
+            {syncing ? (
+              <StatusBadge status="syncing" label="SYNCING" />
+            ) : (
+              <StatusBadge status="connected" label="READY" />
+            )}
+            <DataTag kind="simulated" />
+          </span>
         }
       />
 
@@ -98,7 +108,9 @@ export default function SensorConnectionPage() {
           <GlassCard className="bg-white">
             <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-4">
               <div>
-                <p className="label-caps text-on-surface-variant text-[10px]">Overall Sync Progress</p>
+                <p className="label-caps text-on-surface-variant text-[10px]">
+                  Overall Sync Progress <DataTag kind="simulated" />
+                </p>
                 <p className="font-sora text-4xl font-bold text-primary mt-1">{progress}%</p>
               </div>
               <div className="flex gap-2">
@@ -128,7 +140,9 @@ export default function SensorConnectionPage() {
 
           {/* Sensor steps — vertical timeline */}
           <div className="space-y-3">
-            <p className="label-caps text-on-surface-variant text-[10px] px-1">Sensor Pairing Sequence</p>
+            <p className="label-caps text-on-surface-variant text-[10px] px-1">
+              Sensor Pairing Sequence <DataTag kind="simulated" />
+            </p>
             {sensorSteps.map((step, i) => {
               const Icon = icons[step.icon] || Heart;
               const state = getStepState(i, progress);
@@ -206,23 +220,30 @@ export default function SensorConnectionPage() {
             </p>
             <div className="grid grid-cols-3 gap-2 mt-4 pt-4 border-t border-outline-variant/20 text-center">
               <div>
-                <p className="font-mono text-lg font-bold text-error">{vitals.heartRate}</p>
+                <p className="font-mono text-lg font-bold text-error">
+                  {sensor.linked ? (sensor.hr != null ? Math.round(sensor.hr) : '--') : vitals.heartRate}
+                </p>
                 <p className="text-[10px] text-on-surface-variant">BPM</p>
+                <DataTag kind={valueTag(sensor)} />
               </div>
               <div>
                 <p className="font-mono text-lg font-bold text-secondary">{vitals.spo2}%</p>
                 <p className="text-[10px] text-on-surface-variant">SpO2</p>
+                <DataTag kind="simulated" />
               </div>
               <div>
                 <p className="font-mono text-lg font-bold">{vitals.temp}°</p>
                 <p className="text-[10px] text-on-surface-variant">Temp</p>
+                <DataTag kind="simulated" />
               </div>
             </div>
           </GlassCard>
 
           {/* Connection status */}
           <GlassCard className="bg-white space-y-3">
-            <p className="label-caps text-on-surface-variant text-[10px]">Uplink Status</p>
+            <p className="label-caps text-on-surface-variant text-[10px]">
+              Uplink Status <DataTag kind="simulated" />
+            </p>
             {[
               { icon: Wifi, label: 'STRAT-LINK', value: progress >= 75 ? 'Connected' : 'Handshaking', ok: progress >= 75 },
               { icon: Signal, label: 'SAT-NODE', value: 'Strong', ok: true },

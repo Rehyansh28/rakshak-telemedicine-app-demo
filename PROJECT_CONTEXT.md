@@ -1,6 +1,6 @@
 # Rakshak real-sensor-data project: context
 
-Updated at the end of each phase. **Last update: end of Phase 4 (26 Sep 2026).**
+Updated at the end of each phase. **Last update: Phase 4 follow-up (26 Sep 2026).**
 Branch: `claude/rakshak-real-sensor-data-phbaso` (never `main`).
 
 ## Goal and rules
@@ -53,6 +53,9 @@ Branch: `claude/rakshak-real-sensor-data-phbaso` (never `main`).
   - simulated SpO2 hovers between 95 and 99%;
   - soldier cards tag their heart rate;
   - DEMO.md, README updates, fixes found by end-to-end tests.
+- **Phase 4 follow-up (approved changes):**
+  - DEMO.md now has a one-time setup (section 0), a "day before" update followed by a **code freeze** (no `git pull` on demo day), **battery-only safety** (no charger, projector or other mains cable while electrodes are on; electrodes off before plugging the charger back in), and how to record and commit `real_90s.txt`;
+  - the Sensor Connection page shows the real hub status for the sensor soldier and labels the fake pairing animation SIMULATED.
 
 ## Bugs found and fixed along the way
 - `replay --loop` flooded "Sensor disconnected" alerts (loop offset added twice). Regression test added.
@@ -70,4 +73,4 @@ Branch: `claude/rakshak-real-sensor-data-phbaso` (never `main`).
   - firmware `firmware/rakshak_node/rakshak_node.ino` (check the repeated IMU-tail lines);
   - `real_60s.txt` + `real_90s.txt` (with lying down) → tune activity/posture/no-movement thresholds, confirm `+z`;
   - Mac outputs of the Phase 2–4 steps.
-- **Left for later:** AR Diagnostic, Organ Detail, Sensor Connection page (fake progress), AI Insights / Report charts, an "acknowledge alert" button.
+- **Left for later:** AR Diagnostic, Organ Detail, AI Insights / Report charts, an "acknowledge alert" button.
