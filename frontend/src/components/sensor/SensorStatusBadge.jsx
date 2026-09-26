@@ -5,6 +5,7 @@ const TONES = {
   warn: 'bg-amber-500 text-white',
   bad: 'bg-error text-white',
   idle: 'bg-surface-container-highest text-on-surface-variant',
+  replay: 'bg-violet-600 text-white',
 };
 
 /** Status of a soldier's live sensor: live / disconnected / electrodes off / signal poor / data old. */

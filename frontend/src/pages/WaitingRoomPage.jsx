@@ -18,7 +18,7 @@ import PatientECG from '../components/sensor/PatientECG';
 import SensorStatusBadge from '../components/sensor/SensorStatusBadge';
 import DataTag from '../components/sensor/DataTag';
 import { useSensorLive } from '../hooks/useSensorLive';
-import { postureText } from '../services/sensorStatus';
+import { postureText, valueTag } from '../services/sensorStatus';
 import Button from '../components/ui/Button';
 import PatientPageHeader from '../components/layout/PatientPageHeader';
 import StatusBadge from '../components/ui/StatusBadge';
@@ -169,7 +169,7 @@ export default function WaitingRoomPage() {
                   {sensor.linked ? (sensor.hr != null ? Math.round(sensor.hr) : '--') : vitals.heartRate}
                 </p>
                 <p className="text-[10px] text-on-surface-variant">BPM</p>
-                <DataTag kind={sensor.linked ? 'experimental' : 'simulated'} />
+                <DataTag kind={valueTag(sensor)} />
               </div>
               <div className="p-3 rounded-lg bg-surface-container-low">
                 <p className="text-2xl font-bold font-mono text-secondary">{vitals.spo2}%</p>
@@ -186,7 +186,7 @@ export default function WaitingRoomPage() {
               <p className="text-sm text-on-surface-variant mb-3">
                 <span className="label-caps text-[10px] mr-2">Posture</span>
                 <span className="font-medium text-on-surface">{postureText(sensor) || '--'}</span>
-                <DataTag kind="experimental" className="ml-2" />
+                <DataTag kind={valueTag(sensor)} className="ml-2" />
               </p>
             )}
             <PatientECG soldierId={selectedPatient?.id} sensor={sensor} height={90} />

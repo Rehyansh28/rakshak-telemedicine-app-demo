@@ -6,6 +6,7 @@ import { formatLiveTime } from '../../utils/formatTime';
 import { PATHS } from '../../routes/paths';
 import SlideOver from '../ui/SlideOver';
 import AlertTags from '../sensor/AlertTags';
+import { isSensorAlert } from '../../services/sensorStatus';
 import ProfileMenu from './ProfileMenu';
 
 export default function TopNavbar({
@@ -25,7 +26,7 @@ export default function TopNavbar({
     emergencyAlerts,
   } = useApp();
   const navigate = useNavigate();
-  const activeSensorAlerts = emergencyAlerts.filter((a) => a.source === 'hub' && !a.resolvedAt).length;
+  const activeSensorAlerts = emergencyAlerts.filter((a) => isSensorAlert(a) && !a.resolvedAt).length;
 
   const handleAlertClick = (alert) => {
     const patient = patientList.find((p) => p.id === alert.soldierId);

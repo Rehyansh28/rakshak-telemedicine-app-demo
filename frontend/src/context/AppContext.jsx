@@ -17,6 +17,7 @@ import { AppContext } from './app-context';
 import { SignalingService } from '../services/websocket';
 import { WebRTCConnection } from '../services/webrtc';
 import { hubStream } from '../services/hubStream';
+import { isSensorAlert } from '../services/sensorStatus';
 
 // Emergency alerts are re-checked this often, so new (sensor) alerts appear without a refresh.
 const ALERT_POLL_MS = 4000;
@@ -97,10 +98,11 @@ export function AppProvider({ children }) {
       const sorted = [...list].sort((a, b) => b.id - a.id);
       const seen = seenAlertIdsRef.current;
       if (seen) {
-        const fresh = sorted.filter((a) => a.source === 'hub' && !a.resolvedAt && !seen.has(a.id));
+        const fresh = sorted.filter((a) => isSensorAlert(a) && !a.resolvedAt && !seen.has(a.id));
         if (fresh.length > 0) {
           const a = fresh[0];
-          showToast(`${a.title} - ${a.patient} (experimental sensor alert)`, a.type === 'critical' ? 'error' : 'warning');
+          const origin = a.source === 'hub-replay' ? 'REPLAY - recorded data, not live' : 'experimental sensor alert';
+          showToast(`${a.title} - ${a.patient} (${origin})`, a.type === 'critical' ? 'error' : 'warning');
         }
       }
       seenAlertIdsRef.current = new Set(sorted.map((a) => a.id));

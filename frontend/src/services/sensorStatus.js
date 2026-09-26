@@ -10,6 +10,7 @@
  *   'leads-off'     an ECG electrode is off
  *   'signal-poor'   ECG signal flat / stuck / clipping (e.g. loose wire)
  *   'live'          all good - hr is the real (experimental) heart rate
+ * replay: true while the hub plays back a recording -> shown as REPLAY, never as live.
  */
 import { hubStream } from './hubStream';
 
@@ -19,7 +20,16 @@ const ECG_OLD_S = 3;
 export function describeSensor(soldierId, backend) {
   const device = soldierId ? hubStream.devices.get(soldierId) : undefined;
   const linked = Boolean(device) || Boolean(backend?.latest);
-  const base = { soldierId, linked, device: device || null, hr: null, agoS: null };
+  const replay = hubStream.connection === 'open' && hubStream.mode === 'replay';
+  const base = {
+    soldierId,
+    linked,
+    device: device || null,
+    hr: null,
+    agoS: null,
+    replay,
+    recording: replay ? hubStream.recording : null,
+  };
   if (!linked) return { ...base, status: 'none' };
   if (hubStream.connection !== 'open') return { ...base, status: 'hub-offline' };
   if (!device) return { ...base, status: 'waiting' };
@@ -38,6 +48,35 @@ export function describeSensor(soldierId, backend) {
 
 /** Badge text + colour style for a status (null = no badge). */
 export function sensorBadge(info) {
+  const badge = statusBadge(info);
+  if (!badge || !info.replay) return badge;
+  // Recorded data played back: always say so, never "Live sensor".
+  return {
+    label: info.status === 'live' ? 'Replay · recorded data' : `Replay · ${badge.label}`,
+    tone: 'replay',
+  };
+}
+
+/** Which tag a sensor value gets: SIMULATED (no sensor), REPLAY (recording) or EXPERIMENTAL (live). */
+export function valueTag(info) {
+  if (!info.linked) return 'simulated';
+  return info.replay ? 'replay' : 'experimental';
+}
+
+/** Tag for a heart rate that comes from Django (Patient.lastUpdate is set by the hub). */
+export function storedValueTag(patient) {
+  const label = patient.lastUpdate || '';
+  if (label.startsWith('REPLAY')) return 'replay';
+  if (label.startsWith('LIVE') || label === 'Sensor offline') return 'experimental';
+  return 'simulated';
+}
+
+/** Alerts made by the sensor hub: "hub" (live) or "hub-replay" (from a recording). */
+export function isSensorAlert(alert) {
+  return alert.source === 'hub' || alert.source === 'hub-replay';
+}
+
+function statusBadge(info) {
   switch (info.status) {
     case 'live':
       return { label: 'Live sensor', tone: 'good' };

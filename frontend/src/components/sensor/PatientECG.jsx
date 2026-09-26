@@ -6,7 +6,9 @@ import { ecgOverlayText } from '../../services/sensorStatus';
 /** The live ECG for a soldier with a sensor; otherwise the old dummy wave, labelled SIMULATED. */
 export default function PatientECG({ soldierId, sensor, height = 80 }) {
   if (sensor.linked) {
-    return <LiveECG soldierId={soldierId} height={height} overlay={ecgOverlayText(sensor)} />;
+    return (
+      <LiveECG soldierId={soldierId} height={height} overlay={ecgOverlayText(sensor)} replay={sensor.replay} />
+    );
   }
   return (
     <div className="relative">

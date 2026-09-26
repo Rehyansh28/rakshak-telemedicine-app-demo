@@ -28,7 +28,7 @@ function drawGrid(ctx, width, height, seconds) {
   ctx.stroke();
 }
 
-export default function LiveECG({ soldierId, height = 100, seconds = 8, overlay = null }) {
+export default function LiveECG({ soldierId, height = 100, seconds = 8, overlay = null, replay = false }) {
   const canvasRef = useRef(null);
 
   useEffect(() => {
@@ -130,8 +130,12 @@ export default function LiveECG({ soldierId, height = 100, seconds = 8, overlay 
   return (
     <div className="vitals-wave rounded relative" style={{ height }}>
       <canvas ref={canvasRef} className="absolute inset-0 w-full h-full" aria-label="Live ECG (experimental)" />
-      <span className="absolute top-1 left-2 label-caps text-[9px] text-on-surface-variant/80 bg-white/70 px-1 rounded pointer-events-none">
-        Live ECG · {seconds}s · experimental
+      <span
+        className={`absolute top-1 left-2 label-caps text-[9px] px-1 rounded pointer-events-none ${
+          replay ? 'bg-violet-600 text-white' : 'text-on-surface-variant/80 bg-white/70'
+        }`}
+      >
+        {replay ? `Replay ECG · ${seconds}s · recorded, not live` : `Live ECG · ${seconds}s · experimental`}
       </span>
       {overlay && (
         <div className="absolute inset-0 flex items-center justify-center pointer-events-none">

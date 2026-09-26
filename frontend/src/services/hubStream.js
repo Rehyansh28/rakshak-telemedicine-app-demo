@@ -24,8 +24,10 @@ class EcgBuffer {
 
   push(msg) {
     const { seq, samples } = msg;
-    if (typeof seq === 'number' && this.lastSeq !== null && seq <= this.lastSeq && this.lastSeq - seq < 100) {
-      return; // already have it (e.g. sent again after a reconnect)
+    // Only the snapshot sent after a reconnect can repeat chunks we already have. Live chunks
+    // are always new - also when seq starts again from 0 because the ESP32 restarted.
+    if (msg.snapshot && typeof seq === 'number' && this.lastSeq !== null && seq <= this.lastSeq) {
+      return;
     }
     if (typeof seq === 'number') this.lastSeq = seq;
     for (const value of samples) {
@@ -49,6 +51,8 @@ class HubStream {
     this.connection = 'offline'; // 'connecting' | 'open' | 'offline'
     this.devices = new Map(); // soldierId -> latest device summary
     this.lastSummaryAt = 0; // Date.now() of the latest summary
+    this.mode = null; // 'live' | 'replay' (a recording played back - never show it as live)
+    this.recording = null; // file name while replaying
     this.ecg = new Map(); // soldierId -> EcgBuffer
     this.listeners = new Set();
     this.alertListeners = new Set();
@@ -134,6 +138,8 @@ class HubStream {
     } else if (msg.type === 'summary') {
       this.devices = new Map((msg.devices || []).map((d) => [d.soldierId || d.dev, d]));
       this.lastSummaryAt = Date.now();
+      this.mode = msg.mode || 'live';
+      this.recording = msg.recording || null;
       this.notify();
     } else if (msg.type === 'alert') {
       this.alertListeners.forEach((listener) => listener(msg));

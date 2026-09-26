@@ -6,7 +6,7 @@ import PatientECG from '../components/sensor/PatientECG';
 import SensorStatusBadge from '../components/sensor/SensorStatusBadge';
 import DataTag from '../components/sensor/DataTag';
 import { useSensorLive } from '../hooks/useSensorLive';
-import { postureText } from '../services/sensorStatus';
+import { postureText, valueTag } from '../services/sensorStatus';
 import PageContainer from '../components/layout/PageContainer';
 import PageHeader from '../components/layout/PageHeader';
 import Button from '../components/ui/Button';
@@ -127,7 +127,7 @@ export default function LiveConsultationPage() {
             <div className="space-y-3 text-sm">
               <div className="flex justify-between items-center gap-2">
                 <span>
-                  Heart Rate <DataTag kind={sensor.linked ? 'experimental' : 'simulated'} />
+                  Heart Rate <DataTag kind={valueTag(sensor)} />
                 </span>
                 <span className="font-mono font-bold text-error">
                   {sensor.linked ? (sensor.hr != null ? Math.round(sensor.hr) : '--') : vitals.heartRate} BPM
@@ -136,7 +136,7 @@ export default function LiveConsultationPage() {
               {sensor.linked && (
                 <div className="flex justify-between items-center gap-2">
                   <span>
-                    Posture <DataTag kind="experimental" />
+                    Posture <DataTag kind={valueTag(sensor)} />
                   </span>
                   <span className="font-medium text-right">{posture || '--'}</span>
                 </div>

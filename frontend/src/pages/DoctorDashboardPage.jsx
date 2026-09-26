@@ -10,7 +10,7 @@ import SensorStatusBadge from '../components/sensor/SensorStatusBadge';
 import DataTag from '../components/sensor/DataTag';
 import AlertTags from '../components/sensor/AlertTags';
 import { useSensorLive } from '../hooks/useSensorLive';
-import { postureText } from '../services/sensorStatus';
+import { postureText, valueTag } from '../services/sensorStatus';
 import PageContainer from '../components/layout/PageContainer';
 import PageHeader from '../components/layout/PageHeader';
 import Button from '../components/ui/Button';
@@ -162,7 +162,7 @@ export default function DoctorDashboardPage() {
                     <p className="font-mono text-2xl font-bold text-error">
                       {sensor.linked ? liveHr : vitals.heartRate}
                     </p>
-                    <DataTag kind={sensor.linked ? 'experimental' : 'simulated'} />
+                    <DataTag kind={valueTag(sensor)} />
                   </div>
                   <div>
                     <p className="label-caps text-[10px] text-on-surface-variant">SpO2</p>

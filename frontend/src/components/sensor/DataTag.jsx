@@ -3,6 +3,7 @@ const STYLES = {
   simulated: 'text-on-surface-variant border-outline-variant border-dashed bg-surface-container-low',
   resolved: 'text-success border-success/40 bg-success/5',
   sensor: 'text-secondary border-secondary/40 bg-secondary/5',
+  replay: 'text-violet-700 border-violet-400/70 bg-violet-50',
 };
 
 const TEXT = {
@@ -10,6 +11,7 @@ const TEXT = {
   simulated: 'Simulated',
   resolved: 'Resolved',
   sensor: 'Sensor',
+  replay: 'Replay',
 };
 
 const TITLE = {
@@ -17,9 +19,10 @@ const TITLE = {
   simulated: 'Dummy value - there is no real sensor for this yet.',
   resolved: 'This alert has ended.',
   sensor: 'Made by the sensor hub (experimental).',
+  replay: 'Recorded sensor data played back - NOT live.',
 };
 
-/** Small label that says where a value comes from: EXPERIMENTAL (real sensor) or SIMULATED (dummy). */
+/** Small label that says where a value comes from: EXPERIMENTAL (live sensor), REPLAY (recording) or SIMULATED (dummy). */
 export default function DataTag({ kind, className = '' }) {
   return (
     <span
