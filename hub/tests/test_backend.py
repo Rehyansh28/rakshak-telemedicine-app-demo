@@ -61,6 +61,8 @@ def device_summary(hr=70, connected=True):
 
 
 class FakeHub:
+    replaying = False
+
     @staticmethod
     def wall_now():
         from datetime import datetime
@@ -96,6 +98,19 @@ class BackendSinkTests(unittest.TestCase):
         sink.send_now()
         self.assertNotIn("resolveOpenAlerts", server.batches[1])
         self.assertIn("connected", logs[-1])
+
+    def test_replay_is_marked_in_summaries_and_alerts(self):
+        server = start_server()
+        self.addCleanup(server.shutdown)
+        sink, _ = self.make_sink(server.server_port)
+        replay_hub = FakeHub()
+        replay_hub.replaying = True
+        sink.on_summary([device_summary()], replay_hub)
+        sink.on_alert(Alert("node-01", "IA-SLD-1923", "fall", "critical", "Possible fall", "m", replay=True))
+        sink.send_now()
+        batch = server.batches[0]
+        self.assertTrue(batch["summaries"][0]["replay"])
+        self.assertTrue(batch["alerts"][0]["replay"])
 
     def test_disconnected_summary_sends_no_old_values(self):
         s = summary_for_backend(device_summary(hr=81, connected=False), FakeHub.wall_now())

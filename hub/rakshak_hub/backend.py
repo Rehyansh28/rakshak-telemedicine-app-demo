@@ -41,7 +41,7 @@ def load_env_file(path):
     return values
 
 
-def summary_for_backend(s, when):
+def summary_for_backend(s, when, replay=False):
     """Turn one device summary into the small record Django stores."""
     ecg = s.get("ecg") or {}
     imu = s.get("imu") or {}
@@ -58,6 +58,7 @@ def summary_for_backend(s, when):
         "posture": imu.get("posture") if live else None,
         "lyingSide": imu.get("lyingSide") if live else None,
         "activity": imu.get("activity") if live else None,
+        "replay": replay,
     }
 
 
@@ -96,7 +97,7 @@ class BackendSink:
         with self.lock:
             for s in summaries:
                 if s["soldierId"]:
-                    self.summaries.append(summary_for_backend(s, when))
+                    self.summaries.append(summary_for_backend(s, when, replay=hub.replaying))
 
     def on_alert(self, alert):
         if not alert.soldier_id:
@@ -111,6 +112,7 @@ class BackendSink:
                 "message": alert.message,
                 "time": alert.time.isoformat(),
                 "resolved": alert.resolved,
+                "replay": alert.replay,
             })
 
     # ----- sending -----

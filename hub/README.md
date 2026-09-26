@@ -8,11 +8,12 @@ works out heart rate, electrodes on/off, posture (upright / leaning / lying),
 activity (still / moving), falls and "no movement for a long time".
 
 ```
-ESP32 --USB (921600 baud)--> hub (this folder) --> Django backend + React frontend
+ESP32 --USB (921600 baud)--> hub (this folder) --+--> live stream (/live): ECG graph, HR, posture, alerts --> React app
+                                                  +--> Django (/api/hub/ingest/): 1 summary per second + alerts
 ```
 
 It is plain Python (only needs `pyserial`), so the same code runs on a laptop and later
-on a Raspberry Pi.
+on a Raspberry Pi. For the demo day, follow [`../DEMO.md`](../DEMO.md).
 
 ## Setup (macOS, one time)
 
@@ -40,6 +41,7 @@ Run these from the `hub` folder with `(.venv)` active.
 | Play a saved file (no hardware needed) | `python hub.py replay recordings/simulated_demo.txt` |
 | Replay faster / looping | `python hub.py replay <file> --speed 3 --loop` |
 | Only alerts and checks | add `--quiet` right after `hub.py`, e.g. `python hub.py --quiet run` |
+| Without Django | add `--no-backend`, e.g. `python hub.py --no-backend replay <file>` |
 | Run the tests | `python -m unittest discover -s tests -v` |
 
 While `run` or `record` is running: type `c` then Enter to **calibrate upright**, `q`
@@ -49,6 +51,18 @@ then Enter (or `Ctrl + C`) to stop.
 straight and still for about 3 seconds**. That direction is saved as "upright". Until
 then posture shows `CALIBRATING`. If the sensor is moved or re-taped, calibrate again
 with `c` + Enter.
+
+## Live view in the web app
+
+While the hub runs, the React app (`npm run dev`, http://127.0.0.1:5555) shows the live
+ECG graph, heart rate, posture and alerts on the Command Center, Live Consultation and
+staff Waiting Room pages. The hub streams them at http://127.0.0.1:8765/live/events and
+the Vite dev server forwards `/live` there. Quick check while the hub runs:
+http://127.0.0.1:8765/live/health .
+
+**Replay is never shown as live.** While `python hub.py replay ...` runs, the app shows a
+violet **REPLAY** badge and REPLAY tags instead of "Live sensor", and everything sent to
+Django is marked as replay (alerts with source `hub-replay`).
 
 ## Sending data to Django
 
@@ -66,6 +80,9 @@ One-time setup:
 
 Then just start Django and the hub. Use `--no-backend` to run the hub without Django,
 e.g. `python hub.py --no-backend replay recordings/simulated_demo.txt`.
+
+Between rehearsals, close all open sensor alerts (nothing is deleted):
+`python manage.py resolve_sensor_alerts` in the `backend` folder (see `../DEMO.md`).
 
 ## Settings: `config.ini`
 
@@ -99,6 +116,18 @@ Files in `recordings/` are plain text: `<seconds><TAB><raw line from the ESP32>`
 triggers every alert: fall, no movement, electrodes off, sensor disconnected. To see the
 ECG faults found on the real hardware (flat signal, stuck near 0, clipping):
 `python tools/make_fake_recording.py --scenario bad_ecg --out recordings/simulated_bad_ecg.txt`
+
+Record your own with `python hub.py record --seconds 90 --out recordings/<name>.txt`;
+real recordings are the backup plan for the demo (see `../DEMO.md`).
+
+## Later: Raspberry Pi as the hub
+
+The code is the same. On the Pi: `sudo usermod -aG dialout $USER` (then log in again),
+the port is usually `/dev/ttyUSB0`, and set `host = 0.0.0.0` under `[live]` and the
+Django address under `[backend] url` (e.g. `http://<laptop-address>:8555/api`). On the
+laptop, allow that address in Django and point Vite at the Pi:
+`ALLOWED_HOSTS=localhost,127.0.0.1,<laptop-address> python manage.py runserver` and
+`VITE_HUB_TARGET=http://<pi-address>:8765 npm run dev`.
 
 ## Adding a new sensor type (e.g. SpO2)
 

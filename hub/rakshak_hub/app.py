@@ -159,6 +159,7 @@ def cmd_replay(args, cfg):
     sinks = make_sinks(args, cfg)
     hub = Hub(cfg, sinks)
     hub.source_status = f"replay {os.path.basename(args.file)}"
+    hub.recording = os.path.basename(args.file)
     speed = max(args.speed, 0.01)
     print(f"Replaying {args.file}" + (" as fast as possible" if args.fast else f" at {speed:g}x speed"))
     offset = 0.0

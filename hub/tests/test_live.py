@@ -109,6 +109,16 @@ class LiveServerTests(unittest.TestCase):
         self.feed_until(40)  # ~450 messages, nobody reading
         self.assertLess(time.time() - started, 5)  # the hub never waits for a browser
 
+    def test_mode_says_live_or_replay(self):
+        self.feed_until(3)
+        self.assertEqual(self.live.last_summary["mode"], "live")
+        self.hub.recording = "real_90s.txt"  # what 'hub.py replay' sets
+        self.feed_until(5)
+        self.assertEqual(self.live.last_summary["mode"], "replay")
+        self.assertEqual(self.live.last_summary["recording"], "real_90s.txt")
+        health = json.loads(self.connect("/live/health").read())
+        self.assertEqual(health["mode"], "replay")
+
     def test_unknown_path(self):
         self.assertEqual(self.connect("/nope").status, 404)
 

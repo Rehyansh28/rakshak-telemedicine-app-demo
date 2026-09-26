@@ -58,7 +58,7 @@ class ConsoleSink:
 
     def on_alert(self, alert):
         when = alert.time.strftime("%H:%M:%S")
-        who = f"{alert.dev} [{alert.soldier_id or 'no soldier'}]"
+        who = f"{alert.dev} [{alert.soldier_id or 'no soldier'}]" + (" [REPLAY]" if alert.replay else "")
         if alert.resolved:
             self.log(f"{when} {who}  OK again: {alert.title}")
         else:

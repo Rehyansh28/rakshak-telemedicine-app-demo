@@ -216,6 +216,30 @@ class IgnoredLineLabelTests(unittest.TestCase):
         self.assertEqual(describe_ignored("hello"), "other text")
 
 
+class ReplayMarkingTests(unittest.TestCase):
+    def test_alerts_made_during_replay_are_marked(self):
+        cfg = load_config(CONFIG)
+        sink = Collect()
+        sink.t = 0.0
+        hub = Hub(cfg, [sink], log=lambda text: None)
+        sink.hub = hub
+        hub.recording = "simulated_demo.txt"
+        t = 0.0
+        for t, line in generate("demo"):
+            if t > 20:
+                break
+            hub.advance(t)
+            hub.feed(line, t)
+        falls = [a for _, a in sink.alerts if a.key == "fall"]
+        self.assertEqual(len(falls), 1)
+        self.assertTrue(falls[0].replay)
+
+    def test_live_alerts_are_not_marked(self):
+        _, sink = run_scenario("demo")
+        self.assertTrue(sink.alerts)
+        self.assertFalse(any(a.replay for _, a in sink.alerts))
+
+
 class LoopReplayTests(unittest.TestCase):
     def test_looping_replay_does_not_flap_disconnected(self):
         """Regression: with --loop, later loops once ticked ahead of the data (disconnect flapping)."""

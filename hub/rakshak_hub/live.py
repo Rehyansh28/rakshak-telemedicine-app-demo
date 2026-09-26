@@ -112,6 +112,9 @@ class LiveServer:
             "type": "summary",
             "time": hub.wall_now().isoformat(),
             "source": hub.source_status,
+            # "replay" = a recording is being played back: the web app must not call it live.
+            "mode": "replay" if hub.replaying else "live",
+            "recording": hub.recording,
             "experimental": True,
             "devices": [live_device(s) for s in summaries],
         }
@@ -130,6 +133,7 @@ class LiveServer:
             "message": alert.message,
             "time": alert.time.isoformat(),
             "resolved": alert.resolved,
+            "replay": alert.replay,
         }
         with self.lock:
             if alert.resolved:
@@ -208,6 +212,7 @@ class LiveServer:
             "experimental": True,
             "viewers": viewers,
             "source": summary["source"] if summary else None,
+            "mode": summary["mode"] if summary else None,
             "devices": summary["devices"] if summary else [],
         }).encode("utf-8")
         handler.send_response(200)
