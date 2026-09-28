@@ -100,6 +100,8 @@ sensor (later a Raspberry Pi), not on the server.
 - Real recordings `hub/recordings/real_90s.txt` (good) and `real_60s_bad_wiring.txt` (first
   test, before the wiring was fixed), plus the SIMULATED `simulated_demo.txt`.
 
+**Firmware:** ESP32 firmware source is not in the repo - the original 0.1.0 sketch was lost. The board still runs it; `real_90s.txt` was recorded with it. It will be rewritten (0.1.2, with the I2C/IMU/ADC fixes), flashed and tested in the next hardware session.
+
 ## How to test
 
 **Automated**
@@ -130,6 +132,18 @@ dropouts, and a "Motion sensor data missing" alert (REPLAY).
 Pages, against (a) `main`'s backend on an un-migrated database and (b) this branch's backend
 after `migrate`. All logins and pages work in both; no requests to `/live/` or `/sensor/`;
 "Sensor hub not connected" shown; the same console messages as `main` (see below).
+
+## Next phase (not in this PR)
+
+- **Firmware rewrite:** ESP32 sketch 0.1.2 with the I2C/IMU/ADC fixes, committed to the repo,
+  flashed and tested in the next hardware session.
+- **Wiring fixes:** a proper Grove cable for the IMU instead of jumper wires, then soldered
+  connections (see `REAL_DATA_REPORT.md`).
+- **SpO2 + temperature sensors:** replace the last SIMULATED values (a new hub handler per
+  sensor, see `hub/README.md`).
+- **Raspberry Pi hub:** run the same hub code on a Pi instead of the laptop.
+- **Live data on the website:** make the hub reachable from the deployed site (today it only
+  works on the local setup; the website shows "Sensor hub not connected").
 
 ## Known issues already on `main` (not changed by this PR)
 

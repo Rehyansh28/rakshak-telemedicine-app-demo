@@ -12,6 +12,8 @@ recordings are in `hub/recordings/` (both report ESP32 firmware version 0.1.0):
 | `real_90s.txt` | 28 Sep 2026 | **The good recording**, after the ECG wiring was fixed: 90 s of standing still, marching on the spot, lying down. The results below are from this file, and it is the one to replay in the app (clearly labelled REPLAY). |
 | `real_60s_bad_wiring.txt` | 24 Sep 2026 | **The first test, before the wiring was fixed.** Kept to show what bad wiring looks like - see [the first test](#the-first-test-before-the-wiring-was-fixed). |
 
+**Firmware:** ESP32 firmware source is not in the repo - the original 0.1.0 sketch was lost. The board still runs it; `real_90s.txt` was recorded with it. It will be rewritten (0.1.2, with the I2C/IMU/ADC fixes), flashed and tested in the next hardware session.
+
 ## Results
 
 | Part | Result |

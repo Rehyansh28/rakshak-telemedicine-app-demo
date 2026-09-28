@@ -21,7 +21,7 @@ Branch: `claude/rakshak-real-sensor-data-phbaso` → `main` (the team merges it;
 
 ## Environment
 - **How we work:** Claude works in a cloud container (no access to the ESP32). The team runs commands on the demo Mac and pastes the output back.
-- **ESP32 port:** `/dev/cu.usbserial-0001` (CP2102). **Firmware:** 0.1.1 (retries starting the IMU, silences ESP-IDF log messages).
+- **ESP32 port:** `/dev/cu.usbserial-0001` (CP2102). **Firmware:** 0.1.0 on the board (both recordings report it; a 0.1.1 was planned but never confirmed on the board). ESP32 firmware source is not in the repo - the original 0.1.0 sketch was lost. The board still runs it; `real_90s.txt` was recorded with it. It will be rewritten (0.1.2, with the I2C/IMU/ADC fixes), flashed and tested in the next hardware session.
 - **IMU:** taped flat on the chest, label facing out. **`+z` confirmed** from real_90s.txt (lying on the back: gravity az ≈ +1.07). Upright calibration: gravity (0.02, 0.98, 0.2) → y axis up.
 - **Default soldier:** `node-01 → IA-SLD-1923` (`hub/config.ini` `[devices]`).
 - **Sensor demo URL:** local only, http://127.0.0.1:5555 (`npm run dev`). The GitHub Pages site makes no hub requests and shows "Sensor hub not connected" + SIMULATED values.
@@ -72,7 +72,7 @@ Branch: `claude/rakshak-real-sensor-data-phbaso` → `main` (the team merges it;
   - ECG 100 % present, HR ~100-110 standing / ~75-85 lying, confirmed by our own R-peak count; clipping < 1.5 %;
   - IMU only 49 % present: two ~22 s dropouts when moving/lying (loose I2C jumper wires; >4,000 read errors);
   - posture correct where data exists; peak |a| 1.43 g, so no false falls; **thresholds unchanged** (good margins);
-  - both files report firmware "0.1.0" (version string not bumped, or 0.1.1 not flashed);
+  - both files report firmware "0.1.0" (the version on the board);
   - explained for the professor in `REAL_DATA_REPORT.md`.
 - **IMU-gap handling:** a gap (> `imu_gap_s` = 0.5 s) resets only the still/no-movement timers and pending falls; posture is kept and shown as "last known · no motion data N s"; one "Motion sensor data missing" alert per dropout (clears only after 3 s of steady data); stale posture is not stored in Django; a no-movement alert is never resolved by a gap.
 - **Demo (28 Sep, done):** videos of the live session + REPLAY of `real_90s.txt` in the web app. DEMO.md now describes this as a general "Quick demo: replay a real recording".
@@ -86,7 +86,7 @@ Branch: `claude/rakshak-real-sensor-data-phbaso` → `main` (the team merges it;
 
 ## Still open
 - **Waiting on the team:**
-  - firmware `firmware/rakshak_node/rakshak_node.ino` (the team commits it; both recordings report version 0.1.0);
+  - firmware: ESP32 firmware source is not in the repo - the original 0.1.0 sketch was lost. The board still runs it; `real_90s.txt` was recorded with it. It will be rewritten (0.1.2, with the I2C/IMU/ADC fixes), flashed and tested in the next hardware session.;
   - a recording with **side** lying and a 30 s still period *with* IMU data (not captured yet) to check side detection and the no-movement alert on real data;
   - hardware fix for the IMU connection (see REAL_DATA_REPORT.md).
 - **Left for later:** AR Diagnostic, Organ Detail, AI Insights / Report charts, an "acknowledge alert" button.
