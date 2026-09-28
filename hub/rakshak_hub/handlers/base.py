@@ -77,6 +77,9 @@ class SensorHandler:
     label = None
     # Set to False for messages that are not a data stream (e.g. "status").
     stream = True
+    # Alert text when this stream stops while the rest of the sensor still talks.
+    stale_title = None  # default: "<label> data stopped"
+    stale_hint = ""
 
     def __init__(self, device, config):
         self.device = device
@@ -86,6 +89,7 @@ class SensorHandler:
         self.messages = 0
         self.samples = 0
         self.last_msg_at = None
+        self.fresh_since = None  # since when data flows again after a dropout
 
     def handle(self, msg, now):
         """Called by the device for every valid message of this type."""
@@ -117,15 +121,23 @@ class SensorHandler:
             now - device.last_seen <= timeout and device.last_seen - self.last_msg_at > timeout / 2
         )
         settled = now - device.connected_at > timeout
-        if now - self.last_msg_at > timeout and others_still_talking and settled:
-            self.device.alerts.raise_(
-                key,
-                "warning",
-                f"{self.label} data stopped",
-                f"No {self.label} data for more than {timeout:g} s.",
-            )
-        else:
-            self.device.alerts.clear(key)
+        alerts = self.device.alerts
+        if now - self.last_msg_at > timeout:
+            self.fresh_since = None
+            if others_still_talking and settled:
+                alerts.raise_(
+                    key,
+                    "warning",
+                    self.stale_title or f"{self.label} data stopped",
+                    f"No {self.label} data for more than {timeout:g} s.{self.stale_hint}",
+                )
+            return
+        if self.fresh_since is None:
+            self.fresh_since = now
+        # One alert per dropout: only clear it once data has flowed steadily for a while,
+        # so short bursts between gaps do not end one alert and start the next.
+        if key not in alerts.active or now - self.fresh_since >= self.config.timeouts.stale_clear_after_s:
+            alerts.clear(key)
 
     def summary(self, now):
         """Return a small dict about this sensor for the per-second summary."""

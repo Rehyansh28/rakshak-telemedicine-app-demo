@@ -14,6 +14,9 @@ How it works, simply:
   shows rotation. Small wobble + little rotation = still.
 - Fall: a hard impact followed, a moment later, by lying down.
 - No movement: still (and lying, by default) for a long time.
+- Gaps: when IMU data is missing (e.g. loose I2C wires), nothing is guessed for the
+  missing time. Timers for "still" / "no movement" and a pending fall check start
+  again, and the last posture is kept (shown as stale by the handler).
 """
 from __future__ import annotations
 
@@ -70,32 +73,38 @@ class ImuAnalyzer:
         self.ref_up = None
         self.gyro_bias = (0.0, 0.0, 0.0)
         self.events = []  # (kind, details) for the handler to turn into alerts / log lines
+        self.gaps = 0  # how many data gaps were seen
         self.start_calibration()
         self._reset_signal_state()
 
     # ----- state -----------------------------------------------------------
 
     def _reset_signal_state(self):
-        """Forget recent samples (used at start, after a data gap or ESP32 restart)."""
-        self.t = None
-        self.gravity = None
+        """Start from nothing (only at start-up)."""
         self.accel = None
         self.pitch = None
         self.roll = None
-        self.window = deque()  # (t, |a|, gyro speed)
         self.peak_g = 0.0  # biggest |a| since the last summary
         self.posture = "unknown"
+        self.lying_side = None
+        self.tilt = None
+        self.last_fall_t = None
+        self._data_gap()
+
+    def _data_gap(self):
+        """Missing data (IMU dropout, ESP32 restart, replay loop): forget recent samples and
+        timers, but keep calibration and the last posture (it becomes "last known")."""
+        self.t = None
+        self.gravity = None
+        self.window = deque()  # (t, |a|, gyro speed)
         self.pending_posture = None
         self.pending_since = None
-        self.lying_side = None
         self.moving = None
         self.still_since = None
         self.no_move_since = None
         self.last_freefall_t = None
-        self.fall_pending_t = None
+        self.fall_pending_t = None  # an impact just before a gap is not confirmed as a fall
         self.fall_peak = 0.0
-        self.last_fall_t = None
-        self.tilt = None
         self.accel_std = 0.0
         self.gyro_speed = 0.0
         self._calib_buf = []
@@ -124,9 +133,10 @@ class ImuAnalyzer:
 
     def _add(self, t, ax, ay, az, gx, gy, gz, pitch, roll):
         cfg = self.cfg
-        if self.t is not None and (t < self.t - 0.5 or t > self.t + 5.0):
-            # Clock jumped: ESP32 restarted, replay looped, or a long gap. Keep calibration.
-            self._reset_signal_state()
+        if self.t is not None and (t < self.t - cfg.imu_gap_s or t > self.t + cfg.imu_gap_s):
+            # Data gap, or the clock went back (ESP32 restarted / replay looped).
+            self.gaps += 1
+            self._data_gap()
         dt = 0.01 if self.t is None else min(max(t - self.t, 0.0), 0.1)
         self.t = t
         if self.calib_requested_t is None:

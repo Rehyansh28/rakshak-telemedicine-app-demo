@@ -53,6 +53,8 @@ def live_device(s):
         "ecgSampleRate": ecg.get("sampleRate"),
         "posture": imu.get("posture"),
         "lyingSide": imu.get("lyingSide"),
+        "postureStale": imu.get("postureStale"),  # no fresh IMU data: posture is the last known value
+        "imuAgeS": imu.get("ageS"),
         "activity": imu.get("activity"),
         "stillForS": imu.get("stillForS"),
         "noMovementForS": imu.get("noMovementForS"),

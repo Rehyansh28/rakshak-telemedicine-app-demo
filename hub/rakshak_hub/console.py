@@ -125,6 +125,8 @@ class ConsoleSink:
                 posture = imu["posture"].upper()
                 if imu["lyingSide"]:
                     posture += f" ({imu['lyingSide']})"
+                if imu.get("postureStale"):
+                    posture += f" [last known - no IMU data for {imu['ageS']} s]"
             activity = imu["activity"] or "--"
             if activity == "still" and imu["stillForS"]:
                 activity += f" {imu['stillForS']} s"

@@ -12,6 +12,8 @@ FIELDS = ["ax", "ay", "az", "gx", "gy", "gz", "pitch", "roll"]
 class ImuHandler(SensorHandler):
     msg_type = "imu"
     label = "IMU"
+    stale_title = "Motion sensor data missing"
+    stale_hint = " Loose IMU wires? Posture shows the last known value; no fall / no-movement checks meanwhile."
 
     def __init__(self, device, config):
         super().__init__(device, config)
@@ -79,11 +81,22 @@ class ImuHandler(SensorHandler):
                 "No movement",
                 f"No movement for more than {wait:g} s{where} - possibly unconscious.",
             )
-        elif still_for == 0:
+        elif self.analyzer.moving or (
+            self.config.imu.no_movement_only_when_lying and self.analyzer.posture not in ("lying", "unknown")
+            and self.analyzer.moving is not None
+        ):
+            # Clear only on evidence (moving / no longer lying) - never just because data was missing.
             alerts.clear("no_movement")
 
     def summary(self, now):
         data = super().summary(now)
         data["fs"] = self.fs
         data.update(self.analyzer.summary())
+        # No fresh IMU data: posture is the last known value, activity is unknown.
+        stale = self.last_msg_at is None or now - self.last_msg_at > self.config.timeouts.stale_after_s
+        data["postureStale"] = stale
+        if stale:
+            data["activity"] = None
+            data["stillForS"] = None
+        data["gaps"] = self.analyzer.gaps
         return data

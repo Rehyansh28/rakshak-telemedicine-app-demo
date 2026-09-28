@@ -46,6 +46,7 @@ def summary_for_backend(s, when, replay=False):
     ecg = s.get("ecg") or {}
     imu = s.get("imu") or {}
     live = s["connected"]
+    fresh_imu = live and not imu.get("postureStale")
     return {
         "soldierId": s["soldierId"],
         "dev": s["dev"],
@@ -55,9 +56,10 @@ def summary_for_backend(s, when, replay=False):
         "hr": ecg.get("hr") if live else None,
         "ecgSignal": ecg.get("signal") if live else None,
         "leadsOff": ecg.get("leadsOff") if live else None,
-        "posture": imu.get("posture") if live else None,
-        "lyingSide": imu.get("lyingSide") if live else None,
-        "activity": imu.get("activity") if live else None,
+        # Missing IMU data (e.g. loose wires): do not store an old posture as if it were current.
+        "posture": imu.get("posture") if fresh_imu else None,
+        "lyingSide": imu.get("lyingSide") if fresh_imu else None,
+        "activity": imu.get("activity") if fresh_imu else None,
         "replay": replay,
     }
 

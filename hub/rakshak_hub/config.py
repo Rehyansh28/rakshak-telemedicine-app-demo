@@ -17,6 +17,7 @@ DEFAULTS = {
     "timeouts": {
         "disconnect_after_s": 3.0,
         "stale_after_s": 2.0,
+        "stale_clear_after_s": 3.0,
     },
     "ecg": {
         "leads_off_alert_after_s": 3.0,
@@ -50,6 +51,7 @@ DEFAULTS = {
         "fall_cooldown_s": 30.0,
         "no_movement_alert_after_s": 30.0,
         "no_movement_only_when_lying": True,
+        "imu_gap_s": 0.5,
     },
     "hub": {
         "summary_interval_s": 1.0,
