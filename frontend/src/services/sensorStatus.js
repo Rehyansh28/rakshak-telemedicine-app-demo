@@ -125,11 +125,16 @@ const CURRENT = new Set(['live', 'leads-off', 'signal-poor']);
 export function postureText(info) {
   const device = info.device;
   if (!device || !CURRENT.has(info.status)) return null;
-  if (device.calibrating) return 'Calibrating - stand still';
+  if (device.calibrating && !device.postureStale) return 'Calibrating - stand still';
   const parts = [];
-  if (device.posture) {
+  if (device.posture && device.posture !== 'unknown') {
     parts.push(POSTURE_TEXT[device.posture] || device.posture);
     if (device.lyingSide) parts[0] += ` (${device.lyingSide})`;
+  }
+  if (device.postureStale) {
+    // IMU data missing (e.g. loose wires): show the last known posture, clearly marked.
+    const age = device.imuAgeS != null ? ` ${Math.round(device.imuAgeS)} s` : '';
+    return parts.length ? `${parts[0]} (last known) · no motion data${age}` : `No motion data${age}`;
   }
   if (device.activity === 'moving') parts.push('moving');
   else if (device.activity === 'still') parts.push(device.stillForS ? `still ${device.stillForS} s` : 'still');
