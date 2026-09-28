@@ -2,6 +2,8 @@ import { motion } from 'framer-motion';
 import { Heart, MapPin, Mountain } from 'lucide-react';
 import StatusBadge from '../ui/StatusBadge';
 import GlassCard from '../ui/GlassCard';
+import DataTag from '../sensor/DataTag';
+import { storedValueTag } from '../../services/sensorStatus';
 
 export default function PatientCard({ patient, onClick, selected }) {
   return (
@@ -33,6 +35,9 @@ export default function PatientCard({ patient, onClick, selected }) {
         <div>
           <span className="font-mono text-sm font-bold">{patient.temp}°C</span>
         </div>
+        <DataTag kind={storedValueTag(patient)} className="justify-self-start" />
+        <DataTag kind="simulated" className="justify-self-start" />
+        <DataTag kind="simulated" className="justify-self-start" />
       </div>
       <div className="flex items-center justify-between text-xs text-on-surface-variant">
         <span className="flex items-center gap-1">

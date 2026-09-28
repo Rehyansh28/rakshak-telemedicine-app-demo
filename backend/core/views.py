@@ -39,6 +39,7 @@ from .serializers import (
     SensorStepSerializer,
     SystemConfigSerializer,
 )
+from .hub_views import has_live_sensor
 from .patient_utils import apply_patient_fields, bootstrap_patient_session, build_patient_create_data
 from .permissions import IsMedicalStaff, IsDoctor
 from .utils import authenticate_login, keys_to_camel
@@ -231,6 +232,19 @@ class PatientSensorStepsView(APIView):
         return Response(SensorStepSerializer(steps, many=True).data)
 
 
+SIMULATED_SPO2_RANGE = (95, 99)
+
+
+def simulated_spo2_step(spo2):
+    """SIMULATED SpO2 (no sensor yet): wander between 95 and 99 %; outside that, step back in."""
+    low, high = SIMULATED_SPO2_RANGE
+    if spo2 < low:
+        return spo2 + 1
+    if spo2 > high:
+        return spo2 - 1
+    return max(low, min(high, spo2 + random.choice([-1, 0, 1])))
+
+
 class PatientVitalsJitterView(APIView):
     """Dev endpoint: nudge vitals slightly and persist to DB for polling demo."""
 
@@ -241,9 +255,12 @@ class PatientVitalsJitterView(APIView):
             patient = Patient.objects.get(soldier_id=soldier_id)
         except Patient.DoesNotExist:
             return Response({"detail": "Not found"}, status=status.HTTP_404_NOT_FOUND)
-        patient.heart_rate += random.choice([-1, 1])
-        patient.spo2 = max(85, min(100, patient.spo2 + random.choice([-1, 0])))
-        patient.save(update_fields=["heart_rate", "spo2"])
+        fields = ["spo2"]
+        if not has_live_sensor(patient):  # never overwrite a real heart rate from the sensor hub
+            patient.heart_rate += random.choice([-1, 1])
+            fields.append("heart_rate")
+        patient.spo2 = simulated_spo2_step(patient.spo2)
+        patient.save(update_fields=fields)
         return Response(PatientDetailSerializer(patient).data)
 
 

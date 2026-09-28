@@ -15,6 +15,7 @@ from .models import (
     ReportTimelineEvent,
     SensorStep,
     SystemConfig,
+    VitalSummary,
 )
 
 admin.site.register(SystemConfig)
@@ -31,3 +32,4 @@ admin.site.register(ReportTimelineEvent)
 admin.site.register(SensorStep)
 admin.site.register(ActivityLog)
 admin.site.register(ConsultationQueue)
+admin.site.register(VitalSummary)

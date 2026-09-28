@@ -1,5 +1,5 @@
 import { motion, AnimatePresence } from 'framer-motion';
-import { CheckCircle, Info } from 'lucide-react';
+import { AlertTriangle, CheckCircle, Info } from 'lucide-react';
 import { useApp } from '../../context/useApp';
 
 export default function ToastContainer() {
@@ -18,6 +18,8 @@ export default function ToastContainer() {
           >
             {toast.type === 'success' ? (
               <CheckCircle className="w-5 h-5 text-success shrink-0" />
+            ) : toast.type === 'error' || toast.type === 'warning' ? (
+              <AlertTriangle className={`w-5 h-5 shrink-0 ${toast.type === 'error' ? 'text-error' : 'text-amber-500'}`} />
             ) : (
               <Info className="w-5 h-5 text-secondary shrink-0" />
             )}

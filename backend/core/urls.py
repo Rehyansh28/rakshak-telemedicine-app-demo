@@ -1,6 +1,6 @@
 from django.urls import path
 
-from . import admin_views, views
+from . import admin_views, hub_views, views
 
 urlpatterns = [
     path("auth/login/", views.LoginView.as_view(), name="auth-login"),
@@ -67,6 +67,8 @@ urlpatterns = [
         views.PatientVitalsJitterView.as_view(),
         name="patient-vitals-jitter",
     ),
+    path("patients/<str:soldier_id>/sensor/", hub_views.PatientSensorView.as_view(), name="patient-sensor"),
+    path("hub/ingest/", hub_views.HubIngestView.as_view(), name="hub-ingest"),
     path("emergency-alerts/", views.EmergencyAlertsView.as_view(), name="emergency-alerts"),
     path("ai-recommendations/", views.AIRecommendationsView.as_view(), name="ai-recommendations"),
     path("activity/", views.ActivityView.as_view(), name="activity"),

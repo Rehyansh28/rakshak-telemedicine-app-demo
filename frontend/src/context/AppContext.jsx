@@ -16,6 +16,12 @@ import {
 import { AppContext } from './app-context';
 import { SignalingService } from '../services/websocket';
 import { WebRTCConnection } from '../services/webrtc';
+import { HUB_ENABLED, hubStream } from '../services/hubStream';
+import { isSensorAlert } from '../services/sensorStatus';
+
+// Emergency alerts are re-checked this often, so new (sensor) alerts appear without a refresh.
+// Fast on the local setup with the hub; the website (no hub) only needs a slow refresh.
+const ALERT_POLL_MS = HUB_ENABLED ? 4000 : 30000;
 
 
 const ICE_SERVERS = [
@@ -82,6 +88,46 @@ export function AppProvider({ children }) {
     setToast({ id, message, type });
     setTimeout(() => setToast(null), 3500);
   }, []);
+
+  // Emergency alerts (newest first). Sensor alerts from the hub are EXPERIMENTAL.
+  const [emergencyAlerts, setEmergencyAlerts] = useState([]);
+  const seenAlertIdsRef = useRef(null);
+
+  const refreshAlerts = useCallback(async () => {
+    try {
+      const list = await apiGet('/emergency-alerts/');
+      const sorted = [...list].sort((a, b) => b.id - a.id);
+      const seen = seenAlertIdsRef.current;
+      if (seen) {
+        const fresh = sorted.filter((a) => isSensorAlert(a) && !a.resolvedAt && !seen.has(a.id));
+        if (fresh.length > 0) {
+          const a = fresh[0];
+          const origin = a.source === 'hub-replay' ? 'REPLAY - recorded data, not live' : 'experimental sensor alert';
+          showToast(`${a.title} - ${a.patient} (${origin})`, a.type === 'critical' ? 'error' : 'warning');
+        }
+      }
+      seenAlertIdsRef.current = new Set(sorted.map((a) => a.id));
+      setEmergencyAlerts(sorted);
+    } catch {
+      /* polling is best-effort */
+    }
+  }, [showToast]);
+
+  useEffect(() => {
+    refreshAlerts();
+    const interval = setInterval(refreshAlerts, ALERT_POLL_MS);
+    // When a page streams live hub data, fetch right after a hub alert (Django has it by then).
+    let timer = null;
+    const unsubscribe = hubStream.onAlert(() => {
+      clearTimeout(timer);
+      timer = setTimeout(refreshAlerts, 1500);
+    });
+    return () => {
+      clearInterval(interval);
+      clearTimeout(timer);
+      unsubscribe();
+    };
+  }, [refreshAlerts]);
 
   // WebRTC & Call states
   const [activeCall, setActiveCall] = useState(null);
@@ -517,6 +563,8 @@ export function AppProvider({ children }) {
     setConsultationControls,
     toast,
     showToast,
+    emergencyAlerts,
+    refreshAlerts,
     activeCall,
     incomingCall,
     localStream,
