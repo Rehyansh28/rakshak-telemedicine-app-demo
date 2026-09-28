@@ -159,8 +159,9 @@ export default function WaitingRoomPage() {
             <div className="flex items-center gap-2 mb-4">
               <Heart className="w-5 h-5 text-error" />
               <span className="label-caps text-on-surface-variant text-[10px]">Live Bio-Suit Vitals</span>
-              <span className="ml-auto">
-                {sensor.linked ? <SensorStatusBadge info={sensor} /> : <DataTag kind="simulated" />}
+              <span className="ml-auto flex items-center gap-2">
+                <SensorStatusBadge info={sensor} />
+                {!sensor.linked && <DataTag kind="simulated" />}
               </span>
             </div>
             <div className="grid grid-cols-3 gap-4 mb-4 text-center">

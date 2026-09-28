@@ -141,7 +141,7 @@ export default function DoctorDashboardPage() {
             <div className="flex justify-between items-center mb-4">
               <h2 className="font-sora font-semibold text-lg text-primary">Priority Patient Vitals</h2>
               {priorityPatient &&
-                (sensor.linked ? (
+                (sensor.linked || sensor.status === 'no-hub' ? (
                   <SensorStatusBadge info={sensor} />
                 ) : (
                   <StatusBadge status="pending" label="Simulated data" />

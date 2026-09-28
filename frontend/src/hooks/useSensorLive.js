@@ -1,6 +1,6 @@
 import { useEffect, useRef, useState } from 'react';
 import { apiGet } from '../api/client';
-import { hubStream } from '../services/hubStream';
+import { HUB_ENABLED, hubStream } from '../services/hubStream';
 import { describeSensor } from '../services/sensorStatus';
 
 const INITIAL = { soldierId: null, linked: false, device: null, hr: null, agoS: null, status: 'none' };
@@ -8,7 +8,8 @@ const INITIAL = { soldierId: null, linked: false, device: null, hr: null, agoS: 
 /**
  * Live sensor status for one soldier (EXPERIMENTAL). Re-renders about once per second.
  * Also asks Django whether this soldier ever had sensor data, so "hub offline" can be
- * shown for a sensor soldier even when the hub is not running.
+ * shown for a sensor soldier even when the hub is not running. Without a hub (e.g. on the
+ * website) nothing is requested and the status is 'no-hub'.
  */
 export function useSensorLive(soldierId) {
   const [info, setInfo] = useState(INITIAL);
@@ -22,7 +23,7 @@ export function useSensorLive(soldierId) {
     const first = setTimeout(update, 0);
     let cancelled = false;
     backendRef.current = null;
-    if (soldierId) {
+    if (soldierId && HUB_ENABLED) {
       apiGet(`/patients/${soldierId}/sensor/`)
         .then((data) => {
           if (cancelled) return;

@@ -122,7 +122,10 @@ export default function LiveConsultationPage() {
           <GlassCard>
             <div className="flex justify-between items-center gap-2 mb-2">
               <p className="label-caps text-on-surface-variant">Live Vitals</p>
-              {sensor.linked ? <SensorStatusBadge info={sensor} /> : <DataTag kind="simulated" />}
+              <span className="flex items-center gap-2">
+                <SensorStatusBadge info={sensor} />
+                {!sensor.linked && <DataTag kind="simulated" />}
+              </span>
             </div>
             <div className="space-y-3 text-sm">
               <div className="flex justify-between items-center gap-2">

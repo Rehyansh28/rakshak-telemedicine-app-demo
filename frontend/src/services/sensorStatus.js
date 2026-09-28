@@ -2,6 +2,7 @@
  * Turns the hub's live data into one status for a soldier's sensor (EXPERIMENTAL).
  *
  * status:
+ *   'no-hub'        this build has no sensor hub (e.g. the website) -> SIMULATED values
  *   'none'          this soldier has no sensor -> the page shows SIMULATED values
  *   'hub-offline'   the hub program is not running / not reachable
  *   'waiting'       hub runs, but no data from this soldier's sensor yet
@@ -12,7 +13,7 @@
  *   'live'          all good - hr is the real (experimental) heart rate
  * replay: true while the hub plays back a recording -> shown as REPLAY, never as live.
  */
-import { hubStream } from './hubStream';
+import { HUB_ENABLED, hubStream } from './hubStream';
 
 const SUMMARY_OLD_S = 4;
 const ECG_OLD_S = 3;
@@ -30,6 +31,7 @@ export function describeSensor(soldierId, backend) {
     replay,
     recording: replay ? hubStream.recording : null,
   };
+  if (!HUB_ENABLED) return { ...base, status: 'no-hub' };
   if (!linked) return { ...base, status: 'none' };
   if (hubStream.connection !== 'open') return { ...base, status: 'hub-offline' };
   if (!device) return { ...base, status: 'waiting' };
@@ -84,6 +86,12 @@ function statusBadge(info) {
       return { label: 'Waiting for sensor', tone: 'idle' };
     case 'hub-offline':
       return { label: 'Hub offline', tone: 'idle' };
+    case 'no-hub':
+      return {
+        label: 'Sensor hub not connected',
+        tone: 'idle',
+        title: 'Live sensor data only works on the local setup with the hub running. Values here are SIMULATED.',
+      };
     case 'disconnected':
       return { label: 'Sensor disconnected', tone: 'bad' };
     case 'leads-off':

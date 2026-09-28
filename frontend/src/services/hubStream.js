@@ -6,8 +6,13 @@
  *   summary  once per second: heart rate, electrodes, signal, posture... for every sensor
  *   alert    an alert started or ended
  * One shared connection for the whole app, opened while at least one component uses it.
+ *
+ * The hub only exists on the local setup: `npm run dev` (the Vite proxy forwards /live to it)
+ * or a build with VITE_HUB_URL set. In any other build (e.g. the GitHub Pages website) the
+ * stream is switched off: no requests, and the pages show "Sensor hub not connected".
  */
 
+export const HUB_ENABLED = import.meta.env.DEV || Boolean(import.meta.env.VITE_HUB_URL);
 const HUB_URL = import.meta.env.VITE_HUB_URL || '/live';
 const ECG_SECONDS = 10;
 const RETRY_MS = 3000;
@@ -48,7 +53,7 @@ class HubStream {
     this.users = 0;
     this.source = null;
     this.retryTimer = null;
-    this.connection = 'offline'; // 'connecting' | 'open' | 'offline'
+    this.connection = HUB_ENABLED ? 'offline' : 'disabled'; // 'connecting' | 'open' | 'offline' | 'disabled'
     this.devices = new Map(); // soldierId -> latest device summary
     this.lastSummaryAt = 0; // Date.now() of the latest summary
     this.mode = null; // 'live' | 'replay' (a recording played back - never show it as live)
@@ -60,6 +65,7 @@ class HubStream {
 
   /** Keep the connection open while the caller needs it. Returns a release function. */
   use() {
+    if (!HUB_ENABLED) return () => {};
     this.users += 1;
     if (this.users === 1) this.connect();
     return () => {

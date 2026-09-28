@@ -90,7 +90,7 @@ export default function SensorConnectionPage() {
         description="On behalf of the selected soldier: pair ECG, SpO2, temperature probes and verify STRAT-LINK encryption before camera alignment."
         actions={
           <span className="flex flex-wrap items-center gap-2">
-            {sensor.linked && <SensorStatusBadge info={sensor} />}
+            <SensorStatusBadge info={sensor} />
             {syncing ? (
               <StatusBadge status="syncing" label="SYNCING" />
             ) : (

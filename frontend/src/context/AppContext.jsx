@@ -16,11 +16,12 @@ import {
 import { AppContext } from './app-context';
 import { SignalingService } from '../services/websocket';
 import { WebRTCConnection } from '../services/webrtc';
-import { hubStream } from '../services/hubStream';
+import { HUB_ENABLED, hubStream } from '../services/hubStream';
 import { isSensorAlert } from '../services/sensorStatus';
 
 // Emergency alerts are re-checked this often, so new (sensor) alerts appear without a refresh.
-const ALERT_POLL_MS = 4000;
+// Fast on the local setup with the hub; the website (no hub) only needs a slow refresh.
+const ALERT_POLL_MS = HUB_ENABLED ? 4000 : 30000;
 
 
 const ICE_SERVERS = [
