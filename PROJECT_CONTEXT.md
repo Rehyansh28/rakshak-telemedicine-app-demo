@@ -1,16 +1,16 @@
 # Rakshak real-sensor-data project: context
 
-Updated at the end of each phase. **Last update: real-data analysis + IMU-gap handling (28 Sep 2026).**
-Branch: `claude/rakshak-real-sensor-data-phbaso` (never `main`).
+Updated at the end of each phase. **Last update: merge preparation (branch ready to merge into `main`).**
+Branch: `claude/rakshak-real-sensor-data-phbaso` → `main` (the team merges it; see `PR_DESCRIPTION.md`).
 
 ## Goal and rules
-- **Team and deadline:** 3 students, **demo deadline Monday 28 Sep 2026**. Keep it simple and reliable.
+- **Team:** 3 students. Keep it simple and reliable. The first demo (28 Sep 2026: videos + REPLAY of `real_90s.txt`) is done.
 - **Goal:** replace the dummy vitals with real ESP32 data:
   - AD8232 ECG, 250 samples/s;
   - M5Stack MPU6886 IMU (±8 g, ±2000 dps), 100 samples/s;
   - JSON lines over USB at 921600 baud.
 - **Architecture:** ESP32 → USB → Python **hub** (`hub/`) → live stream to React (`/live`) + summaries/alerts to Django (`/api/hub/ingest/`).
-- **Where it runs:** everything on one Mac for the demo; a Raspberry Pi will be the hub later.
+- **Where it runs:** everything on one Mac (local setup); a Raspberry Pi will be the hub later. The GitHub Pages website has no hub.
 - **Rules:**
   - go phase by phase and stop for OK;
   - small changes, don't break existing features;
@@ -24,7 +24,7 @@ Branch: `claude/rakshak-real-sensor-data-phbaso` (never `main`).
 - **ESP32 port:** `/dev/cu.usbserial-0001` (CP2102). **Firmware:** 0.1.1 (retries starting the IMU, silences ESP-IDF log messages).
 - **IMU:** taped flat on the chest, label facing out. **`+z` confirmed** from real_90s.txt (lying on the back: gravity az ≈ +1.07). Upright calibration: gravity (0.02, 0.98, 0.2) → y axis up.
 - **Default soldier:** `node-01 → IA-SLD-1923` (`hub/config.ini` `[devices]`).
-- **Demo URL:** local only, http://127.0.0.1:5555 (the GitHub Pages site can't reach the hub).
+- **Sensor demo URL:** local only, http://127.0.0.1:5555 (`npm run dev`). The GitHub Pages site makes no hub requests and shows "Sensor hub not connected" + SIMULATED values.
 
 ## What was built
 - **Phase 0 (report):** found the dummy data sources:
@@ -65,21 +65,29 @@ Branch: `claude/rakshak-real-sensor-data-phbaso` (never `main`).
 ## Tests
 - **Hub:** 45 tests (Python 3.9 / 3.11 / 3.13), including a regression test on real_90s.txt.
 - **Backend:** 29 tests (Django 6.1).
-- **Frontend:** builds; 14 old lint errors in untouched files, none new.
+- **Frontend:** builds; 14 old lint errors in files the branch does not change (`main` has 15), none new.
 - **End to end:** Playwright in a real browser, on replay and on a virtual serial port (live, unplug/replug).
 
-- **Real data (28 Sep):** `hub/recordings/real_90s.txt` (good) and `real_60s_bad_wiring.txt` (old first-day recording, bad ECG wiring, firmware 0.1.0 junk lines):
+- **Real data:** `hub/recordings/real_90s.txt` (28 Sep, good) and `real_60s_bad_wiring.txt` (24 Sep, first test before the wiring was fixed: flat/clipping ECG, 395 junk lines):
   - ECG 100 % present, HR ~100-110 standing / ~75-85 lying, confirmed by our own R-peak count; clipping < 1.5 %;
   - IMU only 49 % present: two ~22 s dropouts when moving/lying (loose I2C jumper wires; >4,000 read errors);
   - posture correct where data exists; peak |a| 1.43 g, so no false falls; **thresholds unchanged** (good margins);
   - both files report firmware "0.1.0" (version string not bumped, or 0.1.1 not flashed);
   - explained for the professor in `REAL_DATA_REPORT.md`.
 - **IMU-gap handling:** a gap (> `imu_gap_s` = 0.5 s) resets only the still/no-movement timers and pending falls; posture is kept and shown as "last known · no motion data N s"; one "Motion sensor data missing" alert per dropout (clears only after 3 s of steady data); stale posture is not stored in Django; a no-movement alert is never resolved by a gap.
-- **Demo (28 Sep):** videos of the live session + REPLAY of `real_90s.txt` in the web app (DEMO.md, top section). Checked in a real browser.
+- **Demo (28 Sep, done):** videos of the live session + REPLAY of `real_90s.txt` in the web app. DEMO.md now describes this as a general "Quick demo: replay a real recording".
+- **Merge preparation:**
+  - checked production safety by building exactly like `deploy.yml` and serving it like GitHub Pages, against `main`'s backend on an un-migrated database and against this branch's backend after `migrate`;
+  - found: the website polled the hub (`/live`, ~23 failed requests/min/tab) and `/sensor/` → fixed: the hub stream and `/sensor/` only run with `npm run dev` or a build with `VITE_HUB_URL`; elsewhere a grey "Sensor hub not connected" badge; alerts refresh every 30 s there (4 s with the hub);
+  - migrations 0006/0007 are add-only (tested on a 0005 database copy, rollback to 0005 works); the new backend code gives 500s until `migrate` runs → **migrate before the new backend serves**;
+  - removed `hub/live_test.log` from git; renamed `real_60s.txt` → `real_60s_bad_wiring.txt`;
+  - docs made general and correct before/after the merge; `PR_DESCRIPTION.md` has the server steps (persistent `db.sqlite3` check, backup, migrate, merge, check) and the known issues already on `main` (TURN passwords in `AppContext.jsx`, default `SECRET_KEY`, unpinned backend requirements, entrypoint seed check after `migrate`) - not fixed on this branch;
+  - re-tested: production-like tour (no failing requests, badge shown, all logins/pages OK) and the local setup (`npm run dev` + replay of `real_90s.txt`: REPLAY badge, ECG, HR, posture, alerts).
 
 ## Still open
 - **Waiting on the team:**
-  - firmware `firmware/rakshak_node/rakshak_node.ino` (not in the repo yet);
+  - firmware `firmware/rakshak_node/rakshak_node.ino` (the team commits it; both recordings report version 0.1.0);
   - a recording with **side** lying and a 30 s still period *with* IMU data (not captured yet) to check side detection and the no-movement alert on real data;
   - hardware fix for the IMU connection (see REAL_DATA_REPORT.md).
 - **Left for later:** AR Diagnostic, Organ Detail, AI Insights / Report charts, an "acknowledge alert" button.
+- **Merge:** the team opens the PR (text in `PR_DESCRIPTION.md`), runs the server steps, merges; later the same into the original project repo.
