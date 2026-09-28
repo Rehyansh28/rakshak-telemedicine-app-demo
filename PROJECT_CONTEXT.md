@@ -1,6 +1,6 @@
 # Rakshak real-sensor-data project: context
 
-Updated at the end of each phase. **Last update: Phase 4 follow-up (26 Sep 2026).**
+Updated at the end of each phase. **Last update: real-data analysis + IMU-gap handling (28 Sep 2026).**
 Branch: `claude/rakshak-real-sensor-data-phbaso` (never `main`).
 
 ## Goal and rules
@@ -22,7 +22,7 @@ Branch: `claude/rakshak-real-sensor-data-phbaso` (never `main`).
 ## Environment
 - **How we work:** Claude works in a cloud container (no access to the ESP32). The team runs commands on the demo Mac and pastes the output back.
 - **ESP32 port:** `/dev/cu.usbserial-0001` (CP2102). **Firmware:** 0.1.1 (retries starting the IMU, silences ESP-IDF log messages).
-- **IMU:** taped flat on the chest, label facing out; `chest_normal_axis = +z` is assumed, and confirming it is still pending.
+- **IMU:** taped flat on the chest, label facing out. **`+z` confirmed** from real_90s.txt (lying on the back: gravity az ≈ +1.07). Upright calibration: gravity (0.02, 0.98, 0.2) → y axis up.
 - **Default soldier:** `node-01 → IA-SLD-1923` (`hub/config.ini` `[devices]`).
 - **Demo URL:** local only, http://127.0.0.1:5555 (the GitHub Pages site can't reach the hub).
 
@@ -63,14 +63,23 @@ Branch: `claude/rakshak-real-sensor-data-phbaso` (never `main`).
 - Viewer registration in the live server; backend heart rate taken from the newest summary that has one.
 
 ## Tests
-- **Hub:** 39 tests (Python 3.9 / 3.11 / 3.13).
+- **Hub:** 45 tests (Python 3.9 / 3.11 / 3.13), including a regression test on real_90s.txt.
 - **Backend:** 29 tests (Django 6.1).
 - **Frontend:** builds; 14 old lint errors in untouched files, none new.
 - **End to end:** Playwright in a real browser, on replay and on a virtual serial port (live, unplug/replug).
 
+- **Real data (28 Sep):** `hub/recordings/real_90s.txt` (good) and `real_60s.txt` (old first-day recording, bad ECG wiring, firmware 0.1.0 junk lines):
+  - ECG 100 % present, HR ~100-110 standing / ~75-85 lying, confirmed by our own R-peak count; clipping < 1.5 %;
+  - IMU only 49 % present: two ~22 s dropouts when moving/lying (loose I2C jumper wires; >4,000 read errors);
+  - posture correct where data exists; peak |a| 1.43 g, so no false falls; **thresholds unchanged** (good margins);
+  - both files report firmware "0.1.0" (version string not bumped, or 0.1.1 not flashed);
+  - explained for the professor in `REAL_DATA_REPORT.md`.
+- **IMU-gap handling:** a gap (> `imu_gap_s` = 0.5 s) resets only the still/no-movement timers and pending falls; posture is kept and shown as "last known · no motion data N s"; one "Motion sensor data missing" alert per dropout (clears only after 3 s of steady data); stale posture is not stored in Django; a no-movement alert is never resolved by a gap.
+- **Demo (28 Sep):** videos of the live session + REPLAY of `real_90s.txt` in the web app (DEMO.md, top section). Checked in a real browser.
+
 ## Still open
 - **Waiting on the team:**
-  - firmware `firmware/rakshak_node/rakshak_node.ino` (check the repeated IMU-tail lines);
-  - `real_60s.txt` + `real_90s.txt` (with lying down) → tune activity/posture/no-movement thresholds, confirm `+z`;
-  - Mac outputs of the Phase 2–4 steps.
+  - firmware `firmware/rakshak_node/rakshak_node.ino` (not in the repo yet);
+  - a recording with **side** lying and a 30 s still period *with* IMU data (not captured yet) to check side detection and the no-movement alert on real data;
+  - hardware fix for the IMU connection (see REAL_DATA_REPORT.md).
 - **Left for later:** AR Diagnostic, Organ Detail, AI Insights / Report charts, an "acknowledge alert" button.

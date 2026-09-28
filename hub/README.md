@@ -103,6 +103,7 @@ http://127.0.0.1:8555/api/patients/ while the backend runs (the `"id"` values).
 | `ECG signal poor` / `signal FLAT` | The ECG has no heartbeat signal even though the ESP32 says "electrodes on". Usually a loose AD8232 power (3.3V) or ground wire; press them in firmly. Heart rate shows `--` until the signal is good again. |
 | `signal NEAR_RAIL` / `CLIPPING` | Signal stuck near 0 / 4095 or slamming between them: bad electrode contact (use fresh pads) or movement. |
 | `new IMU read errors - loose IMU wires?` | The ESP32 could not read the IMU. Push the jumper wires into the Grove socket firmly. |
+| `Motion sensor data missing` / posture `[last known - no IMU data ...]` | IMU dropout (loose I2C wires, as in `real_90s.txt`). The last posture is shown as "last known"; no fall / no-movement checks until data returns. One alert per dropout. |
 | `CHECK WARNING: ...` | The data looks wrong (wrong rate, IMU not ~1 g, ...). Tell the team / check wiring. |
 | `CHECK: N ignored line(s): ...` | Lines that were not valid messages, with a label and an example. A few are normal (e.g. right after the ESP32 resets). |
 | `Backend not reachable` | Django is not running: start it (`python manage.py runserver` in `backend/`). The hub keeps the data (about 15 minutes) and sends it when Django is back. |

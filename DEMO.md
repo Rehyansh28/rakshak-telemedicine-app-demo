@@ -9,6 +9,44 @@
 > to a projector or monitor, no powered USB hub, no Ethernet. To show the screen to an
 > audience, use wireless screen sharing (AirPlay) or let the audience look at the laptop.
 
+## ★ Today's demo (28 Sep): REPLAY of `real_90s.txt` - no hardware
+
+The demo is the **videos of the live session** plus a **REPLAY** of the real recording
+`hub/recordings/real_90s.txt` in the web app. No ESP32, no electrodes, so the charger may stay
+plugged in. Steps:
+
+1. Window 1 - backend: `cd ~/rakshak-sensor/backend && source venv/bin/activate && python manage.py runserver`
+2. Window 4 - clear old sensor alerts (safe, deletes nothing):
+   `cd ~/rakshak-sensor/backend && source venv/bin/activate && python manage.py resolve_sensor_alerts`
+3. Window 2 - frontend: `cd ~/rakshak-sensor/frontend && npm run dev`
+4. Browser: http://127.0.0.1:5555/doctor/login → sign in → **Command Center**.
+5. Window 3 - start the replay **when you want the story to begin** (it starts at 0 s and loops
+   every 90 s):
+   `cd ~/rakshak-sensor/hub && source .venv/bin/activate && python hub.py replay recordings/real_90s.txt --loop`
+
+The page shows a violet **REPLAY · RECORDED DATA** badge and REPLAY tags everywhere - say
+"this is a replay of a real recording". What the audience sees (times from the start of the
+replay):
+
+| Time | Wearer did | App shows |
+|------|------------|-----------|
+| 0-3 s | stand still | "Calibrating", then **Upright · still** |
+| 3-22 s | stand still | Upright · still, HR about 100-108 |
+| 22-30 s | march on the spot | Upright · **moving**, HR about 94-113 |
+| 30-53 s | (motion data lost - loose IMU wires) | **Upright (last known) · no motion data N s**, alert "Motion sensor data missing" |
+| 53-57 s | getting down | Upright · moving |
+| 57-66 s | lying on the back | **Lying down (back) · still**, HR falls to about 75-88 |
+| 66-88 s | (motion data lost again) | Lying down (back) (last known) · no motion data, one alert |
+| 88-90 s | lying on the back | Lying down (back); then the loop starts again at Upright |
+
+The ECG (real AD8232 signal) and heart rate are present the whole time. SpO2 and temperature
+are SIMULATED. Explain the "motion data missing" parts with `REAL_DATA_REPORT.md`.
+After the demo: `Ctrl + C` in Windows 3, 2, 1, and run step 2 again.
+
+---
+
+## Full runbook (live hardware)
+
 Everything runs on one Mac, in the project folder `~/rakshak-sensor`, in **4 Terminal
 windows** plus one browser:
 
