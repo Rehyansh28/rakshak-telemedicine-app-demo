@@ -1,12 +1,16 @@
-# Rakshak - what the real sensor data showed (28 Sep 2026)
+# Rakshak - what the real sensor data showed
 
 *Student prototype, EXPERIMENTAL - not a medical device.*
 
 ## What we tested
 A soldier-worn node (ESP32 + AD8232 ECG + M5Stack MPU6886 motion sensor on the chest)
-streamed data over USB to our hub software, which feeds the telemedicine web app. We
-recorded 90 seconds (`hub/recordings/real_90s.txt`): standing still, marching on the spot,
-lying down. The demo replays this recording in the app, clearly labelled REPLAY.
+streamed data over USB to our hub software, which feeds the telemedicine web app. Two real
+recordings are in `hub/recordings/` (both report ESP32 firmware version 0.1.0):
+
+| File | Recorded | What it is |
+|------|----------|------------|
+| `real_90s.txt` | 28 Sep 2026 | **The good recording**, after the ECG wiring was fixed: 90 s of standing still, marching on the spot, lying down. The results below are from this file, and it is the one to replay in the app (clearly labelled REPLAY). |
+| `real_60s_bad_wiring.txt` | 24 Sep 2026 | **The first test, before the wiring was fixed.** Kept to show what bad wiring looks like - see [the first test](#the-first-test-before-the-wiring-was-fixed). |
 
 ## Results
 
@@ -17,12 +21,24 @@ lying down. The demo replays this recording in the app, clearly labelled REPLAY.
 | **Motion sensor (IMU)** | Perfect while still, but **only 49 % of the data arrived**. Two long dropouts (23 s and 22 s) happened while the wearer moved or lay down; the device counted over 4,000 read errors. |
 | **Posture** | Correct wherever motion data existed: upright (tilt 2-6°), marching detected as "moving", lying on the back (tilt 83-88°). No false fall or "no movement" alerts. |
 
+## The first test, before the wiring was fixed
+`real_60s_bad_wiring.txt` (60 s) is what the hub saw with a loose ECG-board power/ground wire:
+- **ECG flat or clipping:** the samples arrived (100 %), but 390 of 599 chunks hit the ends of
+  the range (0 or 4095), and for about 10 s the signal was stuck at 0. No heartbeat can be
+  seen. The ESP32 still reported a heart rate now and then (35-74 bpm) - those numbers were
+  **not real**. This is why the hub now checks the signal itself and hides the heart rate
+  ("ECG signal poor") when the signal is flat, stuck or clipping.
+- **Junk lines:** the file starts with 395 copies of the cut-off end of one motion message
+  (the hub ignores and counts them).
+- **Motion sensor:** 98 % of the data arrived, but the device already counted 361-503 read
+  errors - the first sign of the loose IMU wires described below.
+
 ## What went wrong, and why
 The motion sensor is connected to the ESP32 by **loose male-female jumper wires pushed into
 a Grove socket**. Its data travels on a two-wire bus (I2C). When the wearer moves, the
 wires wiggle, the connection breaks, and every reading fails until the contact comes back.
-The ECG uses different wires and was not affected. (Earlier tests also showed a flat ECG
-from a loose ECG-board power wire; that was fixed before this recording.)
+The ECG uses different wires and was not affected in `real_90s.txt`. (The first test showed a
+flat ECG from a loose ECG-board power wire; that was fixed before `real_90s.txt`.)
 
 ## How the software handles it now
 - A dropout gives **one** clear alert, "Motion sensor data missing (loose IMU wires?)".
