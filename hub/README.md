@@ -13,7 +13,7 @@ ESP32 --USB (921600 baud)--> hub (this folder) --+--> live stream (/live): ECG g
 ```
 
 It is plain Python (only needs `pyserial`), so the same code runs on a laptop and later
-on a Raspberry Pi. For the demo day, follow [`../DEMO.md`](../DEMO.md).
+on a Raspberry Pi. For a demo (replay or live hardware), follow [`../DEMO.md`](../DEMO.md).
 
 ## Setup (macOS, one time)
 
@@ -59,6 +59,9 @@ ECG graph, heart rate, posture and alerts on the Command Center, Live Consultati
 staff Waiting Room pages. The hub streams them at http://127.0.0.1:8765/live/events and
 the Vite dev server forwards `/live` there. Quick check while the hub runs:
 http://127.0.0.1:8765/live/health .
+
+This only works with `npm run dev` (or a build with `VITE_HUB_URL` set). The GitHub Pages
+website has no hub: it shows "Sensor hub not connected" and SIMULATED values.
 
 **Replay is never shown as live.** While `python hub.py replay ...` runs, the app shows a
 violet **REPLAY** badge and REPLAY tags instead of "Live sensor", and everything sent to
@@ -113,13 +116,19 @@ http://127.0.0.1:8555/api/patients/ while the backend runs (the `"id"` values).
 ## Recordings
 
 Files in `recordings/` are plain text: `<seconds><TAB><raw line from the ESP32>`.
+- `real_90s.txt` - **real** data: standing, marching, lying on the back (good ECG, two IMU
+  dropouts from loose wires). Replay it with `python hub.py replay recordings/real_90s.txt --loop`.
+- `real_60s_bad_wiring.txt` - **real** data from the first test, before the wiring was fixed
+  (flat / clipping ECG, junk lines). Shows what the signal checks catch.
+- Both are explained in [`../REAL_DATA_REPORT.md`](../REAL_DATA_REPORT.md).
+
 `simulated_demo.txt` is **SIMULATED** data (made by `tools/make_fake_recording.py`) that
 triggers every alert: fall, no movement, electrodes off, sensor disconnected. To see the
 ECG faults found on the real hardware (flat signal, stuck near 0, clipping):
 `python tools/make_fake_recording.py --scenario bad_ecg --out recordings/simulated_bad_ecg.txt`
 
-Record your own with `python hub.py record --seconds 90 --out recordings/<name>.txt`;
-real recordings are the backup plan for the demo (see `../DEMO.md`).
+Record your own with `python hub.py record --seconds 90 --out recordings/<name>.txt`.
+A real recording can be replayed whenever there is no hardware (see `../DEMO.md`).
 
 ## Later: Raspberry Pi as the hub
 

@@ -6,7 +6,7 @@ Developed in collaboration with **IIT Jodhpur**, Department of Computer Science 
 
 > **Real sensor data (EXPERIMENTAL):** an ESP32 with an ECG (AD8232) and a motion sensor
 > (MPU6886) feeds live heart rate, ECG, posture and alerts into the app through the
-> [`hub/`](hub/README.md). For demo day follow **[DEMO.md](DEMO.md)**. This is a student
+> [`hub/`](hub/README.md). To run the sensor demo follow **[DEMO.md](DEMO.md)**. This is a student
 > prototype, not a medical device: real values are tagged EXPERIMENTAL, recorded ones
 > REPLAY, dummy ones SIMULATED.
 
@@ -84,7 +84,8 @@ Optional: `curl` for quick API checks.
 ```
 rakshak-telemedicine-app/
 ├── README.md                 ← this file
-├── DEMO.md                   ← demo-day runbook (startup order, checklist, backup plan)
+├── DEMO.md                   ← sensor demo runbook (replay, live hardware, checklist)
+├── REAL_DATA_REPORT.md       ← what the real sensor recordings showed
 ├── hub/                      ← reads the ESP32 sensors (see hub/README.md)
 ├── backend/
 │   ├── config/               # Django settings, root URLs
@@ -140,7 +141,8 @@ Open in browser:
 ### Terminal 3 - Sensor hub (optional)
 
 See [`hub/README.md`](hub/README.md) (one-time setup) and [DEMO.md](DEMO.md). Without the
-hardware, `python hub.py replay recordings/simulated_demo.txt --loop` plays SIMULATED data.
+hardware, `python hub.py replay recordings/real_90s.txt --loop` replays a real recording
+(shown as REPLAY) and `recordings/simulated_demo.txt` plays SIMULATED data.
 
 ---
 
@@ -276,6 +278,7 @@ Vite is configured to:
 | `VITE_API_BASE_URL` | Base URL for all API calls | `/api` |
 | `VITE_PROXY_TARGET` | (shell variable for `npm run dev`) where Vite forwards `/api` | `http://127.0.0.1:8555` |
 | `VITE_HUB_TARGET` | (shell variable for `npm run dev`) where Vite forwards `/live` | `http://127.0.0.1:8765` |
+| `VITE_HUB_URL` | Address of the hub's live stream. Only needed for a **build** that should use a hub; `npm run dev` always uses `/live`. Without it, a build (e.g. GitHub Pages) makes no hub requests and shows "Sensor hub not connected". | not set |
 
 Restart `npm run dev` after changing `.env`.
 
@@ -442,7 +445,10 @@ Serve the `frontend/dist/` folder with any static host (Nginx, Vercel, etc.). Se
 
 Pushes to `main` are deployed to GitHub Pages by `.github/workflows/deploy.yml` (API:
 `https://api.rakshak.online/api`). The live sensor view needs the local hub and the Vite
-proxy, so **run the sensor demo locally** (`npm run dev`), not on the website.
+proxy, so **run the sensor demo locally** (`npm run dev`), not on the website. On the
+website the sensor pages show "Sensor hub not connected" and SIMULATED values, and make no
+requests to a hub. The production backend must be migrated (`python manage.py migrate`)
+**before** it runs this code - see `PR_DESCRIPTION.md` for the deploy steps.
 
 ### Backend
 

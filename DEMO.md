@@ -1,4 +1,7 @@
-# Rakshak demo runbook (macOS)
+# Rakshak sensor demo runbook (macOS)
+
+The live sensor view only works on this **local setup** (Mac + hub + `npm run dev`). The
+GitHub Pages website has no hub: it shows "Sensor hub not connected" and SIMULATED values.
 
 > **EXPERIMENTAL student prototype - not a medical device.** Real sensor values are tagged
 > EXPERIMENTAL, recorded data REPLAY, dummy values SIMULATED. Say this to the audience.
@@ -9,11 +12,11 @@
 > to a projector or monitor, no powered USB hub, no Ethernet. To show the screen to an
 > audience, use wireless screen sharing (AirPlay) or let the audience look at the laptop.
 
-## ★ Today's demo (28 Sep): REPLAY of `real_90s.txt` - no hardware
+## Quick demo: replay a real recording (no hardware)
 
-The demo is the **videos of the live session** plus a **REPLAY** of the real recording
-`hub/recordings/real_90s.txt` in the web app. No ESP32, no electrodes, so the charger may stay
-plugged in. Steps:
+Shows the real recording `hub/recordings/real_90s.txt` in the web app as a **REPLAY** - use it
+when there is no hardware, or next to videos of a live session. No ESP32, no electrodes, so
+the charger may stay plugged in. Needs the one-time setup (section 0). Steps:
 
 1. Window 1 - backend: `cd ~/rakshak-sensor/backend && source venv/bin/activate && python manage.py runserver`
 2. Window 4 - clear old sensor alerts (safe, deletes nothing):
@@ -25,8 +28,8 @@ plugged in. Steps:
    `cd ~/rakshak-sensor/hub && source .venv/bin/activate && python hub.py replay recordings/real_90s.txt --loop`
 
 The page shows a violet **REPLAY · RECORDED DATA** badge and REPLAY tags everywhere - say
-"this is a replay of a real recording". What the audience sees (times from the start of the
-replay):
+"this is a replay of a real recording". What the audience sees with `real_90s.txt` (times
+from the start of the replay):
 
 | Time | Wearer did | App shows |
 |------|------------|-----------|
@@ -41,7 +44,8 @@ replay):
 
 The ECG (real AD8232 signal) and heart rate are present the whole time. SpO2 and temperature
 are SIMULATED. Explain the "motion data missing" parts with `REAL_DATA_REPORT.md`.
-After the demo: `Ctrl + C` in Windows 3, 2, 1, and run step 2 again.
+After the demo: `Ctrl + C` in Windows 3, 2, 1, and run step 2 again. Another recording works
+the same way: put its file name in step 5.
 
 ---
 
@@ -65,12 +69,15 @@ Open Terminal with `Cmd + Space` → "Terminal"; a new window with `Cmd + N`.
 
 Do this once on the demo Mac. Skip any step that is already done.
 
-**0.1 Get the code** (a separate folder; your old project folder is not touched)
+**0.1 Get the code** (a separate folder; your old project folder is not touched). The sensor
+code is on `main` after the merge:
 ```bash
 cd ~
-git clone -b claude/rakshak-real-sensor-data-phbaso https://github.com/Rehyansh28/rakshak-telemedicine-app-demo.git rakshak-sensor
+git clone https://github.com/Rehyansh28/rakshak-telemedicine-app-demo.git rakshak-sensor
 ```
-If macOS asks to install "command line developer tools", click **Install**, then run it again.
+Until it is merged, use the branch instead: add `-b claude/rakshak-real-sensor-data-phbaso`
+after `git clone`. If macOS asks to install "command line developer tools", click
+**Install**, then run it again.
 
 **0.2 Database: back up the old one and copy it in** (the original stays untouched)
 ```bash
@@ -134,14 +141,14 @@ git config --global user.name "Your Name" && git config --global user.email "you
 
 ## 1. The day before: last update, then freeze
 
-After your **last good rehearsal** (Sunday), get the final code **once**:
+After your **last good rehearsal**, get the final code **once**:
 ```bash
 cp ~/rakshak-sensor/backend/db.sqlite3 ~/Desktop/db-backup-$(date +%Y%m%d-%H%M).sqlite3
 cd ~/rakshak-sensor && git pull
 cd backend && source venv/bin/activate && python manage.py migrate && deactivate
 ```
-Then do one full rehearsal with it (sections 2-5) and record the backup file (section 5)
-if you do not have one yet.
+(A copy cloned from the branch before the merge: run `git checkout main` before `git pull`.)
+Then do one full rehearsal with it (sections 2-5).
 
 🧊 **Code freeze: do NOT run `git pull` on demo day.** What worked in the rehearsal is what
 you demo.
@@ -189,7 +196,7 @@ cd ~/rakshak-sensor/hub && source .venv/bin/activate && python hub.py run
 ```
 Check that you see, within about 15 seconds:
 - [ ] `Connected to /dev/cu.usbserial-... at 921600 baud.`
-- [ ] `ESP32 firmware 0.1.1`
+- [ ] `ESP32 firmware 0.1.x` (both saved recordings report 0.1.0)
 - [ ] **no** `Motion sensor error` (if you see it: press the ESP32 RESET button, wait 10 s)
 - [ ] `Calibrated: upright = ...` (if not: wearer stands still, type `c` + Enter)
 - [ ] `Backend: connected to http://127.0.0.1:8555/api as 'hub-node'`
@@ -212,7 +219,7 @@ Soldiers → **Start** on the soldier → Continue → Waiting Room.
 | No movement (possible unconscious) | lie still | alert "No movement" (30 s) |
 | Electrodes off | unclip one ECG lead | badge "Electrodes off", alert (3 s) |
 | Sensor disconnected | unplug the USB cable | badge "Sensor disconnected", alert (3 s); plug back in → live again |
-| Fall | **do not really fall.** Use the backup recording (section 5) if you want to show it | |
+| Fall | **do not really fall.** `real_90s.txt` has no fall; to show the alert, replay `recordings/simulated_demo.txt` (section 5) and say it is SIMULATED | alert "Possible fall detected" |
 
 Alerts pop up by themselves (bottom right) and appear under the bell. If the sensor was
 moved or re-taped: wearer stands still, type `c` + Enter in Window 3 (re-calibrates).
@@ -245,31 +252,37 @@ the audience it is a recording. Recorded data is never presented as live.
 
 Back to live: `Ctrl + C`, then `python hub.py run`.
 
-**Making `real_90s.txt` (during a rehearsal, once).** With Windows 1 and 2 running and the
-hub stopped, electrodes on (Mac on battery!), wearer standing still, in Window 3:
+**Recordings in the repo:** `real_90s.txt` (the good one) and `real_60s_bad_wiring.txt`
+(the first test, before the wiring was fixed - flat / clipping ECG, junk lines). Both are
+explained in `REAL_DATA_REPORT.md`.
+
+**Making a new recording** (e.g. one with side lying, which `real_90s.txt` does not have).
+With Windows 1 and 2 running and the hub stopped, electrodes on (Mac on battery!), wearer
+standing still, in Window 3 (pick a new file name, the same name overwrites):
 ```bash
 cd ~/rakshak-sensor/hub && source .venv/bin/activate
-python hub.py record --seconds 90 --out recordings/real_90s.txt
+python hub.py record --seconds 90 --out recordings/real_side_90s.txt
 ```
-Follow the clock printed on each line: **0-20 s** stand still · **20-40 s** march on the spot
-· **40-65 s** lie flat on the back · **65-90 s** lie on the side. It ends with
-`Saved ... lines to recordings/real_90s.txt`. Check it plays back:
+Follow the clock printed on each line, e.g. **0-20 s** stand still · **20-40 s** march on the
+spot · **40-65 s** lie flat on the back · **65-90 s** lie on the side. It ends with
+`Saved ... lines to recordings/real_side_90s.txt`. Check it plays back:
 ```bash
-python hub.py --no-backend replay recordings/real_90s.txt
+python hub.py --no-backend replay recordings/real_side_90s.txt
 ```
 You should see `signal good`, a heart rate, UPRIGHT → LYING, and no `CHECK WARNING` about
-the ECG. If the ECG was bad, fix the wiring and record again (same command overwrites it).
+the ECG. If the ECG was bad, fix the wiring and record again.
 
-Commit it so the team (and Claude, for tuning) has it:
+Commit it so the team has it:
 ```bash
 cd ~/rakshak-sensor
-git add hub/recordings/real_90s.txt
+git add hub/recordings/real_side_90s.txt
 git commit -m "Add real 90 s recording (stand, march, lie back, lie side)"
 git push
 ```
 `git push` may ask you to log in to GitHub. If that is a problem, upload it on the website
-instead: open the branch `claude/rakshak-real-sensor-data-phbaso` → folder `hub/recordings`
-→ **Add file → Upload files** → drag `real_90s.txt` in → **Commit directly** to that branch.
+instead: open the branch you work on (`main` after the merge; until then
+`claude/rakshak-real-sensor-data-phbaso`) → folder `hub/recordings` → **Add file → Upload
+files** → drag the file in → **Commit** to that branch.
 
 (No real recording at all? `recordings/simulated_demo.txt` works too, but it is
 **simulated** data - say so.)
@@ -281,8 +294,8 @@ instead: open the branch `claude/rakshak-real-sensor-data-phbaso` → folder `hu
 - Remove all sensor alerts completely (asks you to type `yes`; seeded and manual alerts
   are kept) - **back up the database first**:
   `python manage.py resolve_sensor_alerts --delete`
-  Use this e.g. to remove the junk "Sensor disconnected" alerts that `replay --loop` made
-  with hub code older than the loop fix (commit d7a179b, 24 Sep).
+  Use this e.g. to remove junk "Sensor disconnected" alerts that `replay --loop` made with
+  old hub code (before the `replay --loop` fix).
 - **Never** run `seed_demo` and never delete `db.sqlite3` - both wipe data.
 
 ## 7. After the demo
