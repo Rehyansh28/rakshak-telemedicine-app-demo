@@ -68,7 +68,7 @@ Branch: `claude/rakshak-real-sensor-data-phbaso` (never `main`).
 - **Frontend:** builds; 14 old lint errors in untouched files, none new.
 - **End to end:** Playwright in a real browser, on replay and on a virtual serial port (live, unplug/replug).
 
-- **Real data (28 Sep):** `hub/recordings/real_90s.txt` (good) and `real_60s.txt` (old first-day recording, bad ECG wiring, firmware 0.1.0 junk lines):
+- **Real data (28 Sep):** `hub/recordings/real_90s.txt` (good) and `real_60s_bad_wiring.txt` (old first-day recording, bad ECG wiring, firmware 0.1.0 junk lines):
   - ECG 100 % present, HR ~100-110 standing / ~75-85 lying, confirmed by our own R-peak count; clipping < 1.5 %;
   - IMU only 49 % present: two ~22 s dropouts when moving/lying (loose I2C jumper wires; >4,000 read errors);
   - posture correct where data exists; peak |a| 1.43 g, so no false falls; **thresholds unchanged** (good margins);
